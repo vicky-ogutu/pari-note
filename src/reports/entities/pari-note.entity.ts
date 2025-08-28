@@ -2,7 +2,7 @@ import { Entity, PrimaryGeneratedColumn, Column, ManyToOne, JoinColumn, CreateDa
 import { User } from '../../users/entities/user.entity';
 import { Location } from '../../locations/entities/location.entity';
 
-@Entity('stillbirth_reports')
+@Entity('pari_note_reports')
 export class PariNote {
     @PrimaryGeneratedColumn()
     id: number;
