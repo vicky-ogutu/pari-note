@@ -77,4 +77,16 @@ export class LocationsService {
             relations: ['children', 'children.children', 'children.children.children'],
         });
     }
+
+    async getAccessibleLocationIds(locationId: number): Promise<number[]> {
+        const ids = [locationId];
+
+        const children = await this.locRepo.find({ where: { parent: { id: locationId } } });
+        for (const child of children) {
+            ids.push(...await this.getAccessibleLocationIds(child.id));
+        }
+
+        return ids;
+    }
+
 }

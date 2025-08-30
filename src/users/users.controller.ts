@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, UseGuards, Request } from '@nestjs/common';
+import { Controller, Get, Post, Body, UseGuards, Request, SetMetadata } from '@nestjs/common';
 import { JwtAuthGuard } from 'src/auth/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
 import { UsersService } from './users.service';
@@ -8,6 +8,8 @@ import { Roles } from '../common/decorators/roles.decorator';
 export class UsersController {
     constructor(private usersService: UsersService) { }
 
+    @SetMetadata('permission', 'user:create')
+    @UseGuards(JwtAuthGuard, RolesGuard)
     @Post('register')
     async register(@Body() body: any) {
         return this.usersService.create(body);

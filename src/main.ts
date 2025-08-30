@@ -9,7 +9,7 @@ async function bootstrap() {
     new ValidationPipe({
       whitelist: true,
       forbidNonWhitelisted: true,
-      transform: true, // ✅ <--- this is required to populate DTOs properly
+      transform: true,
     }),
   );
 
