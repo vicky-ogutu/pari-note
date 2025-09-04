@@ -21,6 +21,12 @@ export class UsersController {
         return this.usersService.findById(req.user.id);
     }
 
+    @UseGuards(JwtAuthGuard)
+    @Get('user-location')
+    async getUsersWithinLocation(@Request() req) {
+        return this.usersService.findUsersInLocation(req.user.id);
+    }
+
     @UseGuards(JwtAuthGuard, RolesGuard)
     @Roles('admin')
     @Get()
