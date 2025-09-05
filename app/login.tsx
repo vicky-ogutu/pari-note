@@ -1,17 +1,18 @@
 // app/login.tsx
 import { useRouter } from 'expo-router';
-
 import { useState } from 'react';
 import {
-  Alert, Image, KeyboardAvoidingView,
+  Alert,
+  Image,
+  KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View
 } from 'react-native';
+import tw from 'tailwind-react-native-classnames';
 
 export default function LoginScreen() {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function LoginScreen() {
 
     if (email === 'test@gmail.com' && password === '12345') {
       router.replace('/home');
-      console.log('sss');
+      console.log('Login successful');
     } else {
       Alert.alert('Error', 'Invalid credentials');
     }
@@ -34,21 +35,22 @@ export default function LoginScreen() {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={tw`flex-1 bg-white`}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
+      <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
+        <View style={tw`items-center mb-10`}>
           <Image 
-        source={require('../assets/images/splash-logo.jpeg')} 
-      
-      />
-          <Text style={styles.subtitle}>Sign in to continue</Text>
+            source={require('../assets/images/splash-logo.jpeg')} 
+            style={tw`w-40 h-40 mb-4`}
+            resizeMode="contain"
+          />
+          <Text style={tw`text-gray-600 text-base`}>Sign in to continue</Text>
         </View>
 
-        <View style={styles.form}>
+        <View style={tw`w-full`}>
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Email"
             placeholderTextColor="#999"
             value={email}
@@ -58,7 +60,7 @@ export default function LoginScreen() {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Password"
             placeholderTextColor="#999"
             value={password}
@@ -66,16 +68,19 @@ export default function LoginScreen() {
             secureTextEntry
           />
 
-          <TouchableOpacity style={styles.loginButton} onPress={handleLogin}>
-            <Text style={styles.loginButtonText}>Sign In</Text>
+          <TouchableOpacity 
+            style={tw`bg-green-600 p-4 rounded-lg items-center mt-2`} 
+            onPress={handleLogin}
+          >
+            <Text style={tw`text-white text-base font-bold`}>Sign In</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.registerLink}
+            style={tw`mt-5 items-center`}
             onPress={() => router.push('/register')}
           >
-            <Text style={styles.registerText}>
-              Don't have an account? <Text style={styles.registerLinkText}>Sign Up</Text>
+            <Text style={tw`text-gray-600`}>
+              Don't have an account? <Text style={tw`text-green-600 font-bold`}>Sign Up</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -83,63 +88,3 @@ export default function LoginScreen() {
     </KeyboardAvoidingView>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
-  },
-  form: {
-    width: '100%',
-  },
-  input: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  loginButton: {
-   backgroundColor: '#27ae60',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  loginButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  registerLink: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  registerText: {
-    color: '#7f8c8d',
-  },
-  registerLinkText: {
-    color: '#27ae60',
-    fontWeight: 'bold',
-  },
-});
