@@ -9,6 +9,9 @@ import { ReportsModule } from './reports/reports.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { RolesModule } from './roles/roles.module';
 import { PermissionsModule } from './permissions/permissions.module';
+import { BabiesModule } from './babies/babies.module';
+import { MothersModule } from './mothers/mothers.module';
+import { LogsModule } from './logs/logs.module';
 
 @Module({
   imports: [
@@ -30,6 +33,9 @@ import { PermissionsModule } from './permissions/permissions.module';
     NotificationsModule,
     RolesModule,
     PermissionsModule,
+    BabiesModule,
+    MothersModule,
+    LogsModule,
   ],
 })
 export class AppModule { }

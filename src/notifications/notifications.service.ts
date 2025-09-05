@@ -1,35 +1,52 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Notification } from './entities/notification.entity';
-import { UserNotification } from './entities/user-notification.entity';
-import { UsersService } from '../users/users.service';
-import { PariNote } from 'src/reports/entities/pari-note.entity';
+import { Baby } from '../babies/entities/baby.entity';
+import { Mother } from '../mothers/entities/mother.entity';
+import { CreateNotificationDto } from './dto/create-notification.dto';
 
 @Injectable()
 export class NotificationsService {
-    constructor(
-        @InjectRepository(Notification) private notifRepo: Repository<Notification>,
-        @InjectRepository(UserNotification) private userNotifRepo: Repository<UserNotification>,
-        private usersService: UsersService,
-    ) { }
+  constructor(
+    @InjectRepository(Notification)
+    private readonly notificationsRepo: Repository<Notification>,
 
-    async notifyOnReport(report: PariNote) {
-        const message = `New stillbirth report submitted at facility ${report.facility.id}`;
-        const notif = await this.notifRepo.save({
-            report,
-            message,
-            location: report.facility,
-        });
+    @InjectRepository(Baby)
+    private readonly babiesRepo: Repository<Baby>,
 
-        // Notify all users in that facility
-        // (Extend logic to fetch hierarchical users by location)
-        const users = await this.usersService.findByLocation(report.facility.id);
-        for (const user of users) {
-            await this.userNotifRepo.save({
-                notification: notif,
-                user,
-            });
-        }
+    @InjectRepository(Mother)
+    private readonly mothersRepo: Repository<Mother>,
+  ) {}
+
+  async createNotification(data: CreateNotificationDto) {
+  const babies = data.babies?.map((b) => this.babiesRepo.create(b)) || [];
+
+  const mother = this.mothersRepo.create(data.mother);
+
+  const notification = this.notificationsRepo.create({
+    ...data,
+    babies,
+    mother,
+  });
+
+  return await this.notificationsRepo.save(notification);
+}
+
+  async findAll() {
+    return this.notificationsRepo.find({ relations: ['baby', 'mother'] });
+  }
+
+  async findOne(id: number) {
+    const notification = await this.notificationsRepo.findOne({
+      where: { id },
+      relations: ['baby', 'mother'],
+    });
+
+    if (!notification) {
+      throw new NotFoundException(`Notification with ID ${id} not found`);
     }
+
+    return notification;
+  }
 }

@@ -14,7 +14,7 @@ export class ReportsService {
     async create(reportDto: Partial<PariNote>) {
         const report = this.repo.create(reportDto);
         const saved = await this.repo.save(report);
-        await this.notificationsService.notifyOnReport(saved);
+        // await this.notificationsService.notifyOnReport(saved);
         return saved;
     }
 
