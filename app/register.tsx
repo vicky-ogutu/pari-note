@@ -5,12 +5,12 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
   View,
 } from 'react-native';
+import tw from 'tailwind-react-native-classnames';
 
 // Define the form data type
 type FormData = {
@@ -64,18 +64,18 @@ const RegisterScreen = () => {
 
   return (
     <KeyboardAvoidingView
-      style={styles.container}
+      style={tw`flex-1 bg-white`}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={styles.scrollContainer}>
-        <View style={styles.header}>
-          <Text style={styles.title}>Create Account</Text>
-          <Text style={styles.subtitle}>Join us today</Text>
+      <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
+        <View style={tw`items-center mb-10`}>
+          <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Create Account</Text>
+          <Text style={tw`text-base text-gray-600`}>Join us today</Text>
         </View>
 
-        <View style={styles.form}>
+        <View style={tw`w-full`}>
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Full Name *"
             placeholderTextColor="#999"
             value={formData.fullName}
@@ -83,7 +83,7 @@ const RegisterScreen = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Email *"
             placeholderTextColor="#999"
             value={formData.email}
@@ -93,7 +93,7 @@ const RegisterScreen = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Phone Number"
             placeholderTextColor="#999"
             value={formData.phone}
@@ -102,7 +102,7 @@ const RegisterScreen = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Password *"
             placeholderTextColor="#999"
             value={formData.password}
@@ -111,7 +111,7 @@ const RegisterScreen = () => {
           />
 
           <TextInput
-            style={styles.input}
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Confirm Password *"
             placeholderTextColor="#999"
             value={formData.confirmPassword}
@@ -119,16 +119,19 @@ const RegisterScreen = () => {
             secureTextEntry
           />
 
-          <TouchableOpacity style={styles.registerButton} onPress={handleRegister}>
-            <Text style={styles.registerButtonText}>Create Account</Text>
+          <TouchableOpacity 
+            style={tw`bg-green-600 p-4 rounded-lg items-center mt-2`} 
+            onPress={handleRegister}
+          >
+            <Text style={tw`text-white text-base font-bold`}>Create Account</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
-            style={styles.loginLink}
+            style={tw`mt-5 items-center`}
             onPress={() => router.push('/login')}
           >
-            <Text style={styles.loginText}>
-              Already have an account? <Text style={styles.loginLinkText}>Sign In</Text>
+            <Text style={tw`text-gray-600`}>
+              Already have an account? <Text style={tw`text-green-600 font-bold`}>Sign In</Text>
             </Text>
           </TouchableOpacity>
         </View>
@@ -136,65 +139,5 @@ const RegisterScreen = () => {
     </KeyboardAvoidingView>
   );
 };
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-  },
-  scrollContainer: {
-    flexGrow: 1,
-    justifyContent: 'center',
-    padding: 20,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: 40,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: 'bold',
-    color: '#2c3e50',
-    marginBottom: 10,
-  },
-  subtitle: {
-    fontSize: 16,
-    color: '#7f8c8d',
-  },
-  form: {
-    width: '100%',
-  },
-  input: {
-    backgroundColor: '#f8f9fa',
-    padding: 15,
-    borderRadius: 10,
-    marginBottom: 15,
-    borderWidth: 1,
-    borderColor: '#e9ecef',
-  },
-  registerButton: {
-    backgroundColor: '#27ae60',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    marginTop: 10,
-  },
-  registerButtonText: {
-    color: 'white',
-    fontSize: 16,
-    fontWeight: 'bold',
-  },
-  loginLink: {
-    marginTop: 20,
-    alignItems: 'center',
-  },
-  loginText: {
-    color: '#7f8c8d',
-  },
-  loginLinkText: {
-    color: '#3498db',
-    fontWeight: 'bold',
-  },
-});
 
 export default RegisterScreen;

@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { useEffect } from 'react';
-import { Image, StatusBar, StyleSheet, Text, View } from 'react-native';
+import { Image, StatusBar, Text, View } from 'react-native';
+import tw from 'tailwind-react-native-classnames';
 
 const SplashScreen = () => {
   const router = useRouter();
@@ -14,23 +15,16 @@ const SplashScreen = () => {
   }, [router]);
 
   return (
-    <View style={styles.container}>
-      <StatusBar backgroundColor="#2c3e50" barStyle="light-content" />
+    <View style={tw`flex-1 items-center justify-center bg-gray-800`}>
+      <StatusBar backgroundColor="#374151" barStyle="light-content" />
       <Image
         source={require('../assets/images/splash-logo.jpeg')}
-        style={styles.logo}
+        style={tw`w-32 h-32 mb-5`}
       />
-      <Text style={styles.title}>Medical App</Text>
-      <Text style={styles.subtitle}>Patient Management System</Text>
+      <Text style={tw`text-2xl font-bold text-white mb-2`}>Medical App</Text>
+      <Text style={tw`text-base text-gray-300`}>Patient Management System</Text>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  container: { flex: 1, alignItems: 'center', justifyContent: 'center', backgroundColor: '#2c3e50' },
-  logo: { width: 120, height: 120, marginBottom: 20 },
-  title: { fontSize: 24, fontWeight: 'bold', color: '#fff' },
-  subtitle: { fontSize: 16, color: '#ddd' },
-});
 
 export default SplashScreen;
