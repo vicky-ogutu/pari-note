@@ -32,7 +32,7 @@ export class UsersService {
     }
 
     findById(id: number) {
-        return this.usersRepo.findOne({ where: { id }, relations: ['location'] });
+        return this.usersRepo.findOne({ where: { id }, relations: ['location', 'location.parent', 'location.parent.parent', 'role',] });
     }
 
     findByLocation(locationId: number) {
