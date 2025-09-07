@@ -9,6 +9,9 @@ export default function RootLayout() {
        <Stack.Screen name="home" />
       <Stack.Screen name="register" />
       <Stack.Screen name="patient_registration" />
+      <Stack.Screen name="users" /> 
+      <Stack.Screen name="SplashScreen" />
+      <Stack.Screen name="+not-found" />
       
       
     </Stack>

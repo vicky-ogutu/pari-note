@@ -69,20 +69,20 @@ export default function LoginScreen() {
           />
 
           <TouchableOpacity 
-            style={tw`bg-green-600 p-4 rounded-lg items-center mt-2`} 
+            style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2`} 
             onPress={handleLogin}
           >
             <Text style={tw`text-white text-base font-bold`}>Sign In</Text>
           </TouchableOpacity>
 
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={tw`mt-5 items-center`}
             onPress={() => router.push('/register')}
           >
             <Text style={tw`text-gray-600`}>
               Don't have an account? <Text style={tw`text-green-600 font-bold`}>Sign Up</Text>
             </Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
         </View>
       </ScrollView>
     </KeyboardAvoidingView>

@@ -10,11 +10,13 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import tw from 'tailwind-react-native-classnames';
 
 // Define the form data type
 type FormData = {
-  fullName: string;
+  firstName: string;
+  lastName: string;
   email: string;
   password: string;
   confirmPassword: string;
@@ -23,7 +25,8 @@ type FormData = {
 
 const RegisterScreen = () => {
   const [formData, setFormData] = useState<FormData>({
-    fullName: '',
+    firstName: '',
+    lastName: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -31,9 +34,9 @@ const RegisterScreen = () => {
   });
 
   const handleRegister = () => {
-    const { fullName, email, password, confirmPassword, phone } = formData;
+    const { firstName, lastName, email, password, confirmPassword, phone } = formData;
 
-    if (!fullName || !email || !password || !confirmPassword) {
+    if (!firstName ||!lastName|| !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -67,6 +70,9 @@ const RegisterScreen = () => {
       style={tw`flex-1 bg-white`}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
+       <TouchableOpacity onPress={() => router.back()}>
+               <Icon name="arrow-back" size={24} color="#374151" />
+              </TouchableOpacity>
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
         <View style={tw`items-center mb-10`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Create Account</Text>
@@ -76,10 +82,17 @@ const RegisterScreen = () => {
         <View style={tw`w-full`}>
           <TextInput
             style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="Full Name *"
+            placeholder="First Name *"
             placeholderTextColor="#999"
-            value={formData.fullName}
-            onChangeText={text => updateFormData('fullName', text)}
+            value={formData.firstName}
+            onChangeText={text => updateFormData('firstName', text)}
+          />
+          <TextInput
+            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
+            placeholder="Last Name *"
+            placeholderTextColor="#999"
+            value={formData.lastName}
+            onChangeText={text => updateFormData('lastName', text)}
           />
 
           <TextInput
@@ -120,10 +133,10 @@ const RegisterScreen = () => {
           />
 
           <TouchableOpacity 
-            style={tw`bg-green-600 p-4 rounded-lg items-center mt-2`} 
+            style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2`} 
             onPress={handleRegister}
           >
-            <Text style={tw`text-white text-base font-bold`}>Create Account</Text>
+            <Text style={tw`text-white text-base font-bold`}>Create User Account</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -131,7 +144,7 @@ const RegisterScreen = () => {
             onPress={() => router.push('/login')}
           >
             <Text style={tw`text-gray-600`}>
-              Already have an account? <Text style={tw`text-green-600 font-bold`}>Sign In</Text>
+              Already created account? <Text style={tw`text-purple-500 font-bold`}>Sign In</Text>
             </Text>
           </TouchableOpacity>
         </View>

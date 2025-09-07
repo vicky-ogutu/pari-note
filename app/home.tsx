@@ -1,10 +1,19 @@
 import { router } from 'expo-router';
-import { Alert, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { useState } from 'react';
+import { ActivityIndicator, Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import Icon from 'react-native-vector-icons/MaterialIcons';
 import tw from 'tailwind-react-native-classnames';
 
 const now = new Date().toLocaleString();
 
 const HomeScreen = () => {
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+    const handleAddUser = () => {
+     router.push('/patient_registration');
+  };
+
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       {
@@ -13,40 +22,61 @@ const HomeScreen = () => {
       },
       {
         text: 'Logout',
-        onPress: () => router.replace('/login'),
+        onPress: () => {
+          clearAuthTokens();
+          router.replace('/login');
+        },
         style: 'destructive',
       },
     ]);
   };
 
+  // Helper function to clear authentication tokens
+  const clearAuthTokens = () => {
+    // token clearing logic here
+    console.log('Clearing auth tokens');
+  };
+
   return (
-    <View style={tw`flex-1 bg-gray-100`}>
+    <View style={tw`flex-1 bg-purple-100`}>
+      {/* Header */}
       <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
-        <Text style={tw`text-2xl font-bold text-gray-800`}>PeriNote</Text>
-        <TouchableOpacity 
+        <TouchableOpacity onPress={() => setDrawerVisible(true)}>
+          <Text style={tw`text-2xl text-purple-500`}>☰</Text>
+        </TouchableOpacity>
+        <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
+
+        <TouchableOpacity onPress={handleAddUser}>
+                  <Icon name="person-add" size={36} color="#682483ff" />
+                </TouchableOpacity>
+        {/* <TouchableOpacity 
           onPress={handleLogout} 
-          style={tw`bg-red-500 p-2 rounded`}
+          style={tw`bg-purple-500 p-2 rounded`}
         >
           <Text style={tw`text-white font-bold`}>Logout</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
       </View>
 
+      {/* Load Indicator */}
+      {isLoading && (
+        <View style={tw`absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-10`}>
+          <ActivityIndicator size="large" color="#ffffff" />
+        </View>
+      )}
+
+      {/* Main Content */}
       <ScrollView contentContainerStyle={tw`p-5`}>
-        <View style={tw`bg-green-600 p-5 rounded-lg mb-5`}>
-          <Text style={tw`text-xl font-bold text-white mb-1`}>Mandera Subcounty Hospital!</Text>
-          <Text style={tw`text-sm text-green-100`}>
-            {now}
-          </Text>
+        <View style={tw`bg-purple-500 p-5 rounded-lg mb-5`}>
+          <Text style={tw`text-xl font-bold text-white mb-1`}>Homabay County Teaching and Refferral Hospital</Text>
+          <Text style={tw`text-sm text-green-100`}>{now}</Text>
         </View>
 
         <TouchableOpacity
           style={tw`bg-white p-5 rounded-lg mb-4 border-l-4 border-green-600`}
           onPress={() => router.push('/patient_registration')}
         >
-          <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>Register New Stillbirth</Text>
-          <Text style={tw`text-sm text-gray-600`}>
-            Add new patient information to the system
-          </Text>
+          <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>Report New Stillbirth</Text>
+          <Text style={tw`text-sm text-gray-600`}>Add a new stillbirth occurence to the system</Text>
         </TouchableOpacity>
 
         <View style={tw`flex-row justify-between mt-5`}>
@@ -60,6 +90,69 @@ const HomeScreen = () => {
           </View>
         </View>
       </ScrollView>
+
+      {/* Drawer */}
+      <Modal
+        visible={drawerVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <TouchableOpacity 
+          style={tw`flex-1 bg-black bg-opacity-50`}
+          onPress={() => setDrawerVisible(false)}
+        >
+          <View style={tw`w-64 h-full bg-white`}>
+            <View style={tw`p-5 bg-purple-500`}>
+              <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
+            </View>
+            
+            <ScrollView style={tw`flex-1 p-4`}>
+              {/* <TouchableOpacity
+                style={tw`p-4 border-b border-gray-200`}
+                onPress={() => {
+                  setDrawerVisible(false);
+                  router.push('/register');
+                }}
+              >
+                <Text style={tw`text-gray-800 font-medium`}>Add User</Text>
+              </TouchableOpacity> */}
+
+              <TouchableOpacity
+                style={tw`p-4 border-b border-gray-200`}
+                onPress={() => {
+                  setDrawerVisible(false);
+                  router.push('./users');
+                }}
+              >
+                <Text style={tw`text-gray-800 font-medium`}>Users</Text>
+              </TouchableOpacity>
+
+
+               <TouchableOpacity
+                style={tw`p-4 border-b border-gray-200`}
+                onPress={() => {
+                  setDrawerVisible(false);
+                  router.push('./patient_registration'); 
+                }}
+              >
+                <Text style={tw`text-gray-800 font-medium`}>Report New StillBirth</Text>
+              </TouchableOpacity>
+
+
+
+
+
+              <TouchableOpacity
+                style={tw`p-4 border-b border-gray-200`}
+                onPress={handleLogout}
+              >
+                <Text style={tw`text-purple-500 font-medium`}>Logout</Text>
+              </TouchableOpacity>
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </View>
   );
 };
