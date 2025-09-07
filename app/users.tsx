@@ -118,11 +118,6 @@ const [drawerVisible, setDrawerVisible] = useState(false);
     console.log('Clearing auth tokens');
   };
 
-
-
-
-
-
   // Form state for editing
   const [editForm, setEditForm] = useState({
     firstName: '',
@@ -426,62 +421,61 @@ const [drawerVisible, setDrawerVisible] = useState(false);
                 <Text style={tw`text-gray-800 font-medium`}>Add User</Text>
               </TouchableOpacity> */}
 
-              <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('./users');
-                }}
-              >
-                <Text style={tw`text-gray-800 font-medium`}>Users</Text>
-              </TouchableOpacity>
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Main Navigation
+                </Text>
+                
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/home');
+                  }}
+                >
+                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/users');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/patient_registration');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Account
+                </Text>
 
 
-               <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('./patient_registration'); 
-                }}
-              >
-                <Text style={tw`text-gray-800 font-medium`}>Report New StillBirth</Text>
-              </TouchableOpacity>
-
-
-
-
-
-              <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
+                 <TouchableOpacity 
+                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
                 onPress={handleLogout}
               >
-                <Text style={tw`text-purple-500 font-medium`}>Logout</Text>
+                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
               </TouchableOpacity>
+                
+              
+              </View>
             </ScrollView>
           </View>
         </TouchableOpacity>
       </Modal>
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
     </View>
   );

@@ -1,7 +1,10 @@
+import { router } from 'expo-router';
 import React, { useState } from 'react';
+
 import {
   Alert,
   KeyboardAvoidingView,
+  Modal,
   Platform,
   ScrollView,
   Text,
@@ -14,12 +17,7 @@ import tw from 'tailwind-react-native-classnames';
 
 // Define types for our form data
 type FormData = {
-  // Section 1: Locality
-  // county: string;
-  // subCounty: string;
-  // levelOfCare: string;
-  // managingAuthority: string;
-  // otherAuthority: string;
+ 
   
   // Section 1: Baby details
   dateOfDeath: string;
@@ -59,21 +57,9 @@ type FormData = {
   maternalCondition: string;
   otherCause: string;
   
-  // Section 7: Completed by
-  // completedByName: string;
-  // completedByDesignation: string;
-  // completedByPhone: string;
-  // completedByEmail: string;
-  // completedDate: string;
-  // completedSignature: string;
 };
 
 const initialFormData: FormData = {
-  // //county: '',
-  // subCounty: '',
-  // levelOfCare: '',
-  //managingAuthority: '',
-  //otherAuthority: '',
   dateOfDeath: '',
   timeOfDeath: '',
   gestationWeeks: '',
@@ -102,18 +88,39 @@ const initialFormData: FormData = {
   perinatalCause: [],
   maternalCondition: '',
   otherCause: '',
-  // completedByName: '',
-  // completedByDesignation: '',
-  // completedByPhone: '',
-  // completedByEmail: '',
-  // completedDate: '',
-  // completedSignature: ''
+
 };
 
 const StillbirthRegistrationScreen = () => {
+
   const [currentScreen, setCurrentScreen] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
 
+
+
+
+  //clear authentication tokens
+  const clearAuthTokens = () => {
+    // token clearing logic here
+    console.log('Clearing auth tokens');
+  };
+const [drawerVisible, setDrawerVisible] = useState(false);
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        onPress: () => {
+          clearAuthTokens();
+          router.replace('/login');
+        },
+        style: 'destructive',
+      },
+    ]);
+  };
   const updateFormData = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
@@ -166,60 +173,7 @@ const StillbirthRegistrationScreen = () => {
 
   const renderScreen = () => {
     switch(currentScreen) {
-      // case 1:
-      //   return (
-      //     <View style={tw`mb-5`}>
-      //       <Text style={tw`text-lg font-bold mb-5 text-gray-800`}>1. Locality where death occurred</Text>
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="County"
-      //         value={formData.county}
-      //         onChangeText={(text) => updateFormData('county', text)}
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Sub-County"
-      //         value={formData.subCounty}
-      //         onChangeText={(text) => updateFormData('subCounty', text)}
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Level of Care (2, 3, 4, 5, 6)"
-      //         value={formData.levelOfCare}
-      //         onChangeText={(text) => updateFormData('levelOfCare', text)}
-      //         keyboardType="numeric"
-      //       />
-            
-      //       <Text style={tw`text-base font-semibold mb-2 text-gray-700`}>Managing Authority:</Text>
-      //       <View style={tw`mb-5`}>
-      //         {['Public', 'NGO', 'FBO', 'Private', 'Others'].map(option => (
-      //           <TouchableOpacity 
-      //             key={option} 
-      //             style={tw`flex-row items-center mb-2`}
-      //             onPress={() => updateFormData('managingAuthority', option)}
-      //           >
-      //             <View style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}>
-      //               {formData.managingAuthority === option && <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />}
-      //             </View>
-      //             <Text style={tw`text-gray-800`}>{option}</Text>
-      //           </TouchableOpacity>
-      //         ))}
-      //       </View>
-            
-      //       {formData.managingAuthority === 'Others' && (
-      //         <TextInput
-      //           style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //           placeholder="Specify other authority"
-      //           value={formData.otherAuthority}
-      //           onChangeText={(text) => updateFormData('otherAuthority', text)}
-      //         />
-      //       )}
-      //     </View>
-      //   );
-      
+
       case 1:
         return (
           <View style={tw`mb-5`}>
@@ -596,71 +550,13 @@ const StillbirthRegistrationScreen = () => {
           </View>
         );
       
-      // case 7:
-      //   return (
-      //     <View style={tw`mb-5`}>
-      //       <Text style={tw`text-lg font-bold mb-5 text-gray-800`}>7. Completed by</Text>
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Name"
-      //         value={formData.completedByName}
-      //         onChangeText={(text) => updateFormData('completedByName', text)}
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Designation"
-      //         value={formData.completedByDesignation}
-      //         onChangeText={(text) => updateFormData('completedByDesignation', text)}
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Telephone"
-      //         value={formData.completedByPhone}
-      //         onChangeText={(text) => updateFormData('completedByPhone', text)}
-      //         keyboardType="phone-pad"
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Email"
-      //         value={formData.completedByEmail}
-      //         onChangeText={(text) => updateFormData('completedByEmail', text)}
-      //         keyboardType="email-address"
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Date (dd/mm/yyyy)"
-      //         value={formData.completedDate}
-      //         onChangeText={(text) => updateFormData('completedDate', text)}
-      //       />
-            
-      //       <TextInput
-      //         style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-      //         placeholder="Signature"
-      //         value={formData.completedSignature}
-      //         onChangeText={(text) => updateFormData('completedSignature', text)}
-      //       />
-      //     </View>
-      //   );
-      
+     
       case 6:
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-800`}>Review All Information</Text>
             <ScrollView style={tw`mb-5 max-h-96`}>
-              {/* <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-800`}>1. Locality where death occurred</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>County: {formData.county || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Sub-County: {formData.subCounty || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Level of Care: {formData.levelOfCare || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Managing Authority: {formData.managingAuthority || 'Not provided'}</Text>
-              {formData.managingAuthority === 'Others' && (
-                <Text style={tw`text-sm mb-1 text-gray-700`}>Other Authority: {formData.otherAuthority || 'Not provided'}</Text>
-              )} */}
-              
+    
               <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-800`}>1. Details of Deceased baby</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Date of Death: {formData.dateOfDeath || 'Not provided'}</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Time of Death: {formData.timeOfDeath || 'Not provided'}</Text>
@@ -712,14 +608,7 @@ const StillbirthRegistrationScreen = () => {
               <Text style={tw`text-sm mb-1 text-gray-700`}>Perinatal Cause: {formData.perinatalCause.join(', ') || 'Not provided'}</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Maternal Condition: {formData.maternalCondition || 'Not provided'}</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Other Cause: {formData.otherCause || 'Not provided'}</Text>
-              
-              {/* <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-800`}>7. Completed by</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Name: {formData.completedByName || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Designation: {formData.completedByDesignation || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Phone: {formData.completedByPhone || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Email: {formData.completedByEmail || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Date: {formData.completedDate || 'Not provided'}</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Signature: {formData.completedSignature || 'Not provided'}</Text> */}
+          
             </ScrollView>
             
             <TouchableOpacity 
@@ -749,7 +638,14 @@ const StillbirthRegistrationScreen = () => {
       style={tw`flex-1 bg-gray-100`}
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <ScrollView contentContainerStyle={tw`p-5 pb-10 mt-4`}>
+      <TouchableOpacity 
+      style={tw`absolute top-10 left-5 z-10 bg-purple-500 p-3 rounded-full`}
+      onPress={() => setDrawerVisible(true)}
+    >
+      <Text style={tw`text-white font-bold`}>☰</Text>
+    </TouchableOpacity>
+      
+      <ScrollView contentContainerStyle={tw`p-5 pb-10 mt-24`}>
         {renderScreen()}
         
         {currentScreen < 6 && (
@@ -771,10 +667,92 @@ const StillbirthRegistrationScreen = () => {
                 {currentScreen === 5 ? 'Review' : 'Next'}
               </Text>
             </TouchableOpacity>
-          </View>
-        )}
-      </ScrollView>
+
+
+ 
+        </View>
+      )}
+    </ScrollView>
+
+            
+{/* Drawer */}
+      <Modal
+        visible={drawerVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <TouchableOpacity 
+          style={tw`flex-1 bg-black bg-opacity-50`}
+          onPress={() => setDrawerVisible(false)}
+        >
+          <View style={tw`w-64 h-full bg-white`}>
+            <View style={tw`p-5 bg-purple-500`}>
+              <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
+            </View>
+            
+
+
+
+<ScrollView style={tw`flex-1 p-4`}>
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Main Navigation
+                </Text>
+                
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/home');
+                  }}
+                >
+                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/users');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/patient_registration');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Account
+                </Text>
+
+
+                 <TouchableOpacity 
+                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
+                onPress={handleLogout}
+              >
+                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
+              </TouchableOpacity>
+                
+               </View>
+          </ScrollView>
+        </View>
+      </TouchableOpacity>
+    </Modal>
     </KeyboardAvoidingView>
+
+
+
   );
 };
 

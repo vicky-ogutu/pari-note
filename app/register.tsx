@@ -1,16 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import {
-  Alert,
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  Text,
-  TextInput,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import Icon from 'react-native-vector-icons/MaterialIcons';
+import { Alert, KeyboardAvoidingView, Modal, Platform, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 
 // Define the form data type
@@ -33,10 +23,13 @@ const RegisterScreen = () => {
     phone: '',
   });
 
+  const [drawerVisible, setDrawerVisible] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
   const handleRegister = () => {
     const { firstName, lastName, email, password, confirmPassword, phone } = formData;
 
-    if (!firstName ||!lastName|| !email || !password || !confirmPassword) {
+    if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
@@ -65,18 +58,52 @@ const RegisterScreen = () => {
     setFormData(prev => ({ ...prev, [field]: value }));
   };
 
+  // Clear authentication tokens
+  const clearAuthTokens = () => {
+    // token clearing logic here
+    console.log('Clearing auth tokens');
+  };
+
+  const handleLogout = () => {
+    Alert.alert('Logout', 'Are you sure you want to logout?', [
+      {
+        text: 'Cancel',
+        style: 'cancel',
+      },
+      {
+        text: 'Logout',
+        onPress: () => {
+          clearAuthTokens();
+          router.replace('/login');
+        },
+        style: 'destructive',
+      },
+    ]);
+  };
+
   return (
-    <KeyboardAvoidingView
-      style={tw`flex-1 bg-white`}
+    <KeyboardAvoidingView 
+      style={tw`flex-1 bg-white`} 
       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-       <TouchableOpacity onPress={() => router.back()}>
-               <Icon name="arrow-back" size={24} color="#374151" />
-              </TouchableOpacity>
+      {/* Header with Menu Button */}
+      <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-200`}>
+        <TouchableOpacity 
+          onPress={() => setDrawerVisible(true)} 
+          style={tw`p-2 rounded-lg bg-purple-100`}
+        >
+          <Text style={tw`text-2xl text-purple-600`}>☰</Text>
+        </TouchableOpacity>
+        
+        <View style={tw`w-8`} /> {/* Spacer for balance */}
+      </View>
+
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-        <View style={tw`items-center mb-10`}>
-          <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Create Account</Text>
-      
+        <View style={tw`items-center mb-8`}>
+          <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Create Staff Account</Text>
+          <Text style={tw`text-gray-600 text-center`}>
+            Add a new healthcare provider to the system
+          </Text>
         </View>
 
         <View style={tw`w-full`}>
@@ -87,6 +114,7 @@ const RegisterScreen = () => {
             value={formData.firstName}
             onChangeText={text => updateFormData('firstName', text)}
           />
+
           <TextInput
             style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
             placeholder="Last Name *"
@@ -133,22 +161,92 @@ const RegisterScreen = () => {
           />
 
           <TouchableOpacity 
-            style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2`} 
+            style={tw`bg-purple-600 p-4 rounded-lg items-center mt-2 shadow-lg`} 
             onPress={handleRegister}
           >
             <Text style={tw`text-white text-base font-bold`}>Create User</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity
-            style={tw`mt-5 items-center`}
-            onPress={() => router.push('/login')}
-          >
-            <Text style={tw`text-gray-600`}>
-              Already created account? <Text style={tw`text-purple-500 font-bold`}>Sign In</Text>
-            </Text>
-          </TouchableOpacity>
         </View>
       </ScrollView>
+
+      {/* Enhanced Drawer */}
+      <Modal
+        visible={drawerVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <View style={tw`flex-1`}>
+          <TouchableOpacity 
+            style={tw`flex-1 bg-black bg-opacity-50`}
+            onPress={() => setDrawerVisible(false)}
+            activeOpacity={1}
+          />
+          
+          <View style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}>
+            <View style={tw`p-6 bg-purple-600`}>
+              <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
+              <Text style={tw`text-purple-100 text-sm mt-1`}>Hospital Management System</Text>
+            </View>
+            
+            <ScrollView style={tw`flex-1 p-4`}>
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Main Navigation
+                </Text>
+                
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/home');
+                  }}
+                >
+                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/users');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/patient_registration');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Account
+                </Text>
+
+
+                 <TouchableOpacity 
+                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
+                onPress={handleLogout}
+              >
+                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
+              </TouchableOpacity>
+                
+              
+              </View>
+            </ScrollView>
+
+           
+          </View>
+        </View>
+      </Modal>
     </KeyboardAvoidingView>
   );
 };

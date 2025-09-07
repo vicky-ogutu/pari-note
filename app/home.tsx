@@ -14,6 +14,12 @@ const HomeScreen = () => {
      router.push('/patient_registration');
   };
 
+    //clear authentication tokens
+  const clearAuthTokens = () => {
+    // token clearing logic here
+    console.log('Clearing auth tokens');
+  };
+
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       {
@@ -31,11 +37,7 @@ const HomeScreen = () => {
     ]);
   };
 
-  //clear authentication tokens
-  const clearAuthTokens = () => {
-    // token clearing logic here
-    console.log('Clearing auth tokens');
-  };
+
 
   return (
     <View style={tw`flex-1 bg-purple-100`}>
@@ -118,37 +120,57 @@ const HomeScreen = () => {
                 <Text style={tw`text-gray-800 font-medium`}>Add User</Text>
               </TouchableOpacity> */}
 
-              <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('./users');
-                }}
-              >
-                <Text style={tw`text-gray-800 font-medium`}>Users</Text>
-              </TouchableOpacity>
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Main Navigation
+                </Text>
+                
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/home');
+                  }}
+                >
+                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/users');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/patient_registration');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Account
+                </Text>
 
 
-               <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('./patient_registration'); 
-                }}
-              >
-                <Text style={tw`text-gray-800 font-medium`}>Report New StillBirth</Text>
-              </TouchableOpacity>
-
-
-
-
-
-              <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
+                 <TouchableOpacity 
+                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
                 onPress={handleLogout}
               >
-                <Text style={tw`text-purple-500 font-medium`}>Logout</Text>
+                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
               </TouchableOpacity>
+                
+              
+              </View>
             </ScrollView>
           </View>
         </TouchableOpacity>
