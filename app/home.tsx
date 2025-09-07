@@ -31,7 +31,7 @@ const HomeScreen = () => {
     ]);
   };
 
-  // Helper function to clear authentication tokens
+  //clear authentication tokens
   const clearAuthTokens = () => {
     // token clearing logic here
     console.log('Clearing auth tokens');

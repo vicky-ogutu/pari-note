@@ -76,7 +76,7 @@ const RegisterScreen = () => {
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
         <View style={tw`items-center mb-10`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>Create Account</Text>
-          <Text style={tw`text-base text-gray-600`}>Join us today</Text>
+      
         </View>
 
         <View style={tw`w-full`}>
@@ -136,7 +136,7 @@ const RegisterScreen = () => {
             style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2`} 
             onPress={handleRegister}
           >
-            <Text style={tw`text-white text-base font-bold`}>Create User Account</Text>
+            <Text style={tw`text-white text-base font-bold`}>Create User</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

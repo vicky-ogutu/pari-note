@@ -1,4 +1,4 @@
-// config/roles.ts
+
 import { UserRole } from './user';
 
 export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
@@ -32,8 +32,8 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
 
 export const ROLE_DESCRIPTIONS: Record<UserRole, string> = {
   admin: 'Full system access including user management',
-  doctor: 'Can create and view all medical reports',
-  nurse: 'Can create and view own medical reports',
+  doctor: 'Can create and view reports',
+  nurse: 'Can create and view reports',
   data_clerk: 'Can create and edit all medical reports',
   viewer: 'Can only view reports (read-only access)'
 };

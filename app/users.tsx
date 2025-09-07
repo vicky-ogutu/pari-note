@@ -190,7 +190,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
   };
 
   const handleAddUser = () => {
-     router.push('/patient_registration'); // Uncomment when API is ready
+     router.push('/register'); 
   };
 
   const renderUserItem = ({ item }: { item: User }) => (
@@ -397,14 +397,6 @@ const [drawerVisible, setDrawerVisible] = useState(false);
           </View>
         )}
       </ScrollView>
-
-
-
-
-
-
-
-
 
 
 {/* Drawer */}
