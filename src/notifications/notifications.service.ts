@@ -5,6 +5,7 @@ import { Notification } from './entities/notification.entity';
 import { Baby } from '../babies/entities/baby.entity';
 import { Mother } from '../mothers/entities/mother.entity';
 import { CreateNotificationDto } from './dto/create-notification.dto';
+import { Location } from '../locations/entities/location.entity';
 
 @Injectable()
 export class NotificationsService {
@@ -17,30 +18,42 @@ export class NotificationsService {
 
     @InjectRepository(Mother)
     private readonly mothersRepo: Repository<Mother>,
+
+    @InjectRepository(Location)
+    private readonly locationsRepo: Repository<Location>,
   ) {}
 
-  async createNotification(data: CreateNotificationDto) {
-  const babies = data.babies?.map((b) => this.babiesRepo.create(b)) || [];
+ async createNotification(data: CreateNotificationDto) {
+    const location = await this.locationsRepo.findOne({
+      where: { id: data.locationId },
+    });
+    if (!location) {
+      throw new NotFoundException(`Location with ID ${data.locationId} not found`);
+    }
 
-  const mother = this.mothersRepo.create(data.mother);
+    const babies = data.babies?.map((b) => this.babiesRepo.create(b)) || [];
+    const mother = this.mothersRepo.create(data.mother);
 
-  const notification = this.notificationsRepo.create({
-    ...data,
-    babies,
-    mother,
-  });
+    const notification = this.notificationsRepo.create({
+      dateOfNotification: data.dateOfNotification,
+      location,
+      babies,
+      mother,
+    });
 
-  return await this.notificationsRepo.save(notification);
-}
+    console.log('Created Notification:', notification);
+
+    return await this.notificationsRepo.save(notification);
+  }
 
   async findAll() {
-    return this.notificationsRepo.find({ relations: ['baby', 'mother'] });
+    return this.notificationsRepo.find({ relations: ['location', 'babies', 'mother'] });
   }
 
   async findOne(id: number) {
     const notification = await this.notificationsRepo.findOne({
       where: { id },
-      relations: ['baby', 'mother'],
+      relations: ['location', 'babies', 'mother'],
     });
 
     if (!notification) {

@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, ManyToOne } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, JoinColumn, Column, ManyToOne } from 'typeorm';
 import { Notification } from '../../notifications/entities/notification.entity';
 
 @Entity('babies')
@@ -38,5 +38,9 @@ export class Baby {
   sex: string;
 
    @ManyToOne(() => Notification, (notification) => notification.babies, { onDelete: 'CASCADE' })
+   @JoinColumn({
+    name: 'notification_id',
+    foreignKeyConstraintName: 'fk_babies_notification',
+  })
   notification: Notification;
 }

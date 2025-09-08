@@ -1,4 +1,4 @@
-import { Entity, PrimaryGeneratedColumn, Column, OneToOne, OneToMany } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column, JoinColumn, OneToOne, OneToMany } from 'typeorm';
 import { Notification } from '../../notifications/entities/notification.entity';
 
 @Entity('mothers')
@@ -45,7 +45,7 @@ export class Mother {
   @Column('simple-array', { nullable: true })
   conditions: string[];
 
-  @OneToOne(() => Notification, (notification) => notification.mother, { onDelete: 'CASCADE' })
+  @OneToOne(() => Notification, (notification) => notification.mother)
   notification: Notification;
 }
 
