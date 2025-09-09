@@ -1,12 +1,13 @@
 // app/users.tsx
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { ActivityIndicator, Alert, FlatList, Modal, ScrollView, Text, TextInput, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Alert, FlatList, Modal, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import tw from 'tailwind-react-native-classnames';
+import HamburgerButton from '../components/HamburgerButton';
 
-// User type definition
-type User = {
+// User type definition - make sure to export it so it can be used in other files
+export type User = {
   id: string;
   firstName: string;
   lastName: string;
@@ -89,11 +90,7 @@ const UsersScreen = () => {
   const [searchPhone, setSearchPhone] = useState('');
   const [selectedUser, setSelectedUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isEditing, setIsEditing] = useState(false);
-
-
-const [drawerVisible, setDrawerVisible] = useState(false);
-  
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
@@ -117,15 +114,6 @@ const [drawerVisible, setDrawerVisible] = useState(false);
     // token clearing logic here
     console.log('Clearing auth tokens');
   };
-
-  // Form state for editing
-  const [editForm, setEditForm] = useState({
-    firstName: '',
-    lastName: '',
-    email: '',
-    phone: '',
-    role: '',
-  });
 
   // Search users by phone number
   const searchUsersByPhone = () => {
@@ -152,36 +140,21 @@ const [drawerVisible, setDrawerVisible] = useState(false);
 
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
-    setEditForm({
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      phone: user.phone,
-      role: user.role,
-    });
-    setIsEditing(false);
   };
 
-  const handleUpdateUser = () => {
-    if (!selectedUser) return;
-
-    setIsLoading(true);
-    
-    // Simulate API call delay
-    setTimeout(() => {
-      // Update the user in the local state
-      const updatedUsers = users.map(user =>
-        user.id === selectedUser.id ? { ...user, ...editForm } : user
-      );
-      
-      setUsers(updatedUsers);
-      setFilteredUsers(updatedUsers);
-      setSelectedUser({ ...selectedUser, ...editForm });
-      setIsEditing(false);
-      setIsLoading(false);
-      
-      Alert.alert('Success', 'User updated successfully');
-    }, 1000);
+  const handleEditUser = (user: User) => {
+    // Navigate to the edit screen with the user data
+    router.push({
+      pathname: '/editstaff',
+      params: { 
+        userId: user.id,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        email: user.email,
+        phone: user.phone,
+        role: user.role
+      }
+    });
   };
 
   const handleAddUser = () => {
@@ -199,38 +172,36 @@ const [drawerVisible, setDrawerVisible] = useState(false);
       <Text style={tw`text-gray-600 text-sm`}>{item.email}</Text>
       <Text style={tw`text-gray-600 text-sm`}>{item.phone}</Text>
       <Text style={tw`text-blue-600 text-xs font-medium`}>Role: {item.role}</Text>
+      
+      <TouchableOpacity
+        style={tw`bg-blue-600 px-3 py-1 rounded mt-2 self-start`}
+        onPress={() => handleEditUser(item)}
+      >
+        <Text style={tw`text-white text-xs`}>Edit</Text>
+      </TouchableOpacity>
     </TouchableOpacity>
   );
 
   return (
     <View style={tw`flex-1 bg-gray-100`}>
       {/* Header */}
-      {/* <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
-        <TouchableOpacity onPress={() => router.back()}>
-         <Icon name="arrow-back" size={24} color="#374151" />
-        </TouchableOpacity> */}
-
-
-{/* Header */}
       <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
-        <TouchableOpacity onPress={() => setDrawerVisible(true)}>
+        {/* <TouchableOpacity onPress={() => setDrawerVisible(true)}>
           <Text style={tw`text-2xl text-purple-500`}>☰</Text>
-        </TouchableOpacity>
-
- {/* <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
-        <TouchableOpacity 
-          onPress={handleLogout} 
-          style={tw`bg-purple-500 p-2 rounded`}
-        >
-          <Text style={tw`text-white font-bold`}>Logout</Text>
         </TouchableOpacity> */}
-      {/* </View> */}
 
+         <HamburgerButton 
+  onPress={() => setDrawerVisible(true)}
+  position="relative"
+/>
 
-   <Text style={tw`text-xl font-bold text-purple-500`}>User Management</Text>
+        
+
+        <Text style={tw`text-xl font-bold text-purple-500`}>User Management</Text>
         <TouchableOpacity onPress={handleAddUser}>
           <Icon name="person-add" size={36} color="#682483ff" />
         </TouchableOpacity>
+        
       </View>
 
       {/* Loading Indicator */}
@@ -240,7 +211,8 @@ const [drawerVisible, setDrawerVisible] = useState(false);
         </View>
       )}
 
-      <ScrollView contentContainerStyle={tw`p-5`}>
+      {/* Main Content - Using View instead of ScrollView */}
+      <View style={tw`flex-1 p-5`}>
         {/* Search Section */}
         <View style={tw`mb-6`}>
           <Text style={tw`text-lg font-bold mb-3`}>Search Users by Phone Number</Text>
@@ -261,8 +233,8 @@ const [drawerVisible, setDrawerVisible] = useState(false);
           </View>
         </View>
 
-        <View style={tw`flex-row flex-col lg:flex-row`}>
-          {/* Users List */}
+        <View style={tw`flex-1 flex-col lg:flex-row`}>
+          {/* Users List - Using FlatList directly without ScrollView wrapper */}
           <View style={tw`flex-1 mb-6 lg:mb-0 lg:mr-4`}>
             <Text style={tw`text-lg font-bold mb-3`}>
               Users List ({filteredUsers.length})
@@ -271,130 +243,62 @@ const [drawerVisible, setDrawerVisible] = useState(false);
               data={filteredUsers}
               renderItem={renderUserItem}
               keyExtractor={item => item.id}
-              style={tw`max-h-96`}
+              style={tw`flex-1`}
+              contentContainerStyle={tw`pb-4`}
               ListEmptyComponent={
                 <Text style={tw`text-center text-gray-500 mt-10`}>
                   No users found
                 </Text>
               }
             />
-            {/* <ScrollView
-           style={tw`max-h-96`}
-           showsVerticalScrollIndicator={true}>
-            {filteredUsers.length>0?(
-                filteredUsers.map(renderUserItem)
-            ):(
-                 <Text style={tw`text-center text-gray-500 mt-10`}>
-                  No users found
-                </Text>
-            )}
-           </ScrollView> */}
           </View>
 
-          {/* User Details */}
+          {/* User Details - Simplified since editing is now on a separate screen */}
           {selectedUser && (
             <View style={tw`flex-1 bg-white p-5 rounded-lg`}>
               <Text style={tw`text-lg font-bold mb-4`}>User Details</Text>
               
-              {isEditing ? (
-                // Edit Form
-                <>
-                  <TextInput
-                    style={tw`bg-gray-100 p-3 rounded mb-3 border border-gray-300`}
-                    placeholder="First Name"
-                    value={editForm.firstName}
-                    onChangeText={(text) => setEditForm({...editForm, firstName: text})}
-                  />
-                  <TextInput
-                    style={tw`bg-gray-100 p-3 rounded mb-3 border border-gray-300`}
-                    placeholder="Last Name"
-                    value={editForm.lastName}
-                    onChangeText={(text) => setEditForm({...editForm, lastName: text})}
-                  />
-                  <TextInput
-                    style={tw`bg-gray-100 p-3 rounded mb-3 border border-gray-300`}
-                    placeholder="Email"
-                    value={editForm.email}
-                    onChangeText={(text) => setEditForm({...editForm, email: text})}
-                    keyboardType="email-address"
-                  />
-                  <TextInput
-                    style={tw`bg-gray-100 p-3 rounded mb-3 border border-gray-300`}
-                    placeholder="Phone"
-                    value={editForm.phone}
-                    onChangeText={(text) => setEditForm({...editForm, phone: text})}
-                    keyboardType="phone-pad"
-                  />
-                  <TextInput
-                    style={tw`bg-gray-100 p-3 rounded mb-4 border border-gray-300`}
-                    placeholder="Role"
-                    value={editForm.role}
-                    onChangeText={(text) => setEditForm({...editForm, role: text})}
-                  />
-                  
-                  <View style={tw`flex-row justify-between`}>
-                    <TouchableOpacity
-                      style={tw`bg-gray-500 px-4 py-2 rounded`}
-                      onPress={() => setIsEditing(false)}
-                    >
-                      <Text style={tw`text-white`}>Cancel</Text>
-                    </TouchableOpacity>
-                    
-                    <TouchableOpacity
-                      style={tw`bg-green-600 px-4 py-2 rounded`}
-                      onPress={handleUpdateUser}
-                    >
-                      <Text style={tw`text-white`}>Save Changes</Text>
-                    </TouchableOpacity>
-                  </View>
-                </>
-              ) : (
-                // Display Mode
-                <>
-                  <Text style={tw`text-gray-800 mb-2`}>
-                    <Text style={tw`font-bold`}>Name:</Text> {selectedUser.firstName} {selectedUser.lastName}
-                  </Text>
-                  <Text style={tw`text-gray-800 mb-2`}>
-                    <Text style={tw`font-bold`}>Email:</Text> {selectedUser.email}
-                  </Text>
-                  <Text style={tw`text-gray-800 mb-2`}>
-                    <Text style={tw`font-bold`}>Phone:</Text> {selectedUser.phone}
-                  </Text>
-                  <Text style={tw`text-gray-800 mb-4`}>
-                    <Text style={tw`font-bold`}>Role:</Text> {selectedUser.role}
-                  </Text>
-                  
-                  <TouchableOpacity
-                    style={tw`bg-blue-600 px-4 py-2 rounded mb-2`}
-                    onPress={() => setIsEditing(true)}
-                  >
-                    <Text style={tw`text-white text-center`}>Edit User</Text>
-                  </TouchableOpacity>
-                  
-                  <TouchableOpacity
-                    style={tw`bg-red-500 px-4 py-2 rounded`}
-                    onPress={() => Alert.alert('Info', 'Delete functionality would be implemented here')}
-                  >
-                    <Text style={tw`text-white text-center`}>Delete User</Text>
-                  </TouchableOpacity>
-                </>
-              )}
+              <Text style={tw`text-gray-800 mb-2`}>
+                <Text style={tw`font-bold`}>Name:</Text> {selectedUser.firstName} {selectedUser.lastName}
+              </Text>
+              <Text style={tw`text-gray-800 mb-2`}>
+                <Text style={tw`font-bold`}>Email:</Text> {selectedUser.email}
+              </Text>
+              <Text style={tw`text-gray-800 mb-2`}>
+                <Text style={tw`font-bold`}>Phone:</Text> {selectedUser.phone}
+              </Text>
+              <Text style={tw`text-gray-800 mb-4`}>
+                <Text style={tw`font-bold`}>Role:</Text> {selectedUser.role}
+              </Text>
+              
+              <TouchableOpacity
+                style={tw`purple-500 px-4 py-2 rounded mb-2`}
+                onPress={() => handleEditUser(selectedUser)}
+              >
+                <Text style={tw`text-white text-center`}>Edit User</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={tw`bg-red-500 px-4 py-2 rounded`}
+                onPress={() => Alert.alert('Info', 'Delete functionality would be implemented here')}
+              >
+                <Text style={tw`text-white text-center`}>Delete User</Text>
+              </TouchableOpacity>
             </View>
           )}
         </View>
 
-        {/*Notice */}
+        {/* Notice */}
         {!selectedUser && (
           <View style={tw`bg-yellow-100 p-4 rounded-lg mt-6`}>
             <Text style={tw`text-yellow-800 text-center`}>
-              💡 This Screen is meant for the Facility Admin
+              💡 Select a user to view details or click the Edit button to modify user information
             </Text>
           </View>
         )}
-      </ScrollView>
+      </View>
 
-
-{/* Drawer */}
+      {/* Drawer */}
       <Modal
         visible={drawerVisible}
         animationType="slide"
@@ -410,17 +314,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
               <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
             </View>
             
-            <ScrollView style={tw`flex-1 p-4`}>
-              {/* <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('/register');
-                }}
-              >
-                <Text style={tw`text-gray-800 font-medium`}>Add User</Text>
-              </TouchableOpacity> */}
-
+            <View style={tw`flex-1 p-4`}>
               <View style={tw`mb-6`}>
                 <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
                   Main Navigation
@@ -433,7 +327,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
                     router.push('/home');
                   }}
                 >
-                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
+                  <Text style={tw`text-purple-700 font-medium ml-2`}><Text>🏠</Text> Dashboard</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -443,7 +337,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
                     router.push('/users');
                   }}
                 >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                  <Text style={tw`text-gray-700 font-medium ml-2`}><Text>👥</Text> Users</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -453,7 +347,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
                     router.push('/patient_registration');
                   }}
                 >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                  <Text style={tw`text-gray-700 font-medium ml-2`}><Text>📋</Text> Report Stillbirth</Text>
                 </TouchableOpacity>
               </View>
 
@@ -462,21 +356,17 @@ const [drawerVisible, setDrawerVisible] = useState(false);
                   Account
                 </Text>
 
-
-                 <TouchableOpacity 
-                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
-                onPress={handleLogout}
-              >
-                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
-              </TouchableOpacity>
-                
-              
+                <TouchableOpacity 
+                  style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
+                  onPress={handleLogout}
+                >
+                  <Text style={tw`text-red-600 font-semibold`}><Text>🚪</Text> Logout</Text>
+                </TouchableOpacity>
               </View>
-            </ScrollView>
+            </View>
           </View>
         </TouchableOpacity>
       </Modal>
-
     </View>
   );
 };

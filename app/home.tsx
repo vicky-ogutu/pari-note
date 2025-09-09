@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import tw from 'tailwind-react-native-classnames';
-
+import HamburgerButton from '../components/HamburgerButton';
 const now = new Date().toLocaleString();
 
 const HomeScreen = () => {
@@ -43,9 +43,14 @@ const HomeScreen = () => {
     <View style={tw`flex-1 bg-purple-100`}>
       {/* Header */}
       <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
-        <TouchableOpacity onPress={() => setDrawerVisible(true)}>
+        {/* <TouchableOpacity onPress={() => setDrawerVisible(true)}>
           <Text style={tw`text-2xl text-purple-500`}>☰</Text>
-        </TouchableOpacity>
+        </TouchableOpacity> */}
+
+          <HamburgerButton 
+  onPress={() => setDrawerVisible(true)}
+  position="relative"
+/>
         <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
 
         <TouchableOpacity onPress={handleAddUser}>
@@ -132,7 +137,7 @@ const HomeScreen = () => {
                     router.push('/home');
                   }}
                 >
-                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
+                  <Text style={tw`text-purple-700 font-medium ml-2`}><Text>🏠</Text>Dashboard</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -142,17 +147,17 @@ const HomeScreen = () => {
                     router.push('/users');
                   }}
                 >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                  <Text style={tw`text-gray-700 font-medium ml-2`}><Text>👥</Text>Users</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
                   style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                   onPress={() => {
                     setDrawerVisible(false);
-                    router.push('/patient_registration');
+                    router.push('/register');
                   }}
                 >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                  <Text style={tw`text-gray-700 font-medium ml-2`}><Text>📋</Text>Report Stillbirth</Text>
                 </TouchableOpacity>
               </View>
 
@@ -166,7 +171,7 @@ const HomeScreen = () => {
                 style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
                 onPress={handleLogout}
               >
-                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
+                <Text style={tw`text-red-600 font-semibold`}><Text>🚪</Text>Logout</Text>
               </TouchableOpacity>
                 
               

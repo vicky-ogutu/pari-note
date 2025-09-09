@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
 import React, { useState } from 'react';
+import HamburgerButton from '../components/HamburgerButton';
 
 import {
   Alert,
@@ -633,127 +634,136 @@ const [drawerVisible, setDrawerVisible] = useState(false);
   };
 
   return (
-    <KeyboardAvoidingView 
-    
-      style={tw`flex-1 bg-gray-100`}
-      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-    >
-      <TouchableOpacity 
-      style={tw`absolute top-10 left-5 z-10 bg-purple-500 p-3 rounded-full`}
+  <KeyboardAvoidingView 
+    style={tw`flex-1 bg-gray-100`}
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+  >
+    {/* <TouchableOpacity 
+      style={tw`absolute top-10 left-5 z-10 bg-purple-500`}
       onPress={() => setDrawerVisible(true)}
     >
       <Text style={tw`text-white font-bold`}>☰</Text>
-    </TouchableOpacity>
-      
-      <ScrollView contentContainerStyle={tw`p-5 pb-10 mt-24`}>
+    </TouchableOpacity> */}
+    <HamburgerButton 
+  onPress={() => setDrawerVisible(true)}
+  position="absolute"
+/>
+
+    
+    <View style={tw`flex-1`}>
+      <ScrollView 
+        contentContainerStyle={tw`p-5 pb-32 mt-16`} // Increased bottom padding
+        showsVerticalScrollIndicator={true}
+      >
         {renderScreen()}
-        
-        {currentScreen < 6 && (
-          <View style={tw`flex-row justify-between mt-5`}>
-            {currentScreen > 1 && (
-              <TouchableOpacity 
-                style={tw`bg-gray-500 p-4 rounded items-center w-28`}
-                onPress={prevScreen}
-              >
-                <Text style={tw`text-white font-bold`}>Previous</Text>
-              </TouchableOpacity>
-            )}
-            
+      </ScrollView>
+
+      {/* Navigation buttons fixed at the bottom */}
+      {currentScreen < 6 && (
+        <View style={tw`absolute bottom-5 left-5 right-5 flex-row justify-between`}>
+          {currentScreen > 1 && (
             <TouchableOpacity 
-              style={tw`bg-purple-500 p-4 rounded items-center w-28`}
-              onPress={nextScreen}
+              style={tw`bg-gray-500 p-4 rounded items-center flex-1 mr-2`}
+              onPress={prevScreen}
             >
-              <Text style={tw`text-white font-bold`}>
-                {currentScreen === 5 ? 'Review' : 'Next'}
-              </Text>
+              <Text style={tw`text-white font-bold`}>Previous</Text>
             </TouchableOpacity>
-
-
- 
+          )}
+          
+          <TouchableOpacity 
+            style={[
+              tw`bg-purple-500 p-4 rounded items-center`,
+              currentScreen === 1 ? tw`flex-1` : tw`flex-1 ml-2`
+            ]}
+            onPress={nextScreen}
+          >
+            <Text style={tw`text-white font-bold`}>
+              {currentScreen === 5 ? 'Review' : 'Next'}
+            </Text>
+          </TouchableOpacity>
         </View>
       )}
-    </ScrollView>
+    </View>
 
-            
-{/* Drawer */}
-      <Modal
-        visible={drawerVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
+    {/* Drawer */}
+    <Modal
+      visible={drawerVisible}
+      animationType="slide"
+      transparent={true}
+      onRequestClose={() => setDrawerVisible(false)}
+    >
+      <TouchableOpacity 
+        style={tw`flex-1 bg-black bg-opacity-50`}
+        onPress={() => setDrawerVisible(false)}
       >
-        <TouchableOpacity 
-          style={tw`flex-1 bg-black bg-opacity-50`}
-          onPress={() => setDrawerVisible(false)}
-        >
-          <View style={tw`w-64 h-full bg-white`}>
-            <View style={tw`p-5 bg-purple-500`}>
-              <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
+        <View style={tw`w-64 h-full bg-white`}>
+          <View style={tw`p-5 bg-purple-500`}>
+            <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
+          </View>
+          
+          <ScrollView style={tw`flex-1 p-4`}>
+            <View style={tw`mb-6`}>
+              <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                Main Navigation
+              </Text>
+              
+              <TouchableOpacity 
+                style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
+                onPress={() => {
+                  setDrawerVisible(false);
+                  router.push('/home');
+                }}
+              >
+                <Text style={tw`text-purple-700 font-medium ml-2`}>
+                  <Text>🏠</Text> Dashboard
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                onPress={() => {
+                  setDrawerVisible(false);
+                  router.push('/users');
+                }}
+              >
+                <Text style={tw`text-gray-700 font-medium ml-2`}>
+                  <Text>👥</Text> Users
+                </Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity 
+                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                onPress={() => {
+                  setDrawerVisible(false);
+                  router.push('/patient_registration');
+                }}
+              >
+                <Text style={tw`text-gray-700 font-medium ml-2`}>
+                  <Text>📋</Text> Report Stillbirth
+                </Text>
+              </TouchableOpacity>
             </View>
-            
 
+            <View style={tw`mb-6`}>
+              <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                Account
+              </Text>
 
-
-<ScrollView style={tw`flex-1 p-4`}>
-              <View style={tw`mb-6`}>
-                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
-                  Main Navigation
-                </Text>
-                
-                <TouchableOpacity 
-                  style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
-                  onPress={() => {
-                    setDrawerVisible(false);
-                    router.push('/home');
-                  }}
-                >
-                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                  onPress={() => {
-                    setDrawerVisible(false);
-                    router.push('/users');
-                  }}
-                >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity 
-                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                  onPress={() => {
-                    setDrawerVisible(false);
-                    router.push('/patient_registration');
-                  }}
-                >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
-                </TouchableOpacity>
-              </View>
-
-              <View style={tw`mb-6`}>
-                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
-                  Account
-                </Text>
-
-
-                 <TouchableOpacity 
+              <TouchableOpacity 
                 style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
                 onPress={handleLogout}
               >
-                <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
+                <Text style={tw`text-red-600 font-semibold`}>
+                  <Text>🚪</Text> Logout
+                </Text>
               </TouchableOpacity>
-                
-               </View>
+            </View>
           </ScrollView>
         </View>
       </TouchableOpacity>
     </Modal>
-    </KeyboardAvoidingView>
-
-
-
-  );
+  </KeyboardAvoidingView>
+);
 };
 
 export default StillbirthRegistrationScreen;
