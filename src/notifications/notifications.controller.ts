@@ -17,16 +17,16 @@ export class NotificationsController {
     return this.notificationsService.createNotification(createNotificationDto);
   }
 
-  @SetMetadata('permission', 'notification:read')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+  //@SetMetadata('permission', 'notification:read')
+  @UseGuards(JwtAuthGuard)
   @Roles('admin', 'nurse')
   @Get()
   async findAll() {
     return this.notificationsService.findAll();
   }
 
-  @SetMetadata('permission', 'notification:read')
-  @UseGuards(JwtAuthGuard, RolesGuard)
+// @SetMetadata('permission', 'notification:read')
+  @UseGuards(JwtAuthGuard)
   @Roles('admin', 'nurse')
   @Get(':id')
   async findOne(@Param('id') id: number) {

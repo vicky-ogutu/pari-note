@@ -7,6 +7,8 @@ import {
     JoinColumn,
     CreateDateColumn,
     UpdateDateColumn,
+    ManyToMany,
+    JoinTable,
 } from 'typeorm';
 import { User } from 'src/users/entities/user.entity';
 
@@ -31,6 +33,14 @@ export class Location {
     @ManyToOne(() => User, { nullable: true, eager: true })
     @JoinColumn({ name: 'created_by' })
     createdBy: User;
+
+    @ManyToMany(() => User, { eager: true })
+  @JoinTable({
+    name: 'location_users', // junction table
+    joinColumn: { name: 'location_id', referencedColumnName: 'id' },
+    inverseJoinColumn: { name: 'user_id', referencedColumnName: 'id' },
+  })
+  users: User[];
 
     @CreateDateColumn()
     createdAt: Date;
