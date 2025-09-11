@@ -32,4 +32,10 @@ export class NotificationsController {
   async findOne(@Param('id') id: number) {
     return this.notificationsService.findOne(id);
   }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('stillbirths/:locationId')
+  async getStillbirthStats(@Param('locationId') locationId: number) {
+    return this.notificationsService.getStillbirthStats(Number(locationId));
+  }
 }

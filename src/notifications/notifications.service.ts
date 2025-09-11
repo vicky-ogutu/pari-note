@@ -37,12 +37,11 @@ export class NotificationsService {
     relations: ['parent', 'users', 'parent.users'],
   });
 
-  // include the current location's users first
+
   if (current?.users?.length) {
     users.push(...current.users);
   }
 
-  // then walk up the parent chain
   while (current?.parent) {
     if (current.parent.users?.length) {
       users.push(...current.parent.users);
@@ -108,4 +107,39 @@ export class NotificationsService {
 
     return notification;
   }
+
+async getStillbirthStats(locationId: number) {
+
+  const total = await this.babiesRepo.count({
+    where: {
+      outcome: 'stillbirth',
+      notification: {
+        location: { id: locationId },
+      },
+    },
+    relations: ['notification', 'notification.location'],
+  });
+
+  const bySex = await this.babiesRepo
+    .createQueryBuilder('baby')
+    .innerJoin('baby.notification', 'notification')
+    .innerJoin('notification.location', 'location')
+    .where('location.id = :locationId', { locationId })
+    .andWhere('LOWER(baby.outcome) = :outcome', { outcome: 'stillbirth' })
+    .select('baby.sex', 'sex')
+    .addSelect('COUNT(*)', 'count')
+    .groupBy('baby.sex')
+    .getRawMany();
+
+  const sex: Record<string, number> = {};
+  for (const row of bySex) {
+    sex[row.sex?.toLowerCase() || 'unknown'] = Number(row.count);
+  }
+
+  return {
+    total,
+    sex,
+  };
+}
+
 }
