@@ -322,42 +322,42 @@ const ReportDashboard: React.FC = () => {
           Today's Summary ({displayDate})
         </Text>
         
-        <View style={tw`flex-row flex-wrap justify-between`}>
-          {/* Total Stillbirths */}
-          <View style={tw`w-1/2 p-2`}>
-            <View style={tw`bg-purple-100 rounded-lg p-3 items-center`}>
-              <Text style={tw`text-3xl font-bold text-purple-700`}>{todayCount}</Text>
-              <Text style={tw`text-sm text-purple-600`}>Total Stillbirths</Text>
-            </View>
-          </View>
+       <View style={tw`flex-row flex-wrap justify-between`}>
+  {/* Total Stillbirths */}
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-purple-100 rounded-lg p-3 items-center justify-center h-32`}>
+      <Text style={tw`text-3xl font-bold text-purple-700`}>{todayCount}</Text>
+      <Text style={tw`text-sm text-purple-600`}>Total Stillbirths</Text>
+    </View>
+  </View>
 
-          {/* By Type */}
-          <View style={tw`w-1/2 p-2`}>
-            <View style={tw`bg-blue-100 rounded-lg p-3`}>
-              <Text style={tw`text-sm font-semibold text-blue-800`}>By Type:</Text>
-              <Text style={tw`text-xs text-blue-700`}>Fresh: {metrics.freshStillbirths}</Text>
-              <Text style={tw`text-xs text-blue-700`}>Macerated: {metrics.maceratedStillbirths}</Text>
-            </View>
-          </View>
+  {/* By Type */}
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-blue-100 rounded-lg p-3 justify-center h-32`}>
+      <Text style={tw`text-sm font-semibold text-blue-800`}>By Type:</Text>
+      <Text style={tw`text-xs text-blue-700`}>Fresh: {metrics.freshStillbirths}</Text>
+      <Text style={tw`text-xs text-blue-700`}>Macerated: {metrics.maceratedStillbirths}</Text>
+    </View>
+  </View>
 
-          {/* By Sex */}
-          <View style={tw`w-1/2 p-2`}>
-            <View style={tw`bg-green-100 rounded-lg p-3`}>
-              <Text style={tw`text-sm font-semibold text-green-800`}>By Sex:</Text>
-              <Text style={tw`text-xs text-green-700`}>Male: {metrics.male}</Text>
-              <Text style={tw`text-xs text-green-700`}>Female: {metrics.female}</Text>
-            </View>
-          </View>
+  {/* By Sex */}
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-green-100 rounded-lg p-3 justify-center h-32`}>
+      <Text style={tw`text-sm font-semibold text-green-800`}>By Sex:</Text>
+      <Text style={tw`text-xs text-green-700`}>Male: {metrics.male}</Text>
+      <Text style={tw`text-xs text-green-700`}>Female: {metrics.female}</Text>
+    </View>
+  </View>
 
-          {/* By Delivery Place */}
-          <View style={tw`w-1/2 p-2`}>
-            <View style={tw`bg-orange-100 rounded-lg p-3`}>
-              <Text style={tw`text-sm font-semibold text-orange-800`}>Delivery Place:</Text>
-              <Text style={tw`text-xs text-orange-700`}>Facility: {metrics.facilityDeliveries}</Text>
-              <Text style={tw`text-xs text-orange-700`}>Home: {metrics.homeDeliveries}</Text>
-            </View>
-          </View>
-        </View>
+  {/* By Delivery Place */}
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-orange-100 rounded-lg p-3 justify-center h-32`}>
+      <Text style={tw`text-sm font-semibold text-orange-800`}>Delivery Place:</Text>
+      <Text style={tw`text-xs text-orange-700`}>Facility: {metrics.facilityDeliveries}</Text>
+      <Text style={tw`text-xs text-orange-700`}>Home: {metrics.homeDeliveries}</Text>
+    </View>
+  </View>
+</View>
       </View>
 
       {/* Additional reports can be added here */}

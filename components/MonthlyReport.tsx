@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import tw from 'tailwind-react-native-classnames';
 
-// Define the FormData type
+// DefineFormData type
 type FormData = {
   dateOfDeath: string;
   timeOfDeath: string;
@@ -117,34 +117,35 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data }) => {
       ) : (
         <ScrollView>
           <View style={tw`flex-row flex-wrap justify-between mb-4`}>
-            <View style={tw`w-1/2 p-2`}>
-              <View style={tw`bg-purple-100 rounded-lg p-3 items-center`}>
-                <Text style={tw`text-2xl font-bold text-purple-700`}>{metrics.totalStillbirths}</Text>
-                <Text style={tw`text-sm text-purple-600`}>Total Stillbirths</Text>
-              </View>
-            </View>
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-purple-100 rounded-lg p-3 items-center flex-1 justify-center`}>
+      <Text style={tw`text-2xl font-bold text-purple-700`}>{metrics.totalStillbirths}</Text>
+      <Text style={tw`text-sm text-purple-600`}>Total Stillbirths</Text>
+    </View>
+  </View>
 
-            <View style={tw`w-1/2 p-2`}>
-              <View style={tw`bg-blue-100 rounded-lg p-3 items-center`}>
-                <Text style={tw`text-2xl font-bold text-blue-700`}>{metrics.averageGestation}</Text>
-                <Text style={tw`text-sm text-blue-600`}>Avg. Gestation (weeks)</Text>
-              </View>
-            </View>
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-blue-100 rounded-lg p-3 items-center flex-1 justify-center`}>
+      <Text style={tw`text-2xl font-bold text-blue-700`}>{metrics.averageGestation}</Text>
+      <Text style={tw`text-sm text-blue-600`}>Avg. Gestation (weeks)</Text>
+    </View>
+  </View>
 
-            <View style={tw`w-1/2 p-2`}>
-              <View style={tw`bg-green-100 rounded-lg p-3 items-center`}>
-                <Text style={tw`text-2xl font-bold text-green-700`}>{metrics.averageBirthWeight}g</Text>
-                <Text style={tw`text-sm text-green-600`}>Avg. Birth Weight</Text>
-              </View>
-            </View>
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-green-100 rounded-lg p-3 items-center flex-1 justify-center`}>
+      <Text style={tw`text-2xl font-bold text-green-700`}>{metrics.averageBirthWeight}g</Text>
+      <Text style={tw`text-sm text-green-600`}>Avg. Birth Weight</Text>
+    </View>
+  </View>
 
-            <View style={tw`w-1/2 p-2`}>
-              <View style={tw`bg-orange-100 rounded-lg p-3 items-center`}>
-                <Text style={tw`text-2xl font-bold text-orange-700`}>{metrics.facilityDeliveries}</Text>
-                <Text style={tw`text-sm text-orange-600`}>Facility Deliveries</Text>
-              </View>
-            </View>
-          </View>
+  <View style={tw`w-1/2 p-2`}>
+    <View style={tw`bg-orange-100 rounded-lg p-3 items-center flex-1 justify-center`}>
+      <Text style={tw`text-2xl font-bold text-orange-700`}>{metrics.facilityDeliveries}</Text>
+      <Text style={tw`text-sm text-orange-600`}>Facility Deliveries</Text>
+    </View>
+  </View>
+</View>
+
 
           <View style={tw`mb-4`}>
             <Text style={tw`text-lg font-bold mb-2 text-gray-800`}>Breakdown by Type</Text>
@@ -158,7 +159,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data }) => {
             </View>
           </View>
 
-          <View style={tw`mb-4`}>
+          {/* <View style={tw`mb-4`}>
             <Text style={tw`text-lg font-bold mb-2 text-gray-800`}>Period of Death</Text>
             <View style={tw`flex-row justify-between mb-2`}>
               <Text style={tw`text-gray-700`}>Intrapartum</Text>
@@ -168,7 +169,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data }) => {
               <Text style={tw`text-gray-700`}>Antepartum</Text>
               <Text style={tw`text-gray-700 font-bold`}>{metrics.antepartum}</Text>
             </View>
-          </View>
+          </View> */}
 
           <View style={tw`mb-4`}>
             <Text style={tw`text-lg font-bold mb-2 text-gray-800`}>By Sex</Text>
