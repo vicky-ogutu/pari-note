@@ -1,5 +1,6 @@
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { router } from 'expo-router';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { ActivityIndicator, Alert, Modal, ScrollView, Text, TouchableOpacity, View } from 'react-native';
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import tw from 'tailwind-react-native-classnames';
@@ -258,14 +259,34 @@ const HomeScreen = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<'today' | 'monthly'>('today');
+  const [userRole, setUserRole] = useState<string>('');
+
+
+
+ useEffect(() => {
+    const getUserRole = async () => {
+      const role = await AsyncStorage.getItem('role');
+      setUserRole(role || '');
+    };
+    getUserRole();
+  }, []);
+
 
   const handleAddUser = () => {
     router.push('/patient_registration');
   };
 
   // Clear authentication tokens
-  const clearAuthTokens = () => {
-    console.log('Clearing auth tokens');
+  // const clearAuthTokens = () => {
+  //   console.log('Clearing auth tokens');
+  // };
+
+  const clearAuthTokens = async () => {
+    try {
+      await AsyncStorage.multiRemove(['access_token', 'role', 'location_name', 'location_type']);
+    } catch (error) {
+      console.error('Error clearing auth tokens:', error);
+    }
   };
 
   const handleLogout = () => {
@@ -276,7 +297,8 @@ const HomeScreen = () => {
       },
       {
         text: 'Logout',
-        onPress: () => {
+        onPress: async() => {
+          await clearAuthTokens();
           clearAuthTokens();
           router.replace('/login');
         },
@@ -336,6 +358,7 @@ const HomeScreen = () => {
       </ScrollView>
 
       {/* Drawer */}
+      
       <Modal
         visible={drawerVisible}
         animationType="slide"
@@ -367,25 +390,29 @@ const HomeScreen = () => {
                   <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
                 </TouchableOpacity>
 
-                <TouchableOpacity 
-                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                  onPress={() => {
-                    setDrawerVisible(false);
-                    router.push('/users');
-                  }}
-                >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
-                </TouchableOpacity>
+                {userRole === 'admin' && (
+                  <TouchableOpacity 
+                    style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                    onPress={() => {
+                      setDrawerVisible(false);
+                      router.push('/users');
+                    }}
+                  >
+                    <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
+                  </TouchableOpacity>
+                )}
 
-                <TouchableOpacity 
-                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                  onPress={() => {
-                    setDrawerVisible(false);
-                    router.push('/register');
-                  }}
-                >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
-                </TouchableOpacity>
+                {userRole === 'nurse' && (
+                  <TouchableOpacity 
+                    style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                    onPress={() => {
+                      setDrawerVisible(false);
+                      router.push('/patient_registration');
+                    }}
+                  >
+                    <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                  </TouchableOpacity>
+                )}
               </View>
 
               <View style={tw`mb-6`}>

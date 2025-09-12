@@ -1,4 +1,5 @@
 // app/login.tsx
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
 import {
@@ -18,20 +19,70 @@ export default function LoginScreen() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const router = useRouter();
+   const [isLoading, setIsLoading] = useState(false);
 
-  const handleLogin = () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
+  const handleLogin = async () => {
+      //uncomment this to test without roles
+
+    // if (!email || !password) {
+    //   Alert.alert('Error', 'Please fill in all fields');
+    //   return;
+    // }
+    // setIsLoading(true);
+
+    // if (email === 'test@gmail.com' && password === '12345') {
+    //   router.replace('/home');
+    //   console.log('Login successful');
+    // } else {
+    //   Alert.alert('Error', 'Invalid credentials');
+    // }
+
+ try {
+     
+      const response = await fetch('http://localhost:3000/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Login failed');
+      }
+
+      const data = await response.json();
+      
+      // Store authentication data
+      await AsyncStorage.setItem('access_token', data.access_token);
+      await AsyncStorage.setItem('role', data.user.role.name);
+      await AsyncStorage.setItem('location_name', data.user.location?.name || '');
+      await AsyncStorage.setItem('location_type', data.user.location?.type || '');
+      
+      // Redirect based on role
+      if (data.user.role.name === 'admin') {
+        router.replace('/users');
+      } else {
+        router.replace('/home');
+      }
+      
+    } catch (error) {
+      Alert.alert('Error', 'Invalid credentials or network error');
+    } finally {
+      setIsLoading(false);
     }
 
-    if (email === 'test@gmail.com' && password === '12345') {
-      router.replace('/home');
-      console.log('Login successful');
-    } else {
-      Alert.alert('Error', 'Invalid credentials');
-    }
   };
+
+  
+
+
+
+
+
+
+
+
 
   return (
     <KeyboardAvoidingView
