@@ -4,19 +4,267 @@ import { ActivityIndicator, Alert, Modal, ScrollView, Text, TouchableOpacity, Vi
 import Icon from 'react-native-vector-icons/MaterialIcons';
 import tw from 'tailwind-react-native-classnames';
 import HamburgerButton from '../components/HamburgerButton';
+import MonthlyReport from '../components/MonthlyReport';
+import ReportDashboard from '../components/today_report';
+import { FormData } from './types';
+
+
+export const mockStillbirthData: FormData[] = [
+  {
+    dateOfDeath: '10/9/2025',
+    timeOfDeath: '08:30 AM',
+    gestationWeeks: '32',
+    babyOutcome: 'Fresh still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '1800',
+    sexOfBaby: 'Male',
+    otherSex: '',
+    motherAge: '28',
+    motherMarried: 'Yes',
+    motherPara: '2',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'Yes',
+    obstetricConditions: ['Anemia', 'Hypertensive disease'],
+    otherObstetric: '',
+    deliveryPlace: 'Facility',
+    otherDeliveryPlace: '',
+    facilityLevel: '4',
+    deliveryType: 'Caesarian Section',
+    otherDeliveryType: '',
+    periodOfDeath: 'Intrapartum',
+    perinatalCause: ['Birth Asphyxia'],
+    maternalCondition: 'Maternal complications of Pregnancy',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '10/9/2025',
+    timeOfDeath: '14:45 PM',
+    gestationWeeks: '36',
+    babyOutcome: 'Macerated still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '2500',
+    sexOfBaby: 'Female',
+    otherSex: '',
+    motherAge: '35',
+    motherMarried: 'Yes',
+    motherPara: '3',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'Yes',
+    obstetricConditions: ['Diabetes', 'Pre-labor rupture of membranes'],
+    otherObstetric: '',
+    deliveryPlace: 'Facility',
+    otherDeliveryPlace: '',
+    facilityLevel: '5',
+    deliveryType: 'SVD-Skilled',
+    otherDeliveryType: '',
+    periodOfDeath: 'Antepartum',
+    perinatalCause: ['Infection', 'Prematurity'],
+    maternalCondition: 'Complications of placenta, cord and membranes',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '10/9/2025',
+    timeOfDeath: '23:15 PM',
+    gestationWeeks: '28',
+    babyOutcome: 'Fresh still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '1200',
+    sexOfBaby: 'Female',
+    otherSex: '',
+    motherAge: '19',
+    motherMarried: 'No',
+    motherPara: '1',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'No',
+    obstetricConditions: ['Malaria', 'Anemia'],
+    otherObstetric: '',
+    deliveryPlace: 'Home',
+    otherDeliveryPlace: '',
+    facilityLevel: '',
+    deliveryType: 'SVD-Unskilled',
+    otherDeliveryType: '',
+    periodOfDeath: 'Intrapartum',
+    perinatalCause: ['Birth Asphyxia', 'Low birth weight'],
+    maternalCondition: 'Maternal medical and surgical conditions',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '9/9/2025',
+    timeOfDeath: '04:20 AM',
+    gestationWeeks: '40',
+    babyOutcome: 'Fresh still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '3200',
+    sexOfBaby: 'Male',
+    otherSex: '',
+    motherAge: '32',
+    motherMarried: 'Yes',
+    motherPara: '2',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Multiple',
+    antenatalCare: 'Yes',
+    obstetricConditions: ['Hypertensive disease', 'Preterm delivery'],
+    otherObstetric: '',
+    deliveryPlace: 'Facility',
+    otherDeliveryPlace: '',
+    facilityLevel: '6',
+    deliveryType: 'Caesarian Section',
+    otherDeliveryType: '',
+    periodOfDeath: 'Intrapartum',
+    perinatalCause: ['Birth trauma'],
+    maternalCondition: 'Other complications of labour and delivery',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '9/9/2023', 
+    timeOfDeath: '11:30 AM',
+    gestationWeeks: '34',
+    babyOutcome: 'Macerated still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '2100',
+    sexOfBaby: 'Female',
+    otherSex: '',
+    motherAge: '27',
+    motherMarried: 'Yes',
+    motherPara: '1',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'Yes',
+    obstetricConditions: ['UTI', 'Chorioamnionitis'],
+    otherObstetric: '',
+    deliveryPlace: 'Facility',
+    otherDeliveryPlace: '',
+    facilityLevel: '3',
+    deliveryType: 'Assisted VD',
+    otherDeliveryType: '',
+    periodOfDeath: 'Antepartum',
+    perinatalCause: ['Infection'],
+    maternalCondition: 'Complications of placenta, cord and membranes',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '9/9/2025',
+    timeOfDeath: '19:00 PM',
+    gestationWeeks: '31',
+    babyOutcome: 'Fresh still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '1700',
+    sexOfBaby: 'Male',
+    otherSex: '',
+    motherAge: '24',
+    motherMarried: 'Yes',
+    motherPara: '2',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'Yes',
+    obstetricConditions: ['Antepartum Hemorrhage'],
+    otherObstetric: '',
+    deliveryPlace: 'Facility',
+    otherDeliveryPlace: '',
+    facilityLevel: '4',
+    deliveryType: 'Caesarian Section',
+    otherDeliveryType: '',
+    periodOfDeath: 'Intrapartum',
+    perinatalCause: ['Birth Asphyxia'],
+    maternalCondition: 'Maternal complications of Pregnancy',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '9/9/2025',
+    timeOfDeath: '09:45 AM',
+    gestationWeeks: '29',
+    babyOutcome: 'Fresh still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '1400',
+    sexOfBaby: 'Female',
+    otherSex: '',
+    motherAge: '21',
+    motherMarried: 'No',
+    motherPara: '1',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'Unknown',
+    obstetricConditions: ['HIV', 'Malaria'],
+    otherObstetric: '',
+    deliveryPlace: 'Home',
+    otherDeliveryPlace: '',
+    facilityLevel: '',
+    deliveryType: 'SVD-Unskilled',
+    otherDeliveryType: '',
+    periodOfDeath: 'Intrapartum',
+    perinatalCause: ['Low birth weight', 'Prematurity'],
+    maternalCondition: 'Maternal medical and surgical conditions',
+    otherCause: ''
+  },
+  {
+    dateOfDeath: '9/9/2025',
+    timeOfDeath: '16:30 PM',
+    gestationWeeks: '38',
+    babyOutcome: 'Macerated still-birth',
+    apgar1min: '',
+    apgar5min: '',
+    apgar10min: '',
+    ageAtDeath: '',
+    birthWeight: '2800',
+    sexOfBaby: 'Male',
+    otherSex: '',
+    motherAge: '30',
+    motherMarried: 'Yes',
+    motherPara: '3',
+    motherOutcome: 'Alive',
+    pregnancyType: 'Singleton',
+    antenatalCare: 'Yes',
+    obstetricConditions: ['Diabetes'],
+    otherObstetric: '',
+    deliveryPlace: 'Facility',
+    otherDeliveryPlace: '',
+    facilityLevel: '5',
+    deliveryType: 'SVD-Skilled',
+    otherDeliveryType: '',
+    periodOfDeath: 'Antepartum',
+    perinatalCause: ['Congenital malformations'],
+    maternalCondition: 'No maternal condition Identified',
+    otherCause: ''
+  }
+];
+
 const now = new Date().toLocaleString();
 
 const HomeScreen = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState<'today' | 'monthly'>('today');
 
-    const handleAddUser = () => {
-     router.push('/patient_registration');
+  const handleAddUser = () => {
+    router.push('/patient_registration');
   };
 
-    //clear authentication tokens
+  // Clear authentication tokens
   const clearAuthTokens = () => {
-    // token clearing logic here
     console.log('Clearing auth tokens');
   };
 
@@ -37,31 +285,38 @@ const HomeScreen = () => {
     ]);
   };
 
-
-
   return (
     <View style={tw`flex-1 bg-purple-100`}>
       {/* Header */}
       <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
-        {/* <TouchableOpacity onPress={() => setDrawerVisible(true)}>
-          <Text style={tw`text-2xl text-purple-500`}>☰</Text>
-        </TouchableOpacity> */}
-
-          <HamburgerButton 
-  onPress={() => setDrawerVisible(true)}
-  position="relative"
-/>
+        <HamburgerButton 
+          onPress={() => setDrawerVisible(true)}
+          position="relative"
+        />
         <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
-
         <TouchableOpacity onPress={handleAddUser}>
-                  <Icon name="person-add" size={36} color="#682483ff" />
-                </TouchableOpacity>
-        {/* <TouchableOpacity 
-          onPress={handleLogout} 
-          style={tw`bg-purple-500 p-2 rounded`}
+          <Icon name="person-add" size={36} color="#682483ff" />
+        </TouchableOpacity>
+      </View>
+
+      {/* Tab Navigation */}
+      <View style={tw`flex-row bg-white border-b border-gray-200`}>
+        <TouchableOpacity 
+          style={tw`flex-1 py-3 ${activeTab === 'today' ? 'border-b-2 border-purple-500' : ''}`}
+          onPress={() => setActiveTab('today')}
         >
-          <Text style={tw`text-white font-bold`}>Logout</Text>
-        </TouchableOpacity> */}
+          <Text style={tw`text-center font-semibold ${activeTab === 'today' ? 'text-purple-500' : 'text-gray-500'}`}>
+            Today's Report
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity 
+          style={tw`flex-1 py-3 ${activeTab === 'monthly' ? 'border-b-2 border-purple-500' : ''}`}
+          onPress={() => setActiveTab('monthly')}
+        >
+          <Text style={tw`text-center font-semibold ${activeTab === 'monthly' ? 'text-purple-500' : 'text-gray-500'}`}>
+            Monthly Report
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Load Indicator */}
@@ -72,30 +327,12 @@ const HomeScreen = () => {
       )}
 
       {/* Main Content */}
-      <ScrollView contentContainerStyle={tw`p-5`}>
-        <View style={tw`bg-purple-500 p-5 rounded-lg mb-5`}>
-          <Text style={tw`text-xl font-bold text-white mb-1`}>Homabay County Teaching and Refferral Hospital</Text>
-          <Text style={tw`text-sm text-green-100`}>{now}</Text>
-        </View>
-
-        <TouchableOpacity
-          style={tw`bg-white p-5 rounded-lg mb-4 border-l-4 border-green-600`}
-          onPress={() => router.push('/patient_registration')}
-        >
-          <Text style={tw`text-lg font-bold text-gray-800 mb-1`}>Report New Stillbirth</Text>
-          <Text style={tw`text-sm text-gray-600`}>Add a new stillbirth occurence to the system</Text>
-        </TouchableOpacity>
-
-        <View style={tw`flex-row justify-between mt-5`}>
-          <View style={tw`bg-white p-5 rounded-lg flex-1 mx-1 items-center`}>
-            <Text style={tw`text-2xl font-bold text-blue-500 mb-1`}>20</Text>
-            <Text style={tw`text-xs text-gray-600 text-center`}>Total Occurences</Text>
-          </View>
-          <View style={tw`bg-white p-5 rounded-lg flex-1 mx-1 items-center`}>
-            <Text style={tw`text-2xl font-bold text-blue-500 mb-1`}>2</Text>
-            <Text style={tw`text-xs text-gray-600 text-center`}>Today's Occurences</Text>
-          </View>
-        </View>
+      <ScrollView contentContainerStyle={tw`p-4`}>
+        {activeTab === 'today' ? (
+          <ReportDashboard />
+        ) : (
+          <MonthlyReport data={mockStillbirthData} />
+        )}
       </ScrollView>
 
       {/* Drawer */}
@@ -115,16 +352,6 @@ const HomeScreen = () => {
             </View>
             
             <ScrollView style={tw`flex-1 p-4`}>
-              {/* <TouchableOpacity
-                style={tw`p-4 border-b border-gray-200`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('/register');
-                }}
-              >
-                <Text style={tw`text-gray-800 font-medium`}>Add User</Text>
-              </TouchableOpacity> */}
-
               <View style={tw`mb-6`}>
                 <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
                   Main Navigation
@@ -137,7 +364,7 @@ const HomeScreen = () => {
                     router.push('/home');
                   }}
                 >
-                  <Text style={tw`text-purple-700 font-medium ml-2`}><Text>🏠</Text>Dashboard</Text>
+                  <Text style={tw`text-purple-700 font-medium ml-2`}>🏠 Dashboard</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -147,7 +374,7 @@ const HomeScreen = () => {
                     router.push('/users');
                   }}
                 >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}><Text>👥</Text>Users</Text>
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>👥 Users</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity 
@@ -157,7 +384,37 @@ const HomeScreen = () => {
                     router.push('/register');
                   }}
                 >
-                  <Text style={tw`text-gray-700 font-medium ml-2`}><Text>📋</Text>Report Stillbirth</Text>
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>📋 Report Stillbirth</Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Reports
+                </Text>
+                
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 ${activeTab === 'today' ? 'bg-purple-50' : ''}`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    setActiveTab('today');
+                  }}
+                >
+                  <Text style={tw`${activeTab === 'today' ? 'text-purple-700 font-medium' : 'text-gray-700'} ml-2`}>
+                    📊 Today's Report
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 ${activeTab === 'monthly' ? 'bg-purple-50' : ''}`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    setActiveTab('monthly');
+                  }}
+                >
+                  <Text style={tw`${activeTab === 'monthly' ? 'text-purple-700 font-medium' : 'text-gray-700'} ml-2`}>
+                    📈 Monthly Report
+                  </Text>
                 </TouchableOpacity>
               </View>
 
@@ -166,15 +423,12 @@ const HomeScreen = () => {
                   Account
                 </Text>
 
-
-                 <TouchableOpacity 
-                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
-                onPress={handleLogout}
-              >
-                <Text style={tw`text-red-600 font-semibold`}><Text>🚪</Text>Logout</Text>
-              </TouchableOpacity>
-                
-              
+                <TouchableOpacity 
+                  style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
+                  onPress={handleLogout}
+                >
+                  <Text style={tw`text-red-600 font-semibold`}>🚪 Logout</Text>
+                </TouchableOpacity>
               </View>
             </ScrollView>
           </View>

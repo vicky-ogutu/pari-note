@@ -199,7 +199,8 @@ const UsersScreen = () => {
 
         <Text style={tw`text-xl font-bold text-purple-500`}>User Management</Text>
         <TouchableOpacity onPress={handleAddUser}>
-          <Icon name="person-add" size={36} color="#682483ff" />
+          <Text><Icon name="person-add" size={36} color="#682483ff" /></Text>
+         
         </TouchableOpacity>
         
       </View>

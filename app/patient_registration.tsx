@@ -1,3 +1,4 @@
+import DateTimePicker from '@react-native-community/datetimepicker'; // Added missing import
 import { router } from 'expo-router';
 import React, { useState } from 'react';
 import HamburgerButton from '../components/HamburgerButton';
@@ -18,8 +19,6 @@ import tw from 'tailwind-react-native-classnames';
 
 // Define types for our form data
 type FormData = {
- 
-  
   // Section 1: Baby details
   dateOfDeath: string;
   timeOfDeath: string;
@@ -57,7 +56,6 @@ type FormData = {
   perinatalCause: string[];
   maternalCondition: string;
   otherCause: string;
-  
 };
 
 const initialFormData: FormData = {
@@ -89,23 +87,21 @@ const initialFormData: FormData = {
   perinatalCause: [],
   maternalCondition: '',
   otherCause: '',
-
 };
 
 const StillbirthRegistrationScreen = () => {
-
   const [currentScreen, setCurrentScreen] = useState(1);
   const [formData, setFormData] = useState<FormData>(initialFormData);
-
-
-
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [showTimePicker, setShowTimePicker] = useState(false);
+  const [drawerVisible, setDrawerVisible] = useState(false);
 
   //clear authentication tokens
   const clearAuthTokens = () => {
     // token clearing logic here
     console.log('Clearing auth tokens');
   };
-const [drawerVisible, setDrawerVisible] = useState(false);
+
   const handleLogout = () => {
     Alert.alert('Logout', 'Are you sure you want to logout?', [
       {
@@ -122,8 +118,20 @@ const [drawerVisible, setDrawerVisible] = useState(false);
       },
     ]);
   };
+
   const updateFormData = (field: keyof FormData, value: any) => {
     setFormData(prev => ({ ...prev, [field]: value }));
+  };
+
+  const formatDate = (date: Date) => {
+    return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+  };
+
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString("en-US", {
+      hour: "2-digit",
+      minute: "2-digit",
+    }); // HH:MM AM/PM
   };
 
   const toggleObstetricCondition = (condition: string) => {
@@ -174,25 +182,55 @@ const [drawerVisible, setDrawerVisible] = useState(false);
 
   const renderScreen = () => {
     switch(currentScreen) {
-
       case 1:
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-800`}>1. Details of Deceased baby</Text>
             
-            <TextInput
+            {/* Date Picker Field */}
+            <TouchableOpacity
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Date of death (dd/mm/yyyy)"
-              value={formData.dateOfDeath}
-              onChangeText={(text) => updateFormData('dateOfDeath', text)}
-            />
-            
-            <TextInput
+              onPress={() => setShowDatePicker(true)}
+            >
+              <Text>{formData.dateOfDeath || "Date of death (dd/mm/yyyy)"}</Text>
+            </TouchableOpacity>
+
+            {showDatePicker && (
+              <DateTimePicker
+                value={new Date()}
+                mode="date"
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  setShowDatePicker(false);
+                  if (selectedDate) {
+                    updateFormData("dateOfDeath", formatDate(selectedDate));
+                  }
+                }}
+              />
+            )}
+
+            {/* Time Picker Field */}
+            <TouchableOpacity
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Time of death (HH:MM AM/PM)"
-              value={formData.timeOfDeath}
-              onChangeText={(text) => updateFormData('timeOfDeath', text)}
-            />
+              onPress={() => setShowTimePicker(true)}
+            >
+              <Text>{formData.timeOfDeath || "Time of death (HH:MM AM/PM)"}</Text>
+            </TouchableOpacity>
+
+            {showTimePicker && (
+              <DateTimePicker
+                value={new Date()}
+                mode="time"
+                is24Hour={false} // 12-hour format with AM/PM
+                display={Platform.OS === "ios" ? "spinner" : "default"}
+                onChange={(event, selectedDate) => {
+                  setShowTimePicker(false);
+                  if (selectedDate) {
+                    updateFormData("timeOfDeath", formatTime(selectedDate));
+                  }
+                }}
+              />
+            )}
             
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
@@ -289,8 +327,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
             )}
           </View>
         );
-      
-      case 2:
+           case 2:
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-800`}>2. Mother's details</Text>
@@ -604,8 +641,8 @@ const [drawerVisible, setDrawerVisible] = useState(false);
                 <Text style={tw`text-sm mb-1 text-gray-700`}>Other Delivery Type: {formData.otherDeliveryType || 'Not provided'}</Text>
               )}
               
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-800`}>5. Cause of death</Text>
-              <Text style={tw`text-sm mb-1 text-gray-700`}>Period of Death: {formData.periodOfDeath || 'Not provided'}</Text>
+              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>5. Cause of death</Text>
+              <Text style={tw`text-sm mb-1 text-gray-700`}>Period of D eath: {formData.periodOfDeath || 'Not provided'}</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Perinatal Cause: {formData.perinatalCause.join(', ') || 'Not provided'}</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Maternal Condition: {formData.maternalCondition || 'Not provided'}</Text>
               <Text style={tw`text-sm mb-1 text-gray-700`}>Other Cause: {formData.otherCause || 'Not provided'}</Text>
@@ -613,7 +650,7 @@ const [drawerVisible, setDrawerVisible] = useState(false);
             </ScrollView>
             
             <TouchableOpacity 
-              style={tw`bg-blue-500 p-4 rounded mb-3 items-center`}
+              style={tw`bg-green-300 p-4 rounded mb-3 items-center`}
               onPress={() => setCurrentScreen(1)}
             >
               <Text style={tw`text-white font-bold`}>Edit Information</Text>
@@ -634,136 +671,129 @@ const [drawerVisible, setDrawerVisible] = useState(false);
   };
 
   return (
-  <KeyboardAvoidingView 
-    style={tw`flex-1 bg-gray-100`}
-    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-  >
-    {/* <TouchableOpacity 
-      style={tw`absolute top-10 left-5 z-10 bg-purple-500`}
-      onPress={() => setDrawerVisible(true)}
+    <KeyboardAvoidingView 
+      style={tw`flex-1 bg-gray-100`}
+      behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
     >
-      <Text style={tw`text-white font-bold`}>☰</Text>
-    </TouchableOpacity> */}
-    <HamburgerButton 
-  onPress={() => setDrawerVisible(true)}
-  position="absolute"
-/>
+      <HamburgerButton 
+        onPress={() => setDrawerVisible(true)}
+        position="absolute"
+      />
+      
+      <View style={tw`flex-1`}>
+        <ScrollView 
+          contentContainerStyle={tw`p-5 pb-32 mt-16`} // Increased bottom padding
+          showsVerticalScrollIndicator={true}
+        >
+          {renderScreen()}
+        </ScrollView>
 
-    
-    <View style={tw`flex-1`}>
-      <ScrollView 
-        contentContainerStyle={tw`p-5 pb-32 mt-16`} // Increased bottom padding
-        showsVerticalScrollIndicator={true}
-      >
-        {renderScreen()}
-      </ScrollView>
-
-      {/* Navigation buttons fixed at the bottom */}
-      {currentScreen < 6 && (
-        <View style={tw`absolute bottom-5 left-5 right-5 flex-row justify-between`}>
-          {currentScreen > 1 && (
+        {/* Navigation buttons fixed at the bottom */}
+        {currentScreen < 6 && (
+          <View style={tw`absolute bottom-5 left-5 right-5 flex-row justify-between`}>
+            {currentScreen > 1 && (
+              <TouchableOpacity 
+                style={tw`bg-gray-500 p-4 rounded items-center flex-1 mr-2`}
+                onPress={prevScreen}
+              >
+                <Text style={tw`text-white font-bold`}>Previous</Text>
+              </TouchableOpacity>
+            )}
+            
             <TouchableOpacity 
-              style={tw`bg-gray-500 p-4 rounded items-center flex-1 mr-2`}
-              onPress={prevScreen}
+              style={[
+                tw`bg-purple-500 p-4 rounded items-center`,
+                currentScreen === 1 ? tw`flex-1` : tw`flex-1 ml-2`
+              ]}
+              onPress={nextScreen}
             >
-              <Text style={tw`text-white font-bold`}>Previous</Text>
+              <Text style={tw`text-white font-bold`}>
+                {currentScreen === 5 ? 'Review' : 'Next'}
+              </Text>
             </TouchableOpacity>
-          )}
-          
-          <TouchableOpacity 
-            style={[
-              tw`bg-purple-500 p-4 rounded items-center`,
-              currentScreen === 1 ? tw`flex-1` : tw`flex-1 ml-2`
-            ]}
-            onPress={nextScreen}
-          >
-            <Text style={tw`text-white font-bold`}>
-              {currentScreen === 5 ? 'Review' : 'Next'}
-            </Text>
-          </TouchableOpacity>
-        </View>
-      )}
-    </View>
-
-    {/* Drawer */}
-    <Modal
-      visible={drawerVisible}
-      animationType="slide"
-      transparent={true}
-      onRequestClose={() => setDrawerVisible(false)}
-    >
-      <TouchableOpacity 
-        style={tw`flex-1 bg-black bg-opacity-50`}
-        onPress={() => setDrawerVisible(false)}
-      >
-        <View style={tw`w-64 h-full bg-white`}>
-          <View style={tw`p-5 bg-purple-500`}>
-            <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
           </View>
-          
-          <ScrollView style={tw`flex-1 p-4`}>
-            <View style={tw`mb-6`}>
-              <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
-                Main Navigation
-              </Text>
-              
-              <TouchableOpacity 
-                style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('/home');
-                }}
-              >
-                <Text style={tw`text-purple-700 font-medium ml-2`}>
-                  <Text>🏠</Text> Dashboard
-                </Text>
-              </TouchableOpacity>
+        )}
+      </View>
 
-              <TouchableOpacity 
-                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('/users');
-                }}
-              >
-                <Text style={tw`text-gray-700 font-medium ml-2`}>
-                  <Text>👥</Text> Users
-                </Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity 
-                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                onPress={() => {
-                  setDrawerVisible(false);
-                  router.push('/patient_registration');
-                }}
-              >
-                <Text style={tw`text-gray-700 font-medium ml-2`}>
-                  <Text>📋</Text> Report Stillbirth
-                </Text>
-              </TouchableOpacity>
+      {/* Drawer */}
+      <Modal
+        visible={drawerVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <TouchableOpacity 
+          style={tw`flex-1 bg-black bg-opacity-50`}
+          onPress={() => setDrawerVisible(false)}
+        >
+          <View style={tw`w-64 h-full bg-white`}>
+            <View style={tw`p-5 bg-purple-500`}>
+              <Text style={tw`text-white text-lg font-bold`}>PeriNote Menu</Text>
             </View>
-
-            <View style={tw`mb-6`}>
-              <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
-                Account
-              </Text>
-
-              <TouchableOpacity 
-                style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
-                onPress={handleLogout}
-              >
-                <Text style={tw`text-red-600 font-semibold`}>
-                  <Text>🚪</Text> Logout
+            
+            <ScrollView style={tw`flex-1 p-4`}>
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Main Navigation
                 </Text>
-              </TouchableOpacity>
-            </View>
-          </ScrollView>
-        </View>
-      </TouchableOpacity>
-    </Modal>
-  </KeyboardAvoidingView>
-);
+                
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2 bg-purple-50`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/home');
+                  }}
+                >
+                  <Text style={tw`text-purple-700 font-medium ml-2`}>
+                    <Text>🏠</Text> Dashboard
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/users');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>
+                    <Text>👥</Text> Users
+                  </Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => {
+                    setDrawerVisible(false);
+                    router.push('/patient_registration');
+                  }}
+                >
+                  <Text style={tw`text-gray-700 font-medium ml-2`}>
+                    <Text>📋</Text> Report Stillbirth
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              <View style={tw`mb-6`}>
+                <Text style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}>
+                  Account
+                </Text>
+
+                <TouchableOpacity 
+                  style={tw`flex-row items-center justify-center p-3 bg-red-50 rounded-lg`}
+                  onPress={handleLogout}
+                >
+                  <Text style={tw`text-red-600 font-semibold`}>
+                    <Text>🚪</Text> Logout
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </ScrollView>
+          </View>
+        </TouchableOpacity>
+      </Modal>
+    </KeyboardAvoidingView>
+  );
 };
 
 export default StillbirthRegistrationScreen;
