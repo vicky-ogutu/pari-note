@@ -204,50 +204,88 @@ const RegisterScreen = () => {
           />
 
           {/* Role Selection Checkboxes */}
+
           <View style={tw`mb-4`}>
             <Text style={tw`text-gray-700 mb-2 font-medium`}>
               Select Role(s) *
             </Text>
 
-            {/* Admin Checkbox */}
+            {/* County Admin */}
             <TouchableOpacity
               style={tw`flex-row items-center mb-2`}
-              onPress={() => toggleRole("admin")}
+              onPress={() => toggleRole("county-admin")}
             >
               <View
                 style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("admin")
+                  selectedRoles.includes("county-admin")
                     ? "bg-purple-600 border-purple-600"
                     : "bg-white"
                 }`}
               >
-                {selectedRoles.includes("admin") && (
+                {selectedRoles.includes("county-admin") && (
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Admin</Text>
+              <Text style={tw`text-gray-700`}>County Admin</Text>
             </TouchableOpacity>
 
-            {/* Staff Checkbox */}
+            {/* Subcounty Admin */}
             <TouchableOpacity
               style={tw`flex-row items-center mb-2`}
-              onPress={() => toggleRole("staff")}
+              onPress={() => toggleRole("subcounty-admin")}
             >
               <View
                 style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("staff")
+                  selectedRoles.includes("subcounty-admin")
                     ? "bg-purple-600 border-purple-600"
                     : "bg-white"
                 }`}
               >
-                {selectedRoles.includes("staff") && (
+                {selectedRoles.includes("subcounty-admin") && (
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Nurse</Text>
+              <Text style={tw`text-gray-700`}>Subcounty Admin</Text>
+            </TouchableOpacity>
+
+            {/* Facility In-Charge Admin */}
+            <TouchableOpacity
+              style={tw`flex-row items-center mb-2`}
+              onPress={() => toggleRole("facility-incharge-admin")}
+            >
+              <View
+                style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
+                  selectedRoles.includes("facility-incharge-admin")
+                    ? "bg-purple-600 border-purple-600"
+                    : "bg-white"
+                }`}
+              >
+                {selectedRoles.includes("facility-incharge-admin") && (
+                  <Text style={tw`text-white font-bold`}>✓</Text>
+                )}
+              </View>
+              <Text style={tw`text-gray-700`}>Facility In-Charge Admin</Text>
+            </TouchableOpacity>
+
+            {/* HCW (Nurse) */}
+            <TouchableOpacity
+              style={tw`flex-row items-center mb-2`}
+              onPress={() => toggleRole("HCW")}
+            >
+              <View
+                style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
+                  selectedRoles.includes("HCW")
+                    ? "bg-purple-600 border-purple-600"
+                    : "bg-white"
+                }`}
+              >
+                {selectedRoles.includes("HCW") && (
+                  <Text style={tw`text-white font-bold`}>✓</Text>
+                )}
+              </View>
+              <Text style={tw`text-gray-700`}>HCW (Nurse)</Text>
             </TouchableOpacity>
           </View>
-
           <TouchableOpacity
             style={tw`bg-purple-600 p-4 rounded-lg items-center mt-2 shadow-lg`}
             onPress={handleRegister}
