@@ -16,7 +16,7 @@ import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
 import HamburgerButton from "../components/HamburgerButton";
 
-// User type definition - make sure to export it so it can be used in other files
+// User type definition
 export type User = {
   id: string;
   firstName: string;
