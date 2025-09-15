@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -165,7 +168,10 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={tw`flex-1 bg-purple-100`}>
+    <KeyboardAvoidingView
+      style={tw`flex-1 bg-purple-100`}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       {/* Header */}
       <View
         style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
@@ -264,8 +270,138 @@ const HomeScreen = () => {
       </ScrollView>
 
       {/* Drawer */}
-      {/* ... (keep your existing drawer code) */}
-    </View>
+      {/* Enhanced Drawer */}
+      <Modal
+        visible={drawerVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <View style={tw`flex-1`}>
+          <TouchableOpacity
+            style={tw`flex-1 bg-black bg-opacity-50`}
+            onPress={() => setDrawerVisible(false)}
+            activeOpacity={1}
+          />
+
+          <View
+            style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}
+          >
+            <View style={tw`p-6 bg-purple-600`}>
+              <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
+              <Text style={tw`text-purple-100 text-sm mt-1`}>
+                Stillbirth Notification System
+              </Text>
+            </View>
+
+            <ScrollView style={tw`flex-1 p-4`}>
+              <View style={tw`mb-6`}>
+                <Text
+                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
+                >
+                  Main Navigation
+                </Text>
+
+                {userRole === "nurse" && (
+                  <>
+                    {/* Dashboard */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/home");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🏠 Dashboard
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Report Stillbirth */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/patient_registration");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        📋 Report Stillbirth
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Logout */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={handleLogout}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🚪 Logout
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {(userRole === "admin" ||
+                  userRole === "county user" ||
+                  userRole === "subcounty user") && (
+                  <>
+                    {/* Dashboard */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/home");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🏠 Dashboard
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Users */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/users");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        👥 Users
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Register */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/register");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        📝 Register Staff
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Logout */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={handleLogout}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🚪 Logout
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 };
 
