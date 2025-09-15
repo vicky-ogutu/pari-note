@@ -19,7 +19,7 @@ import { FormData } from "./types";
 
 export const mockStillbirthData: FormData[] = [
   {
-    dateOfDeath: "13/9/2025",
+    dateOfDeath: "15/9/2025",
     timeOfDeath: "08:30 AM",
     gestationWeeks: "32",
     babyOutcome: "Fresh still-birth",
@@ -49,7 +49,7 @@ export const mockStillbirthData: FormData[] = [
     otherCause: "",
   },
   {
-    dateOfDeath: "13/9/2025",
+    dateOfDeath: "15/9/2025",
     timeOfDeath: "14:45 PM",
     gestationWeeks: "36",
     babyOutcome: "Macerated still-birth",
@@ -109,7 +109,7 @@ export const mockStillbirthData: FormData[] = [
     otherCause: "",
   },
   {
-    dateOfDeath: "9/9/2025",
+    dateOfDeath: "15/9/2025",
     timeOfDeath: "04:20 AM",
     gestationWeeks: "40",
     babyOutcome: "Fresh still-birth",
@@ -470,7 +470,9 @@ const HomeScreen = () => {
                   </>
                 )}
 
-                {userRole === "admin" && (
+                {(userRole === "admin" ||
+                  userRole === "county user" ||
+                  userRole === "subcounty user") && (
                   <>
                     {/* Dashboard */}
                     <TouchableOpacity

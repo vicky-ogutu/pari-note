@@ -14,6 +14,7 @@ import {
   View,
 } from "react-native";
 import tw from "tailwind-react-native-classnames";
+import { BASE_URL } from "../constants/ApiConfig";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -30,7 +31,7 @@ export default function LoginScreen() {
     setIsLoading(true);
 
     try {
-      const response = await fetch("http://localhost:3000/auth/login", {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -67,10 +68,20 @@ export default function LoginScreen() {
       });
 
       // Redirect based on role
-      if (data.user.role.name === "admin") {
-        router.replace("/users");
-      } else {
-        router.replace("/home");
+
+      switch (data.user.role.name) {
+        case "admin":
+          router.replace("/users");
+          break;
+        case "county user":
+          router.replace("/users");
+          break;
+        case "subcounty user":
+          router.replace("/users");
+          break;
+        default:
+          router.replace("/home");
+          break;
       }
     } catch (error: any) {
       console.error("Login error:", error);

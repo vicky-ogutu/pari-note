@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import tw from "tailwind-react-native-classnames";
 import HamburgerButton from "../components/HamburgerButton";
+import { BASE_URL } from "../constants/ApiConfig";
 
 // Define the form data type
 type FormData = {
@@ -114,6 +115,9 @@ const RegisterScreen = () => {
     try {
       // Get the access token
       const accessToken = await AsyncStorage.getItem("access_token");
+      console.log("Access Token:", accessToken); // Debug log
+      console.log("User Role:", userRole); // Debug log
+      console.log("Location ID:", locationId); // Debug log
 
       if (!accessToken) {
         Alert.alert("Error", "Authentication token not found");
@@ -132,7 +136,7 @@ const RegisterScreen = () => {
 
       // Make the API call
       const response = await axios.post(
-        "http://localhost:3000/users/register",
+        `${BASE_URL}/users/register`,
         requestData,
         {
           headers: {
@@ -409,7 +413,9 @@ const RegisterScreen = () => {
                   Main Navigation
                 </Text>
 
-                {userRole === "admin" && (
+                {(userRole === "admin" ||
+                  userRole === "county user" ||
+                  userRole === "subcounty user") && (
                   <>
                     {/* Dashboard */}
                     <TouchableOpacity

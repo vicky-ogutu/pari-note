@@ -1,8 +1,9 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import DateTimePicker from "@react-native-community/datetimepicker"; // Added missing import
+import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
 import React, { useEffect, useState } from "react";
 import HamburgerButton from "../components/HamburgerButton";
+import { BASE_URL } from "../constants/ApiConfig";
 
 import {
   Alert,
@@ -106,6 +107,8 @@ const StillbirthRegistrationScreen = () => {
     getUserRole();
   }, []);
 
+  //const accessToken = AsyncStorage.getItem("access_token");
+
   //clear authentication tokens
   const clearAuthTokens = async () => {
     try {
@@ -195,10 +198,102 @@ const StillbirthRegistrationScreen = () => {
     }
   };
 
-  const submitForm = () => {
-    Alert.alert("Success", "Stillbirth registration submitted successfully!", [
-      { text: "OK", onPress: () => console.log("Form submitted", formData) },
-    ]);
+  // const submitForm = () => {
+  //   Alert.alert("Success", "Stillbirth registration submitted successfully!", [
+  //     { text: "OK", onPress: () => console.log("Form submitted", formData) },
+  //   ]);
+  // };
+  const submitForm = async () => {
+    try {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const locationName = await AsyncStorage.getItem("location_name");
+      const locationId = await AsyncStorage.getItem("location_id");
+      const locationType = await AsyncStorage.getItem("location_type");
+
+      console.log("Access Token:", accessToken);
+      console.log("Location:", locationName);
+
+      if (!accessToken) {
+        throw new Error("User not logged in");
+      }
+
+      // Build the payload according to your API contract
+      const payload = {
+        // facilityName: locationName || "Unknown Facility",
+        // mflCode: locationId || "00000",
+        // dateOfNotification: new Date().toISOString().split("T")[0],
+        // locality: locationType === "subcounty" ? locationName : "",
+        // county: locationType === "county" ? locationName : "Unknown County",
+        // subCounty: locationType === "subcounty" ? locationName : "",
+        // levelOfCare: formData.facilityLevel || "Level 6",
+        // managingAuthority: "MOH",
+
+        locationId: locationId ? parseInt(locationId) : null, // Must be integer
+        //dateOfNotification: new Date().toISOString().split("T")[0],
+        dateOfNotification: new Date().toISOString(), // Full ISO string
+
+        mother: {
+          age: parseInt(formData.motherAge) || null,
+          married: formData.motherMarried === "Yes",
+          parity: formData.motherPara,
+          outcome: formData.motherOutcome,
+          typeOfPregnancy: formData.pregnancyType,
+          attendedAntenatal: formData.antenatalCare,
+          placeOfDelivery: formData.deliveryPlace,
+          typeOfDelivery: formData.deliveryType,
+          periodOfDeath: formData.periodOfDeath,
+          perinatalCause: formData.perinatalCause.join(", "),
+          maternalCondition: formData.maternalCondition,
+          conditions: formData.obstetricConditions,
+        },
+
+        babies: [
+          {
+            dateOfDeath: formData.dateOfDeath,
+            timeOfDeath: formData.timeOfDeath,
+            gestationWeeks: parseInt(formData.gestationWeeks) || null,
+            outcome: formData.babyOutcome,
+            apgarScore1min: formData.apgar1min,
+            apgarScore5min: formData.apgar5min,
+            apgarScore10min: formData.apgar10min,
+            ageAtDeathDays: parseInt(formData.ageAtDeath) || 0,
+            birthWeight: parseInt(formData.birthWeight) || null,
+            sex:
+              formData.sexOfBaby === "Others"
+                ? formData.otherSex
+                : formData.sexOfBaby,
+          },
+        ],
+      };
+
+      console.log("Submitting payload:", payload);
+      //const response = await fetch(`${BASE_URL}/auth/login`, {
+
+      const response = await fetch(`${BASE_URL}/notifications`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: JSON.stringify(payload),
+      });
+
+      if (!response.ok) {
+        const err = await response.text();
+        throw new Error(err || "Failed to submit form");
+      }
+
+      const data = await response.json();
+      Alert.alert("Success", "Stillbirth registration submitted successfully!");
+      console.log("Server response:", data);
+
+      // Optionally reset form
+      setFormData(initialFormData);
+      setCurrentScreen(1);
+    } catch (error: any) {
+      console.error("Error submitting form:", error);
+      Alert.alert("Error", error.message || "Something went wrong");
+    }
   };
 
   const renderScreen = () => {
@@ -228,7 +323,8 @@ const StillbirthRegistrationScreen = () => {
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    updateFormData("dateOfDeath", formatDate(selectedDate));
+                    // Store as ISO string instead of formatted string
+                    updateFormData("dateOfDeath", selectedDate.toISOString());
                   }
                 }}
               />
@@ -991,7 +1087,9 @@ const StillbirthRegistrationScreen = () => {
                   </>
                 )}
 
-                {userRole === "admin" && (
+                {(userRole === "admin" ||
+                  userRole === "county user" ||
+                  userRole === "subcounty user") && (
                   <>
                     {/* Dashboard */}
                     <TouchableOpacity
