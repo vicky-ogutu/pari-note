@@ -1,7 +1,11 @@
 // app/login.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import {
+  allowScreenCaptureAsync,
+  preventScreenCaptureAsync,
+} from "expo-screen-capture";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -14,6 +18,7 @@ import {
   View,
 } from "react-native";
 import tw from "tailwind-react-native-classnames";
+import { BASE_URL } from "../constants/ApiConfig";
 
 export default function LoginScreen() {
   const [email, setEmail] = useState("");
@@ -21,24 +26,34 @@ export default function LoginScreen() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
 
+  // Prevent black screen in Google Meet screen share
+  useEffect(() => {
+    const enableScreenShare = async () => {
+      try {
+        await preventScreenCaptureAsync();
+      } catch (err) {
+        console.warn("Failed to prevent screen capture:", err);
+      }
+    };
+    enableScreenShare();
+
+    return () => {
+      allowScreenCaptureAsync().catch(() =>
+        console.warn("Failed to allow screen capture back")
+      );
+    };
+  }, []);
+
   const handleLogin = async () => {
-    //uncomment this to test without roles
+    if (!email || !password) {
+      Alert.alert("Error", "Please fill in all fields");
+      return;
+    }
 
-    // if (!email || !password) {
-    //   Alert.alert('Error', 'Please fill in all fields');
-    //   return;
-    // }
-    // setIsLoading(true);
-
-    // if (email === 'test@gmail.com' && password === '12345') {
-    //   router.replace('/home');
-    //   console.log('Login successful');
-    // } else {
-    //   Alert.alert('Error', 'Invalid credentials');
-    // }
+    setIsLoading(true);
 
     try {
-      const response = await fetch("http://192.168.100.25:3000/auth/login", {
+      const response = await fetch(`${BASE_URL}/auth/login`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -47,31 +62,50 @@ export default function LoginScreen() {
       });
 
       if (!response.ok) {
-        throw new Error("Login failed");
+        const errorData = await response.json().catch(() => ({}));
+        throw new Error(errorData.message || "Login failed");
       }
 
       const data = await response.json();
 
       // Store authentication data
-      await AsyncStorage.setItem("access_token", data.access_token);
-      await AsyncStorage.setItem("role", data.user.role.name);
-      await AsyncStorage.setItem(
-        "location_name",
-        data.user.location?.name || ""
-      );
-      await AsyncStorage.setItem(
-        "location_type",
-        data.user.location?.type || ""
-      );
+      await AsyncStorage.multiSet([
+        ["access_token", data.access_token],
+        ["role", data.user.role.name],
+        ["role_id", data.user.role.id.toString()],
+        ["user_id", data.user.id.toString()],
+        ["user_name", data.user.name],
+        ["user_email", data.user.email],
+        ["location_id", data.user.location?.id?.toString() || ""],
+        ["location_name", data.user.location?.name || ""],
+        ["location_type", data.user.location?.type || ""],
+        ["permissions", JSON.stringify(data.user.role.permissions || [])],
+      ]);
+
+      console.log("Login successful, stored data:", {
+        token: data.access_token,
+        role: data.user.role.name,
+        userId: data.user.id,
+        locationId: data.user.location?.id,
+      });
 
       // Redirect based on role
-      if (data.user.role.name === "admin") {
-        router.replace("/users");
-      } else {
-        router.replace("/home");
+      switch (data.user.role.name) {
+        case "admin":
+        case "county user":
+        case "subcounty user":
+          router.replace("/home");
+          break;
+        default:
+          router.replace("/home");
+          break;
       }
-    } catch (error) {
-      Alert.alert("Error", "Invalid credentials or network error");
+    } catch (error: any) {
+      console.error("Login error:", error);
+      Alert.alert(
+        "Error",
+        error.message || "Invalid credentials or network error"
+      );
     } finally {
       setIsLoading(false);
     }
@@ -113,10 +147,15 @@ export default function LoginScreen() {
           />
 
           <TouchableOpacity
-            style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2`}
+            style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2 ${
+              isLoading ? "opacity-50" : ""
+            }`}
             onPress={handleLogin}
+            disabled={isLoading}
           >
-            <Text style={tw`text-white text-base font-bold`}>Sign In</Text>
+            <Text style={tw`text-white text-base font-bold`}>
+              {isLoading ? "Signing In..." : "Sign In"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
