@@ -1,10 +1,12 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
+import { BASE_URL } from "../constants/ApiConfig";
+
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
-  Modal,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -17,256 +19,50 @@ import MonthlyReport from "../components/MonthlyReport";
 import ReportDashboard from "../components/today_report";
 import { FormData } from "./types";
 
-export const mockStillbirthData: FormData[] = [
-  {
-    dateOfDeath: "15/9/2025",
-    timeOfDeath: "08:30 AM",
-    gestationWeeks: "32",
-    babyOutcome: "Fresh still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "1800",
-    sexOfBaby: "Male",
-    otherSex: "",
-    motherAge: "28",
-    motherMarried: "Yes",
-    motherPara: "2",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "Yes",
-    obstetricConditions: ["Anemia", "Hypertensive disease"],
-    otherObstetric: "",
-    deliveryPlace: "Facility",
-    otherDeliveryPlace: "",
-    facilityLevel: "4",
-    deliveryType: "Caesarian Section",
-    otherDeliveryType: "",
-    periodOfDeath: "Intrapartum",
-    perinatalCause: ["Birth Asphyxia"],
-    maternalCondition: "Maternal complications of Pregnancy",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "15/9/2025",
-    timeOfDeath: "14:45 PM",
-    gestationWeeks: "36",
-    babyOutcome: "Macerated still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "2500",
-    sexOfBaby: "Female",
-    otherSex: "",
-    motherAge: "35",
-    motherMarried: "Yes",
-    motherPara: "3",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "Yes",
-    obstetricConditions: ["Diabetes", "Pre-labor rupture of membranes"],
-    otherObstetric: "",
-    deliveryPlace: "Facility",
-    otherDeliveryPlace: "",
-    facilityLevel: "5",
-    deliveryType: "SVD-Skilled",
-    otherDeliveryType: "",
-    periodOfDeath: "Antepartum",
-    perinatalCause: ["Infection", "Prematurity"],
-    maternalCondition: "Complications of placenta, cord and membranes",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "13/9/2025",
-    timeOfDeath: "23:15 PM",
-    gestationWeeks: "28",
-    babyOutcome: "Fresh still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "1200",
-    sexOfBaby: "Female",
-    otherSex: "",
-    motherAge: "19",
-    motherMarried: "No",
-    motherPara: "1",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "No",
-    obstetricConditions: ["Malaria", "Anemia"],
-    otherObstetric: "",
-    deliveryPlace: "Home",
-    otherDeliveryPlace: "",
-    facilityLevel: "",
-    deliveryType: "SVD-Unskilled",
-    otherDeliveryType: "",
-    periodOfDeath: "Intrapartum",
-    perinatalCause: ["Birth Asphyxia", "Low birth weight"],
-    maternalCondition: "Maternal medical and surgical conditions",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "15/9/2025",
-    timeOfDeath: "04:20 AM",
-    gestationWeeks: "40",
-    babyOutcome: "Fresh still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "3200",
-    sexOfBaby: "Male",
-    otherSex: "",
-    motherAge: "32",
-    motherMarried: "Yes",
-    motherPara: "2",
-    motherOutcome: "Alive",
-    pregnancyType: "Multiple",
-    antenatalCare: "Yes",
-    obstetricConditions: ["Hypertensive disease", "Preterm delivery"],
-    otherObstetric: "",
-    deliveryPlace: "Facility",
-    otherDeliveryPlace: "",
-    facilityLevel: "6",
-    deliveryType: "Caesarian Section",
-    otherDeliveryType: "",
-    periodOfDeath: "Intrapartum",
-    perinatalCause: ["Birth trauma"],
-    maternalCondition: "Other complications of labour and delivery",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "14/9/2023",
-    timeOfDeath: "11:30 AM",
-    gestationWeeks: "34",
-    babyOutcome: "Macerated still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "2100",
-    sexOfBaby: "Female",
-    otherSex: "",
-    motherAge: "27",
-    motherMarried: "Yes",
-    motherPara: "1",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "Yes",
-    obstetricConditions: ["UTI", "Chorioamnionitis"],
-    otherObstetric: "",
-    deliveryPlace: "Facility",
-    otherDeliveryPlace: "",
-    facilityLevel: "3",
-    deliveryType: "Assisted VD",
-    otherDeliveryType: "",
-    periodOfDeath: "Antepartum",
-    perinatalCause: ["Infection"],
-    maternalCondition: "Complications of placenta, cord and membranes",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "14/9/2025",
-    timeOfDeath: "19:00 PM",
-    gestationWeeks: "31",
-    babyOutcome: "Fresh still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "1700",
-    sexOfBaby: "Male",
-    otherSex: "",
-    motherAge: "24",
-    motherMarried: "Yes",
-    motherPara: "2",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "Yes",
-    obstetricConditions: ["Antepartum Hemorrhage"],
-    otherObstetric: "",
-    deliveryPlace: "Facility",
-    otherDeliveryPlace: "",
-    facilityLevel: "4",
-    deliveryType: "Caesarian Section",
-    otherDeliveryType: "",
-    periodOfDeath: "Intrapartum",
-    perinatalCause: ["Birth Asphyxia"],
-    maternalCondition: "Maternal complications of Pregnancy",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "15/9/2025",
-    timeOfDeath: "09:45 AM",
-    gestationWeeks: "29",
-    babyOutcome: "Fresh still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "1400",
-    sexOfBaby: "Female",
-    otherSex: "",
-    motherAge: "21",
-    motherMarried: "No",
-    motherPara: "1",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "Unknown",
-    obstetricConditions: ["HIV", "Malaria"],
-    otherObstetric: "",
-    deliveryPlace: "Home",
-    otherDeliveryPlace: "",
-    facilityLevel: "",
-    deliveryType: "SVD-Unskilled",
-    otherDeliveryType: "",
-    periodOfDeath: "Intrapartum",
-    perinatalCause: ["Low birth weight", "Prematurity"],
-    maternalCondition: "Maternal medical and surgical conditions",
-    otherCause: "",
-  },
-  {
-    dateOfDeath: "14/9/2025",
-    timeOfDeath: "16:30 PM",
-    gestationWeeks: "38",
-    babyOutcome: "Macerated still-birth",
-    apgar1min: "",
-    apgar5min: "",
-    apgar10min: "",
-    ageAtDeath: "",
-    birthWeight: "2800",
-    sexOfBaby: "Male",
-    otherSex: "",
-    motherAge: "30",
-    motherMarried: "Yes",
-    motherPara: "3",
-    motherOutcome: "Alive",
-    pregnancyType: "Singleton",
-    antenatalCare: "Yes",
-    obstetricConditions: ["Diabetes"],
-    otherObstetric: "",
-    deliveryPlace: "Facility",
-    otherDeliveryPlace: "",
-    facilityLevel: "5",
-    deliveryType: "SVD-Skilled",
-    otherDeliveryType: "",
-    periodOfDeath: "Antepartum",
-    perinatalCause: ["Congenital malformations"],
-    maternalCondition: "No maternal condition Identified",
-    otherCause: "",
-  },
-];
+// Define interface for the API response
+interface StillbirthReport {
+  today: {
+    total: number;
+    sex: {
+      female: number;
+      male?: number;
+    };
+    type: {
+      stillbirth: number;
+      fresh?: number;
+      macerated?: number;
+    };
+  };
+  monthly: Array<{
+    month: string;
+    total: number;
+    avgWeight: number;
+    sex: {
+      male: number;
+      female: number;
+    };
+    type: {
+      fresh: number;
+      macerated: number;
+    };
+    place: {
+      facility: number;
+      home: number;
+    };
+  }>;
+}
 
-const now = new Date().toLocaleString();
+export const mockStillbirthData: FormData[] = [
+  // ... (keep your existing mock data for raw data display if needed)
+];
 
 const HomeScreen = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState<"today" | "monthly">("today");
   const [userRole, setUserRole] = useState<string>("");
+  const [reportData, setReportData] = useState<StillbirthReport | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const getUserRole = async () => {
@@ -275,6 +71,53 @@ const HomeScreen = () => {
     };
     getUserRole();
   }, []);
+
+  // Fetch report data when component mounts or activeTab changes
+  useEffect(() => {
+    fetchReportData();
+  }, [activeTab]);
+
+  const fetchReportData = async () => {
+    try {
+      setIsLoading(true);
+      setError(null);
+
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const locationId = await AsyncStorage.getItem("location_id");
+
+      if (!accessToken) {
+        throw new Error("User not logged in");
+      }
+
+      if (!locationId) {
+        throw new Error("Location ID not found");
+      }
+
+      const response = await fetch(
+        `${BASE_URL}/notifications/stillbirths/${locationId}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data: StillbirthReport = await response.json();
+      setReportData(data);
+    } catch (err) {
+      console.error("Error fetching report data:", err);
+      setError(err instanceof Error ? err.message : "Failed to fetch data");
+      // Don't set any mock data - keep reportData as null
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleAddUser = () => {
     router.push("/patient_registration");
@@ -316,6 +159,11 @@ const HomeScreen = () => {
     ]);
   };
 
+  // Refresh data function
+  const handleRefresh = () => {
+    fetchReportData();
+  };
+
   return (
     <View style={tw`flex-1 bg-purple-100`}>
       {/* Header */}
@@ -327,9 +175,14 @@ const HomeScreen = () => {
           position="relative"
         />
         <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
-        <TouchableOpacity onPress={handleAddUser}>
-          <Icon name="person-add" size={36} color="#682483ff" />
-        </TouchableOpacity>
+        <View style={tw`flex-row items-center`}>
+          <TouchableOpacity onPress={handleRefresh} style={tw`mr-3`}>
+            <Icon name="refresh" size={24} color="#682483ff" />
+          </TouchableOpacity>
+          <TouchableOpacity onPress={handleAddUser}>
+            <Icon name="person-add" size={36} color="#682483ff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       {/* Tab Navigation */}
@@ -373,171 +226,45 @@ const HomeScreen = () => {
         </View>
       )}
 
+      {/* Error Message */}
+      {error && (
+        <View style={tw`bg-red-100 p-3 mx-4 mt-4 rounded-lg`}>
+          <Text style={tw`text-red-700 text-center`}>{error}</Text>
+        </View>
+      )}
+
+      {/* No Data Message */}
+      {!isLoading && !error && !reportData && (
+        <View style={tw`bg-yellow-100 p-3 mx-4 mt-4 rounded-lg`}>
+          <Text style={tw`text-yellow-700 text-center`}>
+            No data available. Pull to refresh.
+          </Text>
+        </View>
+      )}
+
       {/* Main Content */}
-      <ScrollView contentContainerStyle={tw`p-4`}>
+      <ScrollView
+        contentContainerStyle={tw`p-4`}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading}
+            onRefresh={handleRefresh}
+            colors={["#682483ff"]}
+          />
+        }
+      >
         {activeTab === "today" ? (
-          <ReportDashboard />
+          <ReportDashboard data={reportData?.today} />
         ) : (
-          <MonthlyReport data={mockStillbirthData} />
+          <MonthlyReport
+            data={reportData?.monthly || []}
+            rawData={mockStillbirthData} // This can be kept for detailed view if needed
+          />
         )}
       </ScrollView>
 
       {/* Drawer */}
-
-      <Modal
-        visible={drawerVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
-      >
-        <TouchableOpacity
-          style={tw`flex-1 bg-black bg-opacity-50`}
-          onPress={() => setDrawerVisible(false)}
-        >
-          <View style={tw`w-64 h-full bg-white`}>
-            <View style={tw`p-5 bg-purple-500`}>
-              <Text style={tw`text-white text-lg font-bold`}>
-                PeriNote Menu
-              </Text>
-            </View>
-
-            <ScrollView style={tw`flex-1 p-4`}>
-              <View style={tw`mb-6`}>
-                <Text
-                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
-                >
-                  Main Navigation
-                </Text>
-
-                {userRole === "nurse" && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Report Stillbirth */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/patient_registration");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        📋 Report Stillbirth
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Today Report */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2 ${
-                        activeTab === "today" ? "bg-purple-50" : ""
-                      }`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        setActiveTab("today");
-                      }}
-                    >
-                      <Text
-                        style={tw`${
-                          activeTab === "today"
-                            ? "text-purple-700 font-medium"
-                            : "text-gray-700"
-                        } ml-2`}
-                      >
-                        📊 Today's Report
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-
-                {(userRole === "admin" ||
-                  userRole === "county user" ||
-                  userRole === "subcounty user") && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Users */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/users");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        👥 Users
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* monthly report */}
-
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2 ${
-                        activeTab === "monthly" ? "bg-purple-50" : ""
-                      }`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        setActiveTab("monthly");
-                      }}
-                    >
-                      <Text
-                        style={tw`${
-                          activeTab === "monthly"
-                            ? "text-purple-700 font-medium"
-                            : "text-gray-700"
-                        } ml-2`}
-                      >
-                        📈 Monthly Report
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* ... (keep your existing drawer code) */}
     </View>
   );
 };

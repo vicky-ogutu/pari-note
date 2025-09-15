@@ -3,6 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
+import { BASE_URL } from "../constants/ApiConfig";
 import {
   ActivityIndicator,
   Alert,
@@ -16,7 +17,6 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
 import HamburgerButton from "../components/HamburgerButton";
-import { BASE_URL } from "../constants/ApiConfig";
 
 // User type definition based on API response
 export type User = {
@@ -66,12 +66,15 @@ const UsersScreen = () => {
         return;
       }
 
-      const response = await axios.get(`${BASE_URL}/users/user-location`, {
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.get(
+        `${BASE_URL}/users/user-location`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (response.status === 200) {
         setUsers(response.data);

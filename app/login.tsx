@@ -1,7 +1,11 @@
 // app/login.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import { useState } from "react";
+import {
+  allowScreenCaptureAsync,
+  preventScreenCaptureAsync,
+} from "expo-screen-capture";
+import { useEffect, useState } from "react";
 import {
   Alert,
   Image,
@@ -21,6 +25,24 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+
+  // Prevent black screen in Google Meet screen share
+  useEffect(() => {
+    const enableScreenShare = async () => {
+      try {
+        await preventScreenCaptureAsync();
+      } catch (err) {
+        console.warn("Failed to prevent screen capture:", err);
+      }
+    };
+    enableScreenShare();
+
+    return () => {
+      allowScreenCaptureAsync().catch(() =>
+        console.warn("Failed to allow screen capture back")
+      );
+    };
+  }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -68,16 +90,11 @@ export default function LoginScreen() {
       });
 
       // Redirect based on role
-
       switch (data.user.role.name) {
         case "admin":
-          router.replace("/users");
-          break;
         case "county user":
-          router.replace("/users");
-          break;
         case "subcounty user":
-          router.replace("/users");
+          router.replace("/home");
           break;
         default:
           router.replace("/home");

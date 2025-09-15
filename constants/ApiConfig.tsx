@@ -4,7 +4,6 @@ export const BASE_URL = "http://192.168.100.25:3000";
 
 // Alternatively, with environment detection
 export const API_CONFIG = {
-  //BASE_URL: __DEV__ ? "http://localhost:3000" : "https://192.168.100.25:3000",
   BASE_URL: __DEV__ ? "http://192.168.100.25:3000" : "http://localhost:3000",
 
   //add other API-related constants
