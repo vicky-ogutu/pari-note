@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { BASE_URL } from "../constants/ApiConfig";
 
+import { FilePenIcon, UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -180,7 +181,7 @@ const HomeScreen = () => {
             <Icon name="refresh" size={24} color="#682483ff" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAddUser}>
-            <Icon name="person-add" size={36} color="#682483ff" />
+            {userRole === 'admin' ? (<UserPlusIcon size={36} color="#682483ff" />) : (<FilePenIcon color="#682483ff" />)}
           </TouchableOpacity>
         </View>
       </View>

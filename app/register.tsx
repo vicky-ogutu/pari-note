@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios"; // Import axios
 import { router } from "expo-router";
+import { UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -79,6 +80,10 @@ const RegisterScreen = () => {
     } catch (error) {
       console.error("Error clearing auth tokens:", error);
     }
+  };
+
+    const handleAddUser = () => {
+    router.push("/register");
   };
 
   const handleRegister = async () => {
@@ -211,24 +216,31 @@ const RegisterScreen = () => {
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
       {/* Header with Menu Button */}
-      <View
+                   <View
         style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
       >
         <HamburgerButton
           onPress={() => setDrawerVisible(true)}
           position="relative"
         />
+        <Text style={tw`text-2xl font-bold text-purple-500`}>Create user</Text>
+        <View style={tw`flex-row items-center`}>
+          <TouchableOpacity onPress={handleAddUser}>
+            <UserPlusIcon color="#682483ff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-        <View style={tw`items-center mb-8`}>
-          <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
+
+        {/* <View style={tw`items-center mb-8`}>
+          <Text style={tw`text-2xl font-bold text-gray-500 mb-2`}>
             Create User Account
           </Text>
           <Text style={tw`text-gray-600 text-center`}>
             Add a new healthcare provider to the system
           </Text>
-        </View>
+        </View> */}
 
         <View style={tw`w-full`}>
           <TextInput
@@ -286,7 +298,7 @@ const RegisterScreen = () => {
 
           {/* Role Selection Checkboxes */}
           <View style={tw`mb-4`}>
-            <Text style={tw`text-gray-700 mb-2 font-medium`}>
+            <Text style={tw`text-gray-500 mb-2 font-medium`}>
               Select Role *
             </Text>
 
@@ -306,7 +318,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>County Admin</Text>
+              <Text style={tw`text-gray-500`}>County Admin</Text>
             </TouchableOpacity>
 
             {/* Subcounty Admin */}
@@ -325,7 +337,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Subcounty Admin</Text>
+              <Text style={tw`text-gray-500`}>Subcounty Admin</Text>
             </TouchableOpacity>
 
             {/* Facility In-Charge Admin */}
@@ -344,7 +356,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Facility In-Charge Admin</Text>
+              <Text style={tw`text-gray-500`}>Facility In-Charge Admin</Text>
             </TouchableOpacity>
 
             {/* HCW (Nurse) */}
@@ -363,7 +375,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>HCW (Nurse)</Text>
+              <Text style={tw`text-gray-500`}>HCW (Nurse)</Text>
             </TouchableOpacity>
           </View>
 
@@ -425,7 +437,7 @@ const RegisterScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -438,7 +450,7 @@ const RegisterScreen = () => {
                         router.push("/users");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         👥 Users
                       </Text>
                     </TouchableOpacity>
@@ -451,7 +463,7 @@ const RegisterScreen = () => {
                         router.push("/register");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         📝 Register Staff
                       </Text>
                     </TouchableOpacity>
@@ -461,7 +473,7 @@ const RegisterScreen = () => {
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>
