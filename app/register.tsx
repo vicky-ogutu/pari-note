@@ -1,4 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import axios from "axios"; // Import axios
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -25,6 +26,14 @@ type FormData = {
   phone: string;
 };
 
+// Define role mapping to roleId
+const ROLE_MAPPING: { [key: string]: number } = {
+  "county-admin": 1, //2
+  "subcounty-admin": 2, //3
+  "facility-incharge-admin": 3, //1
+  HCW: 4, //nurse ok
+};
+
 const RegisterScreen = () => {
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
@@ -38,14 +47,17 @@ const RegisterScreen = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
-  const [selectedRoles, setSelectedRoles] = useState<string[]>([]); // Added state for selected roles
+  const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
+  const [locationId, setLocationId] = useState<number | null>(null);
 
   useEffect(() => {
-    const getUserRole = async () => {
+    const getUserData = async () => {
       const role = await AsyncStorage.getItem("role");
+      const locationIdStr = await AsyncStorage.getItem("location_id");
       setUserRole(role || "");
+      setLocationId(locationIdStr ? parseInt(locationIdStr) : null);
     };
-    getUserRole();
+    getUserData();
   }, []);
 
   //clear authentication tokens
@@ -54,15 +66,21 @@ const RegisterScreen = () => {
       await AsyncStorage.multiRemove([
         "access_token",
         "role",
+        "role_id",
+        "user_id",
+        "user_name",
+        "user_email",
+        "location_id",
         "location_name",
         "location_type",
+        "permissions",
       ]);
     } catch (error) {
       console.error("Error clearing auth tokens:", error);
     }
   };
 
-  const handleRegister = () => {
+  const handleRegister = async () => {
     const { firstName, lastName, email, password, confirmPassword, phone } =
       formData;
 
@@ -86,13 +104,74 @@ const RegisterScreen = () => {
       return;
     }
 
-    // Simulate registration success
-    Alert.alert("Success", "Registration successful!", [
-      {
-        text: "OK",
-        onPress: () => router.replace("/login"),
-      },
-    ]);
+    // if (!locationId) {
+    //   Alert.alert("Error", "Location information not found");
+    //   return;
+    // }
+
+    setIsLoading(true);
+
+    try {
+      // Get the access token
+      const accessToken = await AsyncStorage.getItem("access_token");
+
+      if (!accessToken) {
+        Alert.alert("Error", "Authentication token not found");
+        setIsLoading(false);
+        return;
+      }
+
+      // Prepare the request data
+      const requestData = {
+        email: email,
+        name: `${firstName} ${lastName}`,
+        password: password,
+        roleId: ROLE_MAPPING[selectedRoles[0]], // Using the first selected role
+        locationId: locationId,
+      };
+
+      // Make the API call
+      const response = await axios.post(
+        "http://localhost:3000/users/register",
+        requestData,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.status === 201) {
+        Alert.alert("Success", "User account created successfully!", [
+          {
+            text: "OK",
+            onPress: () => router.replace("/users"),
+          },
+        ]);
+      }
+    } catch (error: any) {
+      console.error("Registration error:", error);
+
+      if (error.response) {
+        // The request was made and the server responded with a status code
+        // that falls out of the range of 2xx
+        const errorMessage =
+          error.response.data?.message || "Registration failed";
+        Alert.alert("Error", errorMessage);
+      } else if (error.request) {
+        // The request was made but no response was received
+        Alert.alert(
+          "Error",
+          "No response from server. Please check your connection."
+        );
+      } else {
+        // Something happened in setting up the request that triggered an Error
+        Alert.alert("Error", "An unexpected error occurred");
+      }
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   // Define the type for the field parameter
@@ -100,11 +179,9 @@ const RegisterScreen = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Handle role selection
+  // Handle role selection - allow only one role for now
   const toggleRole = (role: string) => {
-    setSelectedRoles((prev) =>
-      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
-    );
+    setSelectedRoles([role]); // Only allow one role selection
   };
 
   const handleLogout = () => {
@@ -204,10 +281,9 @@ const RegisterScreen = () => {
           />
 
           {/* Role Selection Checkboxes */}
-
           <View style={tw`mb-4`}>
             <Text style={tw`text-gray-700 mb-2 font-medium`}>
-              Select Role(s) *
+              Select Role *
             </Text>
 
             {/* County Admin */}
@@ -286,11 +362,17 @@ const RegisterScreen = () => {
               <Text style={tw`text-gray-700`}>HCW (Nurse)</Text>
             </TouchableOpacity>
           </View>
+
           <TouchableOpacity
-            style={tw`bg-purple-600 p-4 rounded-lg items-center mt-2 shadow-lg`}
+            style={tw`bg-purple-600 p-4 rounded-lg items-center mt-2 shadow-lg ${
+              isLoading ? "opacity-50" : ""
+            }`}
             onPress={handleRegister}
+            disabled={isLoading}
           >
-            <Text style={tw`text-white text-base font-bold`}>Create User</Text>
+            <Text style={tw`text-white text-base font-bold`}>
+              {isLoading ? "Creating..." : "Create User"}
+            </Text>
           </TouchableOpacity>
         </View>
       </ScrollView>

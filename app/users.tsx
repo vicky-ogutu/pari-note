@@ -117,8 +117,14 @@ const UsersScreen = () => {
       await AsyncStorage.multiRemove([
         "access_token",
         "role",
+        "role_id",
+        "user_id",
+        "user_name",
+        "user_email",
+        "location_id",
         "location_name",
         "location_type",
+        "permissions",
       ]);
     } catch (error) {
       console.error("Error clearing auth tokens:", error);
