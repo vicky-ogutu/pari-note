@@ -992,7 +992,7 @@ const StillbirthRegistrationScreen = () => {
       style={tw`flex-1 bg-gray-100`}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-            <View
+      <View
         style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
       >
         <HamburgerButton
@@ -1001,7 +1001,7 @@ const StillbirthRegistrationScreen = () => {
         />
         <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
         <View style={tw`flex-row items-center`}>
-          <TouchableOpacity onPress={()=>{}}>
+          <TouchableOpacity onPress={() => {}}>
             <FilePenIcon color="#682483ff" />
           </TouchableOpacity>
         </View>

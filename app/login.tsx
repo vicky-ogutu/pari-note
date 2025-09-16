@@ -80,6 +80,15 @@ export default function LoginScreen() {
         ["location_name", data.user.location?.name || ""],
         ["location_type", data.user.location?.type || ""],
         ["permissions", JSON.stringify(data.user.role.permissions || [])],
+
+        // Store the missing location hierarchy data
+        ["subcounty_id", data.user.location?.parent?.id?.toString() || ""],
+        ["subcounty_name", data.user.location?.parent?.name || ""],
+        ["county_id", data.user.location?.parent?.parent?.id?.toString() || ""],
+        ["county_name", data.user.location?.parent?.parent?.name || ""],
+
+        // Store the entire location hierarchy as JSON for easy retrieval
+        ["location_hierarchy", JSON.stringify(data.user.location || {})],
       ]);
 
       console.log("Login successful, stored data:", {
