@@ -193,7 +193,7 @@ const HomeScreen = () => {
     >
       {/* Header */}
       <View
-        style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
+        style={tw`flex-row justify-between items-center p-3 bg-white border-b border-gray-300`}
       >
         <HamburgerButton
           onPress={() => setDrawerVisible(true)}

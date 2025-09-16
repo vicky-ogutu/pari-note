@@ -182,7 +182,7 @@ const RegisterScreen = () => {
 
       if (error.response) {
         // The request was made and the server responded with a status code
-        // that falls out of the range of 2xx
+
         const errorMessage =
           error.response.data?.message || "Registration failed";
         Alert.alert("Error", errorMessage);
@@ -240,7 +240,7 @@ const RegisterScreen = () => {
     >
       {/* Header with Menu Button */}
       <View
-        style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
+        style={tw`flex-row justify-between items-center p-3 bg-white border-b border-gray-300`}
       >
         <HamburgerButton
           onPress={() => setDrawerVisible(true)}
@@ -253,13 +253,11 @@ const RegisterScreen = () => {
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
             Create User Account
           </Text>
-          <Text style={tw`text-gray-600 text-center`}>
+          {/* <Text style={tw`text-gray-600 text-center`}>
             Add a new healthcare provider to the system
-          </Text>
+          </Text> */}
           {userRole && (
-            <Text style={tw`text-purple-600 text-sm mt-2`}>
-              Your role: {userRole}
-            </Text>
+            <Text style={tw`text-purple-600 text-sm mt-1`}>{userRole}</Text>
           )}
           {allowedRoles.length > 0 && (
             <Text style={tw`text-green-600 text-xs mt-1`}>
