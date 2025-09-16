@@ -142,7 +142,7 @@ const HomeScreen = () => {
   };
 
   const handleAddUser = () => {
-    router.push("/patient_registration");
+    router.push("/register");
   };
 
   const clearAuthTokens = async () => {

@@ -1,5 +1,5 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
-import axios from "axios"; // Import axios
+import axios from "axios";
 import { router } from "expo-router";
 import { useEffect, useState } from "react";
 import {
@@ -28,11 +28,21 @@ type FormData = {
 };
 
 // Define role mapping to roleId
+// Match exactly what is in DB
+// Match exactly what is in DB
 const ROLE_MAPPING: { [key: string]: number } = {
-  "county-admin": 1, //2
-  "subcounty-admin": 2, //3
-  "facility-incharge-admin": 3, //1
-  HCW: 4, //nurse ok
+  "county user": 2,
+  "subcounty user": 3,
+  admin: 1, // facility in-charge admin
+  nurse: 4, // HCW
+};
+
+// Who can create whom
+const ROLE_HIERARCHY: { [key: string]: string[] } = {
+  "county user": ["subcounty user"],
+  "subcounty user": ["admin"],
+  admin: ["nurse"],
+  nurse: [],
 };
 
 const RegisterScreen = () => {
@@ -50,13 +60,25 @@ const RegisterScreen = () => {
   const [userRole, setUserRole] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [locationId, setLocationId] = useState<number | null>(null);
+  const [allowedRoles, setAllowedRoles] = useState<string[]>([]);
 
   useEffect(() => {
     const getUserData = async () => {
       const role = await AsyncStorage.getItem("role");
       const locationIdStr = await AsyncStorage.getItem("location_id");
+
+      console.log("Current user role from storage:", role); // Debug log
       setUserRole(role || "");
       setLocationId(locationIdStr ? parseInt(locationIdStr) : null);
+
+      // Set allowed roles based on current user's role
+      if (role && ROLE_HIERARCHY[role]) {
+        console.log("Allowed roles for", role, ":", ROLE_HIERARCHY[role]); // Debug log
+        setAllowedRoles(ROLE_HIERARCHY[role]);
+      } else {
+        console.log("No allowed roles for role:", role); // Debug log
+        setAllowedRoles([]);
+      }
     };
     getUserData();
   }, []);
@@ -105,19 +127,20 @@ const RegisterScreen = () => {
       return;
     }
 
-    // if (!locationId) {
-    //   Alert.alert("Error", "Location information not found");
-    //   return;
-    // }
+    // Check if the selected role is allowed for the current user
+    if (!allowedRoles.includes(selectedRoles[0])) {
+      Alert.alert("Error", "You are not authorized to create this role");
+      return;
+    }
 
     setIsLoading(true);
 
     try {
       // Get the access token
       const accessToken = await AsyncStorage.getItem("access_token");
-      console.log("Access Token:", accessToken); // Debug log
-      console.log("User Role:", userRole); // Debug log
-      console.log("Location ID:", locationId); // Debug log
+      console.log("Access Token:", accessToken);
+      console.log("User Role:", userRole);
+      console.log("Location ID:", locationId);
 
       if (!accessToken) {
         Alert.alert("Error", "Authentication token not found");
@@ -185,7 +208,12 @@ const RegisterScreen = () => {
 
   // Handle role selection - allow only one role for now
   const toggleRole = (role: string) => {
-    setSelectedRoles([role]); // Only allow one role selection
+    // Check if the role is allowed for the current user
+    if (allowedRoles.includes(role)) {
+      setSelectedRoles([role]); // Only allow one role selection
+    } else {
+      Alert.alert("Error", "You are not authorized to create this role");
+    }
   };
 
   const handleLogout = () => {
@@ -228,6 +256,16 @@ const RegisterScreen = () => {
           <Text style={tw`text-gray-600 text-center`}>
             Add a new healthcare provider to the system
           </Text>
+          {userRole && (
+            <Text style={tw`text-purple-600 text-sm mt-2`}>
+              Your role: {userRole}
+            </Text>
+          )}
+          {allowedRoles.length > 0 && (
+            <Text style={tw`text-green-600 text-xs mt-1`}>
+              You can create: {allowedRoles.join(", ")}
+            </Text>
+          )}
         </View>
 
         <View style={tw`w-full`}>
@@ -290,80 +328,92 @@ const RegisterScreen = () => {
               Select Role *
             </Text>
 
-            {/* County Admin */}
+            {/* County User */}
             <TouchableOpacity
-              style={tw`flex-row items-center mb-2`}
-              onPress={() => toggleRole("county-admin")}
+              style={tw`flex-row items-center mb-2 ${
+                !allowedRoles.includes("county user") ? "opacity-50" : ""
+              }`}
+              onPress={() => toggleRole("county user")}
+              disabled={!allowedRoles.includes("county user")}
             >
               <View
                 style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("county-admin")
+                  selectedRoles.includes("county user")
                     ? "bg-purple-600 border-purple-600"
                     : "bg-white"
                 }`}
               >
-                {selectedRoles.includes("county-admin") && (
+                {selectedRoles.includes("county user") && (
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>County Admin</Text>
+              <Text style={tw`text-gray-700`}>County User</Text>
             </TouchableOpacity>
 
-            {/* Subcounty Admin */}
+            {/* Subcounty User */}
             <TouchableOpacity
-              style={tw`flex-row items-center mb-2`}
-              onPress={() => toggleRole("subcounty-admin")}
+              style={tw`flex-row items-center mb-2 ${
+                !allowedRoles.includes("subcounty user") ? "opacity-50" : ""
+              }`}
+              onPress={() => toggleRole("subcounty user")}
+              disabled={!allowedRoles.includes("subcounty user")}
             >
               <View
                 style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("subcounty-admin")
+                  selectedRoles.includes("subcounty user")
                     ? "bg-purple-600 border-purple-600"
                     : "bg-white"
                 }`}
               >
-                {selectedRoles.includes("subcounty-admin") && (
+                {selectedRoles.includes("subcounty user") && (
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Subcounty Admin</Text>
+              <Text style={tw`text-gray-700`}>Subcounty User</Text>
             </TouchableOpacity>
 
-            {/* Facility In-Charge Admin */}
+            {/* Admin (Facility In-Charge) */}
             <TouchableOpacity
-              style={tw`flex-row items-center mb-2`}
-              onPress={() => toggleRole("facility-incharge-admin")}
+              style={tw`flex-row items-center mb-2 ${
+                !allowedRoles.includes("admin") ? "opacity-50" : ""
+              }`}
+              onPress={() => toggleRole("admin")}
+              disabled={!allowedRoles.includes("admin")}
             >
               <View
                 style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("facility-incharge-admin")
+                  selectedRoles.includes("admin")
                     ? "bg-purple-600 border-purple-600"
                     : "bg-white"
                 }`}
               >
-                {selectedRoles.includes("facility-incharge-admin") && (
+                {selectedRoles.includes("admin") && (
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Facility In-Charge Admin</Text>
+              <Text style={tw`text-gray-700`}>Admin (Facility In-Charge)</Text>
             </TouchableOpacity>
 
-            {/* HCW (Nurse) */}
+            {/* Nurse */}
             <TouchableOpacity
-              style={tw`flex-row items-center mb-2`}
-              onPress={() => toggleRole("HCW")}
+              style={tw`flex-row items-center mb-2 ${
+                !allowedRoles.includes("nurse") ? "opacity-50" : ""
+              }`}
+              onPress={() => toggleRole("nurse")}
+              disabled={!allowedRoles.includes("nurse")}
             >
               <View
                 style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("HCW")
+                  selectedRoles.includes("nurse")
                     ? "bg-purple-600 border-purple-600"
                     : "bg-white"
                 }`}
               >
-                {selectedRoles.includes("HCW") && (
+                {selectedRoles.includes("nurse") && (
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>HCW (Nurse)</Text>
+              <Text style={tw`text-gray-700`}>Nurse</Text>
             </TouchableOpacity>
           </View>
 
@@ -401,7 +451,7 @@ const RegisterScreen = () => {
             <View style={tw`p-6 bg-purple-600`}>
               <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Hospital Management System
+                Stillbirth Notification System
               </Text>
             </View>
 
