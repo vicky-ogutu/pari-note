@@ -149,8 +149,13 @@ const StillbirthRegistrationScreen = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // const formatDate = (date: Date) => {
+  //   return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+  // };
+
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+    // Return YYYY-MM-DD
+    return date.toISOString().split("T")[0];
   };
 
   const formatTime = (date: Date) => {
@@ -229,8 +234,7 @@ const StillbirthRegistrationScreen = () => {
         // managingAuthority: "MOH",
 
         locationId: locationId ? parseInt(locationId) : null, // Must be integer
-        //dateOfNotification: new Date().toISOString().split("T")[0],
-        dateOfNotification: new Date().toISOString(), // Full ISO string
+        dateOfNotification: new Date().toISOString().split("T")[0],
 
         mother: {
           age: parseInt(formData.motherAge) || null,
@@ -324,7 +328,7 @@ const StillbirthRegistrationScreen = () => {
                   setShowDatePicker(false);
                   if (selectedDate) {
                     // Store as ISO string instead of formatted string
-                    updateFormData("dateOfDeath", selectedDate.toISOString());
+                    updateFormData("dateOfDeath", formatDate(selectedDate));
                   }
                 }}
               />
