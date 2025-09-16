@@ -97,6 +97,7 @@ const HomeScreen = () => {
 
       const accessToken = await AsyncStorage.getItem("access_token");
       const locationId = await AsyncStorage.getItem("location_id");
+      const nurseRole = await AsyncStorage.getItem("role");
 
       console.log("Access Token:", accessToken ? "Exists" : "Missing");
       console.log("Location ID:", locationId);
@@ -147,7 +148,11 @@ const HomeScreen = () => {
   };
 
   const handleAddUser = () => {
-    router.push("/register");
+    if (userRole !== "nurse") {
+      router.push("/register");
+    } else {
+      Alert.alert("Please Note:", "HCW cannot create user Accounts!");
+    }
   };
 
   const clearAuthTokens = async () => {
@@ -210,7 +215,11 @@ const HomeScreen = () => {
             <Icon name="refresh" size={24} color="#682483ff" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAddUser}>
-            {userRole === 'admin' ? (<UserPlusIcon size={36} color="#682483ff" />) : (<FilePenIcon color="#682483ff" />)}
+            {userRole === "admin" ? (
+              <UserPlusIcon size={36} color="#682483ff" />
+            ) : (
+              <FilePenIcon color="#682483ff" />
+            )}
           </TouchableOpacity>
         </View>
       </View>
