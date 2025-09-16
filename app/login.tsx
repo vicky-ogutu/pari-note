@@ -1,11 +1,11 @@
 // app/login.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-import {
-  allowScreenCaptureAsync,
-  preventScreenCaptureAsync,
-} from "expo-screen-capture";
-import { useEffect, useState } from "react";
+// import {
+//   allowScreenCaptureAsync,
+//   preventScreenCaptureAsync,
+// } from "expo-screen-capture";
+import { useState } from "react";
 import {
   Alert,
   Image,
@@ -27,22 +27,22 @@ export default function LoginScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   // Prevent black screen in Google Meet screen share
-  useEffect(() => {
-    const enableScreenShare = async () => {
-      try {
-        await preventScreenCaptureAsync();
-      } catch (err) {
-        console.warn("Failed to prevent screen capture:", err);
-      }
-    };
-    enableScreenShare();
+  // useEffect(() => {
+  //   const enableScreenShare = async () => {
+  //     try {
+  //       await preventScreenCaptureAsync();
+  //     } catch (err) {
+  //       console.warn("Failed to prevent screen capture:", err);
+  //     }
+  //   };
+  //   enableScreenShare();
 
-    return () => {
-      allowScreenCaptureAsync().catch(() =>
-        console.warn("Failed to allow screen capture back")
-      );
-    };
-  }, []);
+  //   return () => {
+  //     allowScreenCaptureAsync().catch(() =>
+  //       console.warn("Failed to allow screen capture back")
+  //     );
+  //   };
+  // }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
