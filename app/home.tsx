@@ -35,6 +35,10 @@ interface TodayReport {
     fresh?: number;
     macerated?: number;
   };
+  place: {
+    facility: number;
+    home: number;
+  };
 }
 
 interface MonthlyReportItem {
@@ -283,7 +287,7 @@ const HomeScreen = () => {
         ) : (
           <MonthlyReport
             data={reportData?.monthly || []}
-            rawData={mockStillbirthData} // This can be kept for detailed view if needed
+            //rawData={mockStillbirthData} // This can be kept for detailed view if needed
           />
         )}
       </ScrollView>
