@@ -6,6 +6,9 @@ import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
   RefreshControl,
   ScrollView,
   Text,
@@ -20,36 +23,41 @@ import ReportDashboard from "../components/today_report";
 import { FormData } from "./types";
 
 // Define interface for the API response
-interface StillbirthReport {
-  today: {
-    total: number;
-    sex: {
-      female: number;
-      male?: number;
-    };
-    type: {
-      stillbirth: number;
-      fresh?: number;
-      macerated?: number;
-    };
+// Update your interfaces to match the API response
+interface TodayReport {
+  total: number;
+  sex: {
+    female?: number;
+    male?: number;
   };
-  monthly: Array<{
-    month: string;
-    total: number;
-    avgWeight: number;
-    sex: {
-      male: number;
-      female: number;
-    };
-    type: {
-      fresh: number;
-      macerated: number;
-    };
-    place: {
-      facility: number;
-      home: number;
-    };
-  }>;
+  type: {
+    stillbirth?: number;
+    fresh?: number;
+    macerated?: number;
+  };
+}
+
+interface MonthlyReportItem {
+  month: string;
+  total: number;
+  avgWeight: number;
+  sex: {
+    male: number;
+    female: number;
+  };
+  type: {
+    fresh: number;
+    macerated: number;
+  };
+  place: {
+    facility: number;
+    home: number;
+  };
+}
+
+interface StillbirthReport {
+  today: TodayReport;
+  monthly: MonthlyReportItem[];
 }
 
 export const mockStillbirthData: FormData[] = [
@@ -85,6 +93,9 @@ const HomeScreen = () => {
       const accessToken = await AsyncStorage.getItem("access_token");
       const locationId = await AsyncStorage.getItem("location_id");
 
+      console.log("Access Token:", accessToken ? "Exists" : "Missing");
+      console.log("Location ID:", locationId);
+
       if (!accessToken) {
         throw new Error("User not logged in");
       }
@@ -92,6 +103,11 @@ const HomeScreen = () => {
       if (!locationId) {
         throw new Error("Location ID not found");
       }
+
+      console.log(
+        "Fetching from URL:",
+        `${BASE_URL}/notifications/stillbirths/${locationId}`
+      );
 
       const response = await fetch(
         `${BASE_URL}/notifications/stillbirths/${locationId}`,
@@ -104,16 +120,22 @@ const HomeScreen = () => {
         }
       );
 
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries([...response.headers])
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: StillbirthReport = await response.json();
+      console.log("API Response Data:", JSON.stringify(data, null, 2));
       setReportData(data);
     } catch (err) {
       console.error("Error fetching report data:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch data");
-      // Don't set any mock data - keep reportData as null
     } finally {
       setIsLoading(false);
     }
@@ -165,7 +187,10 @@ const HomeScreen = () => {
   };
 
   return (
-    <View style={tw`flex-1 bg-purple-100`}>
+    <KeyboardAvoidingView
+      style={tw`flex-1 bg-purple-100`}
+      behavior={Platform.OS === "ios" ? "padding" : "height"}
+    >
       {/* Header */}
       <View
         style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
@@ -264,8 +289,138 @@ const HomeScreen = () => {
       </ScrollView>
 
       {/* Drawer */}
-      {/* ... (keep your existing drawer code) */}
-    </View>
+      {/* Enhanced Drawer */}
+      <Modal
+        visible={drawerVisible}
+        animationType="slide"
+        transparent={true}
+        onRequestClose={() => setDrawerVisible(false)}
+      >
+        <View style={tw`flex-1`}>
+          <TouchableOpacity
+            style={tw`flex-1 bg-black bg-opacity-50`}
+            onPress={() => setDrawerVisible(false)}
+            activeOpacity={1}
+          />
+
+          <View
+            style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}
+          >
+            <View style={tw`p-6 bg-purple-600`}>
+              <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
+              <Text style={tw`text-purple-100 text-sm mt-1`}>
+                Stillbirth Notification System
+              </Text>
+            </View>
+
+            <ScrollView style={tw`flex-1 p-4`}>
+              <View style={tw`mb-6`}>
+                <Text
+                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
+                >
+                  Main Navigation
+                </Text>
+
+                {userRole === "nurse" && (
+                  <>
+                    {/* Dashboard */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/home");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🏠 Dashboard
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Report Stillbirth */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/patient_registration");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        📋 Report Stillbirth
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Logout */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={handleLogout}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🚪 Logout
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+
+                {(userRole === "admin" ||
+                  userRole === "county user" ||
+                  userRole === "subcounty user") && (
+                  <>
+                    {/* Dashboard */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/home");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🏠 Dashboard
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Users */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/users");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        👥 Users
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Register */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={() => {
+                        setDrawerVisible(false);
+                        router.push("/register");
+                      }}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        📝 Register User
+                      </Text>
+                    </TouchableOpacity>
+
+                    {/* Logout */}
+                    <TouchableOpacity
+                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                      onPress={handleLogout}
+                    >
+                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                        🚪 Logout
+                      </Text>
+                    </TouchableOpacity>
+                  </>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </View>
+      </Modal>
+    </KeyboardAvoidingView>
   );
 };
 

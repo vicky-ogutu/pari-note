@@ -3,7 +3,8 @@ import { ScrollView, Text, View } from "react-native";
 import tw from "tailwind-react-native-classnames";
 //import { FormData } from ".../types";
 import { FormData } from "@/app/types";
-// Define the props interface
+
+// Define the props interface based on actual API response
 interface MonthlyReportProps {
   data: Array<{
     month: string;
@@ -26,7 +27,7 @@ interface MonthlyReportProps {
 }
 
 const MonthlyReport: React.FC<MonthlyReportProps> = ({ data, rawData }) => {
-  if (data.length === 0) {
+  if (!data || data.length === 0) {
     return (
       <View style={tw`flex-1 justify-center items-center p-4`}>
         <Text style={tw`text-gray-500 text-lg`}>No monthly data available</Text>
@@ -47,25 +48,29 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data, rawData }) => {
           </Text>
 
           <Text style={tw`text-lg font-medium mb-2`}>
-            Total: {monthData.total}
+            Total: {monthData.total || 0}
           </Text>
           <Text style={tw`text-gray-700 mb-1`}>
-            Avg Weight: {monthData.avgWeight.toFixed(2)}g
+            Avg Weight:{" "}
+            {monthData.avgWeight ? monthData.avgWeight.toFixed(2) + "g" : "N/A"}
           </Text>
 
           <Text style={tw`font-medium mt-3`}>Sex:</Text>
           <Text style={tw`text-gray-700`}>
-            Male: {monthData.sex.male}, Female: {monthData.sex.female}
+            Male: {monthData.sex?.male || 0}, Female:{" "}
+            {monthData.sex?.female || 0}
           </Text>
 
           <Text style={tw`font-medium mt-2`}>Type:</Text>
           <Text style={tw`text-gray-700`}>
-            Fresh: {monthData.type.fresh}, Macerated: {monthData.type.macerated}
+            Fresh: {monthData.type?.fresh || 0}, Macerated:{" "}
+            {monthData.type?.macerated || 0}
           </Text>
 
           <Text style={tw`font-medium mt-2`}>Place:</Text>
           <Text style={tw`text-gray-700`}>
-            Facility: {monthData.place.facility}, Home: {monthData.place.home}
+            Facility: {monthData.place?.facility || 0}, Home:{" "}
+            {monthData.place?.home || 0}
           </Text>
         </View>
       ))}
