@@ -196,6 +196,11 @@ const HomeScreen = () => {
     fetchReportData();
   };
 
+  // Check if user can see monthly reports
+  const canSeeMonthlyReports = () => {
+    return userRole !== "nurse";
+  };
+
   return (
     <KeyboardAvoidingView
       style={tw`flex-1 bg-purple-100`}
@@ -224,37 +229,46 @@ const HomeScreen = () => {
         </View>
       </View>
 
-      {/* Tab Navigation */}
-      <View style={tw`flex-row bg-white border-b border-gray-200`}>
-        <TouchableOpacity
-          style={tw`flex-1 py-3 ${
-            activeTab === "today" ? "border-b-2 border-purple-500" : ""
-          }`}
-          onPress={() => setActiveTab("today")}
-        >
-          <Text
-            style={tw`text-center font-semibold ${
-              activeTab === "today" ? "text-purple-500" : "text-gray-500"
+      {/* Tab Navigation - Conditionally render based on user role */}
+      {canSeeMonthlyReports() ? (
+        <View style={tw`flex-row bg-white border-b border-gray-200`}>
+          <TouchableOpacity
+            style={tw`flex-1 py-3 ${
+              activeTab === "today" ? "border-b-2 border-purple-500" : ""
             }`}
+            onPress={() => setActiveTab("today")}
           >
+            <Text
+              style={tw`text-center font-semibold ${
+                activeTab === "today" ? "text-purple-500" : "text-gray-500"
+              }`}
+            >
+              Today's Report
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`flex-1 py-3 ${
+              activeTab === "monthly" ? "border-b-2 border-purple-500" : ""
+            }`}
+            onPress={() => setActiveTab("monthly")}
+          >
+            <Text
+              style={tw`text-center font-semibold ${
+                activeTab === "monthly" ? "text-purple-500" : "text-gray-500"
+              }`}
+            >
+              Monthly Report
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        // For nurses, show only the Today's Report tab
+        <View style={tw`bg-white border-b border-gray-200 py-3`}>
+          <Text style={tw`text-center font-semibold text-purple-500`}>
             Today's Report
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={tw`flex-1 py-3 ${
-            activeTab === "monthly" ? "border-b-2 border-purple-500" : ""
-          }`}
-          onPress={() => setActiveTab("monthly")}
-        >
-          <Text
-            style={tw`text-center font-semibold ${
-              activeTab === "monthly" ? "text-purple-500" : "text-gray-500"
-            }`}
-          >
-            Monthly Report
-          </Text>
-        </TouchableOpacity>
-      </View>
+        </View>
+      )}
 
       {/* Load Indicator */}
       {isLoading && (
@@ -292,7 +306,7 @@ const HomeScreen = () => {
           />
         }
       >
-        {activeTab === "today" ? (
+        {activeTab === "today" || userRole === "nurse" ? (
           <ReportDashboard data={reportData?.today} />
         ) : (
           <MonthlyReport
