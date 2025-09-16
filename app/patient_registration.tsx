@@ -150,15 +150,28 @@ const StillbirthRegistrationScreen = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  // const formatDate = (date: Date) => {
+  //   return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+  // };
+
   const formatDate = (date: Date) => {
-    return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
+    // Return YYYY-MM-DD
+    return date.toISOString().split("T")[0];
   };
 
+  // const formatTime = (date: Date) => {
+  //   return date.toLocaleTimeString("en-US", {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   }); // HH:MM AM/PM
+  // };
+
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
-    }); // HH:MM AM/PM
+      hour12: false, // ensures 24-hour format
+    });
   };
 
   const toggleObstetricCondition = (condition: string) => {
@@ -230,8 +243,7 @@ const StillbirthRegistrationScreen = () => {
         // managingAuthority: "MOH",
 
         locationId: locationId ? parseInt(locationId) : null, // Must be integer
-        //dateOfNotification: new Date().toISOString().split("T")[0],
-        dateOfNotification: new Date().toISOString(), // Full ISO string
+        dateOfNotification: new Date().toISOString().split("T")[0],
 
         mother: {
           age: parseInt(formData.motherAge) || null,
@@ -325,7 +337,7 @@ const StillbirthRegistrationScreen = () => {
                   setShowDatePicker(false);
                   if (selectedDate) {
                     // Store as ISO string instead of formatted string
-                    updateFormData("dateOfDeath", selectedDate.toISOString());
+                    updateFormData("dateOfDeath", formatDate(selectedDate));
                   }
                 }}
               />
@@ -368,7 +380,7 @@ const StillbirthRegistrationScreen = () => {
               Baby outcome:
             </Text>
             <View style={tw`mb-4`}>
-              {["Alive", "Fresh still-birth", "Macerated still-birth"].map(
+              {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
                 (option) => (
                   <TouchableOpacity
                     key={option}
