@@ -2,16 +2,16 @@ import React from "react";
 import { Text, View } from "react-native";
 import tw from "tailwind-react-native-classnames";
 
-// Define the props interface
+// Define the props interface based on actual API response
 interface ReportDashboardProps {
   data?: {
     total: number;
     sex: {
-      female: number;
+      female?: number;
       male?: number;
     };
     type: {
-      stillbirth: number;
+      stillbirth?: number;
       fresh?: number;
       macerated?: number;
     };
@@ -38,7 +38,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
       {/* Total Cases */}
       <View style={tw`bg-white p-4 rounded-lg shadow-md mb-4`}>
         <Text style={tw`text-xl font-semibold text-center text-purple-600`}>
-          Total Cases: {data.total}
+          Total Cases: {data.total || 0}
         </Text>
       </View>
 
@@ -48,8 +48,8 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
           Sex Distribution
         </Text>
         <View style={tw`flex-row justify-between`}>
-          <Text style={tw`text-gray-700`}>Female: {data.sex.female}</Text>
-          <Text style={tw`text-gray-700`}>Male: {data.sex.male || 0}</Text>
+          <Text style={tw`text-gray-700`}>Female: {data.sex?.female || 0}</Text>
+          <Text style={tw`text-gray-700`}>Male: {data.sex?.male || 0}</Text>
         </View>
       </View>
 
@@ -59,11 +59,19 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
           Type Distribution
         </Text>
         <View style={tw`flex-row justify-between`}>
-          <Text style={tw`text-gray-700`}>Fresh: {data.type.fresh || 0}</Text>
+          <Text style={tw`text-gray-700`}>Fresh: {data.type?.fresh || 0}</Text>
           <Text style={tw`text-gray-700`}>
-            Macerated: {data.type.macerated || 0}
+            Macerated: {data.type?.macerated || 0}
           </Text>
         </View>
+        {/* Stillbirth type if available */}
+        {data.type?.stillbirth !== undefined && (
+          <View style={tw`mt-2`}>
+            <Text style={tw`text-gray-700`}>
+              Stillbirth: {data.type.stillbirth}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );

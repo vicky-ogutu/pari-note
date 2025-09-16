@@ -23,36 +23,41 @@ import ReportDashboard from "../components/today_report";
 import { FormData } from "./types";
 
 // Define interface for the API response
-interface StillbirthReport {
-  today: {
-    total: number;
-    sex: {
-      female: number;
-      male?: number;
-    };
-    type: {
-      stillbirth: number;
-      fresh?: number;
-      macerated?: number;
-    };
+// Update your interfaces to match the API response
+interface TodayReport {
+  total: number;
+  sex: {
+    female?: number;
+    male?: number;
   };
-  monthly: Array<{
-    month: string;
-    total: number;
-    avgWeight: number;
-    sex: {
-      male: number;
-      female: number;
-    };
-    type: {
-      fresh: number;
-      macerated: number;
-    };
-    place: {
-      facility: number;
-      home: number;
-    };
-  }>;
+  type: {
+    stillbirth?: number;
+    fresh?: number;
+    macerated?: number;
+  };
+}
+
+interface MonthlyReportItem {
+  month: string;
+  total: number;
+  avgWeight: number;
+  sex: {
+    male: number;
+    female: number;
+  };
+  type: {
+    fresh: number;
+    macerated: number;
+  };
+  place: {
+    facility: number;
+    home: number;
+  };
+}
+
+interface StillbirthReport {
+  today: TodayReport;
+  monthly: MonthlyReportItem[];
 }
 
 export const mockStillbirthData: FormData[] = [
@@ -88,6 +93,9 @@ const HomeScreen = () => {
       const accessToken = await AsyncStorage.getItem("access_token");
       const locationId = await AsyncStorage.getItem("location_id");
 
+      console.log("Access Token:", accessToken ? "Exists" : "Missing");
+      console.log("Location ID:", locationId);
+
       if (!accessToken) {
         throw new Error("User not logged in");
       }
@@ -95,6 +103,11 @@ const HomeScreen = () => {
       if (!locationId) {
         throw new Error("Location ID not found");
       }
+
+      console.log(
+        "Fetching from URL:",
+        `${BASE_URL}/notifications/stillbirths/${locationId}`
+      );
 
       const response = await fetch(
         `${BASE_URL}/notifications/stillbirths/${locationId}`,
@@ -107,16 +120,22 @@ const HomeScreen = () => {
         }
       );
 
+      console.log("Response status:", response.status);
+      console.log(
+        "Response headers:",
+        Object.fromEntries([...response.headers])
+      );
+
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
       const data: StillbirthReport = await response.json();
+      console.log("API Response Data:", JSON.stringify(data, null, 2));
       setReportData(data);
     } catch (err) {
       console.error("Error fetching report data:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch data");
-      // Don't set any mock data - keep reportData as null
     } finally {
       setIsLoading(false);
     }
@@ -381,7 +400,7 @@ const HomeScreen = () => {
                       }}
                     >
                       <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        📝 Register Staff
+                        📝 Register User
                       </Text>
                     </TouchableOpacity>
 
