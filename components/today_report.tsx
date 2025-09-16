@@ -2,7 +2,6 @@ import React from "react";
 import { Text, View } from "react-native";
 import tw from "tailwind-react-native-classnames";
 
-// Define the props interface based on actual API response
 interface ReportDashboardProps {
   data?: {
     total: number;
@@ -11,9 +10,7 @@ interface ReportDashboardProps {
       male?: number;
     };
     type: {
-      stillbirth?: number;
-      fresh?: number;
-      macerated?: number;
+      [key: string]: number | undefined;
     };
   };
 }
@@ -28,6 +25,13 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
       </View>
     );
   }
+
+  // 🔹 Normalize backend keys to match UI expectations
+  const normalizedType = {
+    fresh: data.type["fresh stillbirth"] ?? data.type["fresh"] ?? 0,
+    macerated: data.type["macerated stillbirth"] ?? data.type["macerated"] ?? 0,
+    stillbirth: data.type["stillbirth"] ?? 0,
+  };
 
   return (
     <View style={tw`p-4`}>
@@ -59,19 +63,18 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
           Type Distribution
         </Text>
         <View style={tw`flex-row justify-between`}>
-          <Text style={tw`text-gray-700`}>Fresh: {data.type?.fresh || 0}</Text>
+          <Text style={tw`text-gray-700`}>Fresh: {normalizedType.fresh}</Text>
           <Text style={tw`text-gray-700`}>
-            Macerated: {data.type?.macerated || 0}
+            Macerated: {normalizedType.macerated}
           </Text>
         </View>
-        {/* Stillbirth type if available */}
-        {data.type?.stillbirth !== undefined && (
+        {/* {normalizedType.stillbirth !== undefined && (
           <View style={tw`mt-2`}>
             <Text style={tw`text-gray-700`}>
-              Stillbirth: {data.type.stillbirth}
+              Stillbirth: {normalizedType.stillbirth}
             </Text>
           </View>
-        )}
+        )} */}
       </View>
     </View>
   );

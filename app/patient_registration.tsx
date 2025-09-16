@@ -158,11 +158,19 @@ const StillbirthRegistrationScreen = () => {
     return date.toISOString().split("T")[0];
   };
 
+  // const formatTime = (date: Date) => {
+  //   return date.toLocaleTimeString("en-US", {
+  //     hour: "2-digit",
+  //     minute: "2-digit",
+  //   }); // HH:MM AM/PM
+  // };
+
   const formatTime = (date: Date) => {
-    return date.toLocaleTimeString("en-US", {
+    return date.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
-    }); // HH:MM AM/PM
+      hour12: false, // ensures 24-hour format
+    });
   };
 
   const toggleObstetricCondition = (condition: string) => {
@@ -371,7 +379,7 @@ const StillbirthRegistrationScreen = () => {
               Baby outcome:
             </Text>
             <View style={tw`mb-4`}>
-              {["Alive", "Fresh still-birth", "Macerated still-birth"].map(
+              {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
                 (option) => (
                   <TouchableOpacity
                     key={option}
