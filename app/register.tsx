@@ -39,8 +39,8 @@ const ROLE_MAPPING: { [key: string]: number } = {
 
 // Who can create whom
 const ROLE_HIERARCHY: { [key: string]: string[] } = {
-  "county user": ["subcounty user"],
-  "subcounty user": ["admin"],
+  "county user": ["subcounty user", "admin", "nurse"],
+  "subcounty user": ["admin", "nurse"],
   admin: ["nurse"],
   nurse: [],
 };
@@ -329,7 +329,7 @@ const RegisterScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-        <View style={tw`items-center mb-8`}>
+        {/* <View style={tw`items-center mb-8`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
             Create User Account
           </Text>
@@ -341,7 +341,7 @@ const RegisterScreen = () => {
               You can create: {allowedRoles.join(", ")}
             </Text>
           )}
-        </View>
+        </View> */}
 
         <View style={tw`w-full`}>
           <TextInput
@@ -400,7 +400,7 @@ const RegisterScreen = () => {
           {/* Location Dropdown */}
           {locations.length > 0 && (
             <View style={tw`mb-4`}>
-              <Text style={tw`text-gray-700 mb-2 font-medium`}>
+              <Text style={tw`text-gray-500 mb-2 font-medium`}>
                 Select Location *
               </Text>
               <Dropdown
@@ -409,8 +409,8 @@ const RegisterScreen = () => {
                   isFocus && { borderColor: "blue" },
                 ]}
                 placeholderStyle={tw`text-gray-500`}
-                selectedTextStyle={tw`text-gray-700`}
-                inputSearchStyle={tw`h-10 text-gray-700`}
+                selectedTextStyle={tw`text-gray-500`}
+                inputSearchStyle={tw`h-10 text-gray-500`}
                 data={locations.map((loc) => ({
                   label: `${loc.name} (${loc.type})`,
                   value: loc.id,
@@ -434,7 +434,7 @@ const RegisterScreen = () => {
 
           {/* Role Selection Checkboxes */}
           <View style={tw`mb-4`}>
-            <Text style={tw`text-gray-700 mb-2 font-medium`}>
+            <Text style={tw`text-gray-500 mb-2 font-medium`}>
               Select Role *
             </Text>
 
@@ -454,10 +454,10 @@ const RegisterScreen = () => {
                 }`}
               >
                 {selectedRoles.includes("county user") && (
-                  <Text style={tw`text-white font-bold`}>✓</Text>
+                  <Text style={tw`text-white font-sm`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>County User</Text>
+              <Text style={tw`text-gray-500`}>County admin</Text>
             </TouchableOpacity>
 
             {/* Subcounty User */}
@@ -479,7 +479,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Subcounty User</Text>
+              <Text style={tw`text-gray-500`}>Subcounty admin</Text>
             </TouchableOpacity>
 
             {/* Admin (Facility In-Charge) */}
@@ -501,7 +501,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Admin (Facility In-Charge)</Text>
+              <Text style={tw`text-gray-500`}>Facility in-charge</Text>
             </TouchableOpacity>
 
             {/* Nurse */}
@@ -523,7 +523,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Nurse</Text>
+              <Text style={tw`text-gray-500`}>HCW</Text>
             </TouchableOpacity>
           </View>
 
@@ -561,7 +561,7 @@ const RegisterScreen = () => {
             <View style={tw`p-6 bg-purple-600`}>
               <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Stillbirth Notification System
+                Stillbirth Notification
               </Text>
             </View>
 
@@ -585,7 +585,7 @@ const RegisterScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -598,12 +598,12 @@ const RegisterScreen = () => {
                         router.push("/users");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         👥 Users
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Register */}
+                    {/* Register
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={() => {
@@ -611,17 +611,17 @@ const RegisterScreen = () => {
                         router.push("/register");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         📝 Register Staff
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* Logout */}
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>
