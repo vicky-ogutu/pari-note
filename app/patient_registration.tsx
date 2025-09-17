@@ -17,6 +17,7 @@ import {
   View,
 } from "react-native";
 
+import { FilePenIcon } from "lucide-react-native";
 import tw from "tailwind-react-native-classnames";
 
 // Define types for our form data
@@ -387,13 +388,13 @@ const StillbirthRegistrationScreen = () => {
                     onPress={() => updateFormData("babyOutcome", option)}
                   >
                     <View
-                      style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                      style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                     >
                       {formData.babyOutcome === option && (
-                        <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                        <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                       )}
                     </View>
-                    <Text style={tw`text-gray-800`}>{option}</Text>
+                    <Text style={tw`text-gray-500`}>{option}</Text>
                   </TouchableOpacity>
                 )
               )}
@@ -457,13 +458,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("sexOfBaby", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.sexOfBaby === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -504,13 +505,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("motherMarried", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.motherMarried === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -533,13 +534,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("motherOutcome", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.motherOutcome === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -564,13 +565,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("pregnancyType", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.pregnancyType === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -586,13 +587,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("antenatalCare", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.antenatalCare === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -622,13 +623,13 @@ const StillbirthRegistrationScreen = () => {
                 onPress={() => toggleObstetricCondition(condition)}
               >
                 <View
-                  style={tw`h-5 w-5 border-2 border-blue-500 rounded items-center justify-center mr-2`}
+                  style={tw`h-5 w-5 border-2 border-purple-500 rounded items-center justify-center mr-2`}
                 >
                   {formData.obstetricConditions.includes(condition) && (
-                    <Text style={tw`text-blue-500 font-bold`}>✓</Text>
+                    <Text style={tw`text-purple-500 font-bold`}>✓</Text>
                   )}
                 </View>
-                <Text style={tw`text-gray-800`}>{condition}</Text>
+                <Text style={tw`text-gray-500`}>{condition}</Text>
               </TouchableOpacity>
             ))}
 
@@ -659,13 +660,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("deliveryPlace", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.deliveryPlace === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -709,13 +710,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("deliveryType", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.deliveryType === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -752,13 +753,13 @@ const StillbirthRegistrationScreen = () => {
                     onPress={() => updateFormData("periodOfDeath", option)}
                   >
                     <View
-                      style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                      style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                     >
                       {formData.periodOfDeath === option && (
-                        <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                        <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                       )}
                     </View>
-                    <Text style={tw`text-gray-800`}>{option}</Text>
+                    <Text style={tw`text-gray-500`}>{option}</Text>
                   </TouchableOpacity>
                 )
               )}
@@ -786,13 +787,13 @@ const StillbirthRegistrationScreen = () => {
                 onPress={() => togglePerinatalCause(cause)}
               >
                 <View
-                  style={tw`h-5 w-5 border-2 border-blue-500 rounded items-center justify-center mr-2`}
+                  style={tw`h-5 w-5 border-2 border-purple-500 rounded items-center justify-center mr-2`}
                 >
                   {formData.perinatalCause.includes(cause) && (
-                    <Text style={tw`text-blue-500 font-bold`}>✓</Text>
+                    <Text style={tw`text-purple-500 font-bold`}>✓</Text>
                   )}
                 </View>
-                <Text style={tw`text-gray-800`}>{cause}</Text>
+                <Text style={tw`text-gray-500`}>{cause}</Text>
               </TouchableOpacity>
             ))}
 
@@ -814,13 +815,13 @@ const StillbirthRegistrationScreen = () => {
                   onPress={() => updateFormData("maternalCondition", option)}
                 >
                   <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-blue-500 items-center justify-center mr-2`}
+                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
                     {formData.maternalCondition === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-blue-500`} />
+                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-800`}>{option}</Text>
+                  <Text style={tw`text-gray-500`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -991,14 +992,24 @@ const StillbirthRegistrationScreen = () => {
       style={tw`flex-1 bg-gray-100`}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      <HamburgerButton
-        onPress={() => setDrawerVisible(true)}
-        position="absolute"
-      />
+      <View
+        style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
+      >
+        <HamburgerButton
+          onPress={() => setDrawerVisible(true)}
+          position="relative"
+        />
+        <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
+        <View style={tw`flex-row items-center`}>
+          <TouchableOpacity onPress={() => {}}>
+            <FilePenIcon color="#682483ff" />
+          </TouchableOpacity>
+        </View>
+      </View>
 
       <View style={tw`flex-1`}>
         <ScrollView
-          contentContainerStyle={tw`p-5 pb-32 mt-16`} // Increased bottom padding
+          contentContainerStyle={tw`p-5 pb-32 `} // Increased bottom padding
           showsVerticalScrollIndicator={true}
         >
           {renderScreen()}
@@ -1069,7 +1080,7 @@ const StillbirthRegistrationScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -1082,7 +1093,7 @@ const StillbirthRegistrationScreen = () => {
                         router.push("/patient_registration");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         📋 Report Stillbirth
                       </Text>
                     </TouchableOpacity>
@@ -1092,7 +1103,7 @@ const StillbirthRegistrationScreen = () => {
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>
@@ -1111,7 +1122,7 @@ const StillbirthRegistrationScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -1124,7 +1135,7 @@ const StillbirthRegistrationScreen = () => {
                         router.push("/users");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         👥 Users
                       </Text>
                     </TouchableOpacity>
@@ -1134,7 +1145,7 @@ const StillbirthRegistrationScreen = () => {
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>

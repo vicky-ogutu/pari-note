@@ -1,6 +1,7 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
+import { UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   Alert,
@@ -13,6 +14,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { Dropdown } from "react-native-element-dropdown";
 import tw from "tailwind-react-native-classnames";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
@@ -28,8 +30,6 @@ type FormData = {
 };
 
 // Define role mapping to roleId
-// Match exactly what is in DB
-// Match exactly what is in DB
 const ROLE_MAPPING: { [key: string]: number } = {
   "county user": 2,
   "subcounty user": 3,
@@ -39,11 +39,18 @@ const ROLE_MAPPING: { [key: string]: number } = {
 
 // Who can create whom
 const ROLE_HIERARCHY: { [key: string]: string[] } = {
-  "county user": ["subcounty user"],
-  "subcounty user": ["admin"],
+  "county user": ["subcounty user", "admin", "nurse"],
+  "subcounty user": ["admin", "nurse"],
   admin: ["nurse"],
   nurse: [],
 };
+
+// Define location type
+interface Location {
+  id: number;
+  name: string;
+  type: string;
+}
 
 const RegisterScreen = () => {
   const [formData, setFormData] = useState<FormData>({
@@ -61,23 +68,75 @@ const RegisterScreen = () => {
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
   const [locationId, setLocationId] = useState<number | null>(null);
   const [allowedRoles, setAllowedRoles] = useState<string[]>([]);
+  const [locations, setLocations] = useState<Location[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [isFocus, setIsFocus] = useState(false);
 
   useEffect(() => {
     const getUserData = async () => {
-      const role = await AsyncStorage.getItem("role");
-      const locationIdStr = await AsyncStorage.getItem("location_id");
+      try {
+        const role = await AsyncStorage.getItem("role");
+        const locationIdStr = await AsyncStorage.getItem("location_id");
+        const locationName = await AsyncStorage.getItem("location_name");
+        const locationType = await AsyncStorage.getItem("location_type");
+        const subcountyId = await AsyncStorage.getItem("subcounty_id");
+        const subcountyName = await AsyncStorage.getItem("subcounty_name");
+        const countyId = await AsyncStorage.getItem("county_id");
+        const countyName = await AsyncStorage.getItem("county_name");
 
-      console.log("Current user role from storage:", role); // Debug log
-      setUserRole(role || "");
-      setLocationId(locationIdStr ? parseInt(locationIdStr) : null);
+        console.log("Current user role from storage:", role);
+        setUserRole(role || "");
+        setLocationId(locationIdStr ? parseInt(locationIdStr) : null);
 
-      // Set allowed roles based on current user's role
-      if (role && ROLE_HIERARCHY[role]) {
-        console.log("Allowed roles for", role, ":", ROLE_HIERARCHY[role]); // Debug log
-        setAllowedRoles(ROLE_HIERARCHY[role]);
-      } else {
-        console.log("No allowed roles for role:", role); // Debug log
-        setAllowedRoles([]);
+        // Set allowed roles based on current user's role
+        if (role && ROLE_HIERARCHY[role]) {
+          console.log("Allowed roles for", role, ":", ROLE_HIERARCHY[role]);
+          setAllowedRoles(ROLE_HIERARCHY[role]);
+        } else {
+          console.log("No allowed roles for role:", role);
+          setAllowedRoles([]);
+        }
+
+        // Build available locations from stored data
+        const availableLocations: Location[] = [];
+
+        // Add current location if available
+        if (locationIdStr && locationName && locationType) {
+          availableLocations.push({
+            id: parseInt(locationIdStr),
+            name: locationName,
+            type: locationType,
+          });
+        }
+
+        // Add subcounty if available
+        if (subcountyId && subcountyName) {
+          availableLocations.push({
+            id: parseInt(subcountyId),
+            name: subcountyName,
+            type: "subcounty",
+          });
+        }
+
+        // Add county if available
+        if (countyId && countyName) {
+          availableLocations.push({
+            id: parseInt(countyId),
+            name: countyName,
+            type: "county",
+          });
+        }
+
+        setLocations(availableLocations);
+
+        // Set default selected location to current location
+        if (locationIdStr) {
+          setSelectedLocation(parseInt(locationIdStr));
+        } else if (availableLocations.length > 0) {
+          setSelectedLocation(availableLocations[0].id);
+        }
+      } catch (error) {
+        console.error("Error retrieving user data:", error);
       }
     };
     getUserData();
@@ -97,10 +156,18 @@ const RegisterScreen = () => {
         "location_name",
         "location_type",
         "permissions",
+        "subcounty_id",
+        "subcounty_name",
+        "county_id",
+        "county_name",
       ]);
     } catch (error) {
       console.error("Error clearing auth tokens:", error);
     }
+  };
+
+  const handleAddUser = () => {
+    router.push("/register");
   };
 
   const handleRegister = async () => {
@@ -127,6 +194,11 @@ const RegisterScreen = () => {
       return;
     }
 
+    if (!selectedLocation) {
+      Alert.alert("Error", "Please select a location");
+      return;
+    }
+
     // Check if the selected role is allowed for the current user
     if (!allowedRoles.includes(selectedRoles[0])) {
       Alert.alert("Error", "You are not authorized to create this role");
@@ -140,7 +212,7 @@ const RegisterScreen = () => {
       const accessToken = await AsyncStorage.getItem("access_token");
       console.log("Access Token:", accessToken);
       console.log("User Role:", userRole);
-      console.log("Location ID:", locationId);
+      console.log("Selected Location ID:", selectedLocation);
 
       if (!accessToken) {
         Alert.alert("Error", "Authentication token not found");
@@ -151,11 +223,14 @@ const RegisterScreen = () => {
       // Prepare the request data
       const requestData = {
         email: email,
-        name: `${firstName} ${lastName}`,
+        //name: `${firstName} ${lastName}`,
+        name: selectedRoles[0], //send role name, not person’s name
         password: password,
         roleId: ROLE_MAPPING[selectedRoles[0]], // Using the first selected role
-        locationId: locationId,
+        locationId: selectedLocation, // Use the selected location instead of current user's location
       };
+
+      console.log("Request Data:", requestData);
 
       // Make the API call
       const response = await axios.post(
@@ -182,7 +257,6 @@ const RegisterScreen = () => {
 
       if (error.response) {
         // The request was made and the server responded with a status code
-
         const errorMessage =
           error.response.data?.message || "Registration failed";
         Alert.alert("Error", errorMessage);
@@ -238,24 +312,27 @@ const RegisterScreen = () => {
       style={tw`flex-1 bg-white`}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Header with Menu Button */}
+      {/* Header with Menu Button - Updated UI from second file */}
       <View
-        style={tw`flex-row justify-between items-center p-3 bg-white border-b border-gray-300`}
+        style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
       >
         <HamburgerButton
           onPress={() => setDrawerVisible(true)}
           position="relative"
         />
+        <Text style={tw`text-2xl font-bold text-purple-500`}>Create user</Text>
+        <View style={tw`flex-row items-center`}>
+          <TouchableOpacity onPress={handleAddUser}>
+            <UserPlusIcon color="#682483ff" />
+          </TouchableOpacity>
+        </View>
       </View>
 
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-        <View style={tw`items-center mb-8`}>
+        {/* <View style={tw`items-center mb-8`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
             Create User Account
           </Text>
-          {/* <Text style={tw`text-gray-600 text-center`}>
-            Add a new healthcare provider to the system
-          </Text> */}
           {userRole && (
             <Text style={tw`text-purple-600 text-sm mt-1`}>{userRole}</Text>
           )}
@@ -264,7 +341,7 @@ const RegisterScreen = () => {
               You can create: {allowedRoles.join(", ")}
             </Text>
           )}
-        </View>
+        </View> */}
 
         <View style={tw`w-full`}>
           <TextInput
@@ -320,9 +397,44 @@ const RegisterScreen = () => {
             secureTextEntry
           />
 
+          {/* Location Dropdown */}
+          {locations.length > 0 && (
+            <View style={tw`mb-4`}>
+              <Text style={tw`text-gray-500 mb-2 font-medium`}>
+                Select Location *
+              </Text>
+              <Dropdown
+                style={[
+                  tw`bg-gray-100 p-4 rounded-lg border border-gray-300`,
+                  isFocus && { borderColor: "blue" },
+                ]}
+                placeholderStyle={tw`text-gray-500`}
+                selectedTextStyle={tw`text-gray-500`}
+                inputSearchStyle={tw`h-10 text-gray-500`}
+                data={locations.map((loc) => ({
+                  label: `${loc.name} (${loc.type})`,
+                  value: loc.id,
+                }))}
+                search
+                maxHeight={300}
+                labelField="label"
+                valueField="value"
+                placeholder={!isFocus ? "Select location" : "..."}
+                searchPlaceholder="Search..."
+                value={selectedLocation}
+                onFocus={() => setIsFocus(true)}
+                onBlur={() => setIsFocus(false)}
+                onChange={(item) => {
+                  setSelectedLocation(item.value);
+                  setIsFocus(false);
+                }}
+              />
+            </View>
+          )}
+
           {/* Role Selection Checkboxes */}
           <View style={tw`mb-4`}>
-            <Text style={tw`text-gray-700 mb-2 font-medium`}>
+            <Text style={tw`text-gray-500 mb-2 font-medium`}>
               Select Role *
             </Text>
 
@@ -342,10 +454,10 @@ const RegisterScreen = () => {
                 }`}
               >
                 {selectedRoles.includes("county user") && (
-                  <Text style={tw`text-white font-bold`}>✓</Text>
+                  <Text style={tw`text-white font-sm`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>County User</Text>
+              <Text style={tw`text-gray-500`}>County admin</Text>
             </TouchableOpacity>
 
             {/* Subcounty User */}
@@ -367,7 +479,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Subcounty User</Text>
+              <Text style={tw`text-gray-500`}>Subcounty admin</Text>
             </TouchableOpacity>
 
             {/* Admin (Facility In-Charge) */}
@@ -389,7 +501,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Admin (Facility In-Charge)</Text>
+              <Text style={tw`text-gray-500`}>Facility in-charge</Text>
             </TouchableOpacity>
 
             {/* Nurse */}
@@ -411,7 +523,7 @@ const RegisterScreen = () => {
                   <Text style={tw`text-white font-bold`}>✓</Text>
                 )}
               </View>
-              <Text style={tw`text-gray-700`}>Nurse</Text>
+              <Text style={tw`text-gray-500`}>HCW</Text>
             </TouchableOpacity>
           </View>
 
@@ -449,7 +561,7 @@ const RegisterScreen = () => {
             <View style={tw`p-6 bg-purple-600`}>
               <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Stillbirth Notification System
+                Stillbirth Notification
               </Text>
             </View>
 
@@ -473,7 +585,7 @@ const RegisterScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -486,12 +598,12 @@ const RegisterScreen = () => {
                         router.push("/users");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         👥 Users
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Register */}
+                    {/* Register
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={() => {
@@ -499,17 +611,17 @@ const RegisterScreen = () => {
                         router.push("/register");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         📝 Register Staff
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* Logout */}
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>

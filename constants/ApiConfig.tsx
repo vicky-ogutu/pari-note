@@ -1,6 +1,6 @@
 export const getEndpoint = (path: string) => `${BASE_URL}${path}`;
-//export const BASE_URL = "http://localhost:3000";
-export const BASE_URL = "http://192.168.100.25:3000";
+export const BASE_URL = "http://localhost:3000";
+// export const BASE_URL = "http://192.168.100.25:3000";
 
 // Alternatively, with environment detection
 export const API_CONFIG = {

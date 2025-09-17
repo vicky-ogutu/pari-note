@@ -2,8 +2,8 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
+import { UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
-import { BASE_URL } from "../constants/ApiConfig";
 import {
   ActivityIndicator,
   Alert,
@@ -17,6 +17,7 @@ import {
 import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
 import HamburgerButton from "../components/HamburgerButton";
+import { BASE_URL } from "../constants/ApiConfig";
 
 // User type definition based on API response
 export type User = {
@@ -195,16 +196,16 @@ const UsersScreen = () => {
   const renderUserItem = ({ item }: { item: User }) => (
     <TouchableOpacity
       style={tw`bg-white p-4 rounded-lg mb-2 border border-gray-200 ${
-        selectedUser?.id === item.id ? "border-blue-500 border-2" : ""
+        selectedUser?.id === item.id ? "border-purple-500 border-2" : ""
       }`}
       onPress={() => handleUserSelect(item)}
     >
-      <Text style={tw`font-bold text-gray-800`}>{item.name}</Text>
-      <Text style={tw`text-gray-600 text-sm`}>{item.email}</Text>
+      <Text style={tw`font-bold text-gray-500`}>{item.name}</Text>
+      <Text style={tw`text-gray-500 text-sm`}>{item.email}</Text>
       {item.phone && (
-        <Text style={tw`text-gray-600 text-sm`}>{item.phone}</Text>
+        <Text style={tw`text-gray-500 text-sm`}>{item.phone}</Text>
       )}
-      <Text style={tw`text-blue-600 text-xs font-medium`}>
+      <Text style={tw`text-purple-500 text-xs font-medium`}>
         Role: {formatRoleName(item.role.name)}
       </Text>
       <Text style={tw`text-green-600 text-xs font-medium`}>
@@ -212,7 +213,7 @@ const UsersScreen = () => {
       </Text>
 
       <TouchableOpacity
-        style={tw`bg-blue-600 px-3 py-1 rounded mt-2 self-start`}
+        style={tw`bg-purple-500 px-3 py-1 rounded mt-2 self-start`}
         onPress={() => handleEditUser(item)}
       >
         <Text style={tw`text-white text-xs`}>Edit</Text>
@@ -224,7 +225,7 @@ const UsersScreen = () => {
     return (
       <View style={tw`flex-1 bg-gray-100 justify-center items-center`}>
         <ActivityIndicator size="large" color="#682483" />
-        <Text style={tw`mt-4 text-gray-600`}>Loading users...</Text>
+        <Text style={tw`mt-4 text-gray-500`}>Loading users...</Text>
       </View>
     );
   }
@@ -245,7 +246,7 @@ const UsersScreen = () => {
         </Text>
         <TouchableOpacity onPress={handleAddUser}>
           <Text>
-            <Icon name="person-add" size={36} color="#682483ff" />
+            <UserPlusIcon style={tw`h-5 w-5`} color="#682483ff" />
           </Text>
         </TouchableOpacity>
       </View>
@@ -263,10 +264,10 @@ const UsersScreen = () => {
       <View style={tw`flex-1 p-5`}>
         {/* Search Section */}
         <View style={tw`mb-6`}>
-          <Text style={tw`text-lg font-bold mb-3`}>Search Users</Text>
+          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>Search Users</Text>
           <View style={tw`flex-row`}>
             <TextInput
-              style={tw`flex-1 bg-white p-3 rounded-l border border-gray-300`}
+              style={tw`flex-1 bg-white p-3 text-gray-500 rounded-l border border-gray-300`}
               placeholder="Search by name, email, role, or phone"
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -285,7 +286,7 @@ const UsersScreen = () => {
           {/* Users List */}
           <View style={tw`flex-1 mb-6 lg:mb-0 lg:mr-4`}>
             <View style={tw`flex-row justify-between items-center mb-3`}>
-              <Text style={tw`text-lg font-bold`}>
+              <Text style={tw`text-lg font-bold text-gray-500`}>
                 Users List ({filteredUsers.length})
               </Text>
               <TouchableOpacity onPress={fetchUsers} style={tw`p-2`}>
@@ -313,24 +314,24 @@ const UsersScreen = () => {
           {/* User Details */}
           {selectedUser && (
             <View style={tw`flex-1 bg-white p-5 rounded-lg`}>
-              <Text style={tw`text-lg font-bold mb-4`}>User Details</Text>
+              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>User Details</Text>
 
-              <Text style={tw`text-gray-800 mb-2`}>
+              <Text style={tw`text-gray-500 mb-2`}>
                 <Text style={tw`font-bold`}>Name:</Text> {selectedUser.name}
               </Text>
-              <Text style={tw`text-gray-800 mb-2`}>
+              <Text style={tw`text-gray-500 mb-2`}>
                 <Text style={tw`font-bold`}>Email:</Text> {selectedUser.email}
               </Text>
               {selectedUser.phone && (
-                <Text style={tw`text-gray-800 mb-2`}>
+                <Text style={tw`text-gray-500 mb-2`}>
                   <Text style={tw`font-bold`}>Phone:</Text> {selectedUser.phone}
                 </Text>
               )}
-              <Text style={tw`text-gray-800 mb-2`}>
+              <Text style={tw`text-gray-500 mb-2`}>
                 <Text style={tw`font-bold`}>Role:</Text>{" "}
                 {formatRoleName(selectedUser.role.name)}
               </Text>
-              <Text style={tw`text-gray-800 mb-4`}>
+              <Text style={tw`text-gray-500 mb-4`}>
                 <Text style={tw`font-bold`}>Location:</Text>{" "}
                 {selectedUser.location.name} ({selectedUser.location.type})
               </Text>
@@ -404,7 +405,7 @@ const UsersScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -417,7 +418,7 @@ const UsersScreen = () => {
                         router.push("/patient_registration");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         📋 Report Stillbirth
                       </Text>
                     </TouchableOpacity>
@@ -427,7 +428,7 @@ const UsersScreen = () => {
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>
@@ -446,7 +447,7 @@ const UsersScreen = () => {
                         router.push("/home");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🏠 Dashboard
                       </Text>
                     </TouchableOpacity>
@@ -459,7 +460,7 @@ const UsersScreen = () => {
                         router.push("/users");
                       }}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         👥 Users
                       </Text>
                     </TouchableOpacity>
@@ -469,7 +470,7 @@ const UsersScreen = () => {
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={handleLogout}
                     >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
+                      <Text style={tw`text-gray-500 font-medium ml-2`}>
                         🚪 Logout
                       </Text>
                     </TouchableOpacity>

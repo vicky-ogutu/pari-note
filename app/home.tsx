@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { BASE_URL } from "../constants/ApiConfig";
 
+import { FilePenIcon, UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -34,6 +35,10 @@ interface TodayReport {
     stillbirth?: number;
     fresh?: number;
     macerated?: number;
+  };
+  place: {
+    facility: number;
+    home: number;
   };
 }
 
@@ -92,6 +97,7 @@ const HomeScreen = () => {
 
       const accessToken = await AsyncStorage.getItem("access_token");
       const locationId = await AsyncStorage.getItem("location_id");
+      const nurseRole = await AsyncStorage.getItem("role");
 
       console.log("Access Token:", accessToken ? "Exists" : "Missing");
       console.log("Location ID:", locationId);
@@ -142,7 +148,11 @@ const HomeScreen = () => {
   };
 
   const handleAddUser = () => {
-    router.push("/register");
+    if (userRole !== "nurse") {
+      router.push("/register");
+    } else {
+      Alert.alert("Please Note:", "HCW cannot create user Accounts!");
+    }
   };
 
   const clearAuthTokens = async () => {
@@ -205,7 +215,12 @@ const HomeScreen = () => {
             <Icon name="refresh" size={24} color="#682483ff" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAddUser}>
-            <Icon name="person-add" size={36} color="#682483ff" />
+            {userRole === "nurse" ? (
+              <FilePenIcon color="#682483ff" />
+              
+            ) : (
+              <UserPlusIcon size={36} color="#682483ff" />
+            )}
           </TouchableOpacity>
         </View>
       </View>
@@ -283,7 +298,7 @@ const HomeScreen = () => {
         ) : (
           <MonthlyReport
             data={reportData?.monthly || []}
-            rawData={mockStillbirthData} // This can be kept for detailed view if needed
+            //rawData={mockStillbirthData} // This can be kept for detailed view if needed
           />
         )}
       </ScrollView>
@@ -309,7 +324,7 @@ const HomeScreen = () => {
             <View style={tw`p-6 bg-purple-600`}>
               <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Stillbirth Notification System
+                Stillbirth Notification
               </Text>
             </View>
 
@@ -391,7 +406,7 @@ const HomeScreen = () => {
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Register */}
+                    {/* Register
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={() => {
@@ -402,7 +417,7 @@ const HomeScreen = () => {
                       <Text style={tw`text-gray-700 font-medium ml-2`}>
                         📝 Register User
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* Logout */}
                     <TouchableOpacity
