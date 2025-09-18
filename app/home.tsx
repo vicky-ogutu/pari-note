@@ -220,10 +220,11 @@ const HomeScreen = () => {
             <Icon name="refresh" size={24} color="#682483ff" />
           </TouchableOpacity>
           <TouchableOpacity onPress={handleAddUser}>
-            {userRole === "admin" ? (
-              <UserPlusIcon size={36} color="#682483ff" />
-            ) : (
+            {userRole === "nurse" ? (
               <FilePenIcon color="#682483ff" />
+              
+            ) : (
+              <UserPlusIcon size={36} color="#682483ff" />
             )}
           </TouchableOpacity>
         </View>
@@ -337,7 +338,7 @@ const HomeScreen = () => {
             <View style={tw`p-6 bg-purple-600`}>
               <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Stillbirth Notification System
+                Stillbirth Notification
               </Text>
             </View>
 
@@ -419,7 +420,7 @@ const HomeScreen = () => {
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Register */}
+                    {/* Register
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
                       onPress={() => {
@@ -430,7 +431,7 @@ const HomeScreen = () => {
                       <Text style={tw`text-gray-700 font-medium ml-2`}>
                         📝 Register User
                       </Text>
-                    </TouchableOpacity>
+                    </TouchableOpacity> */}
 
                     {/* Logout */}
                     <TouchableOpacity
