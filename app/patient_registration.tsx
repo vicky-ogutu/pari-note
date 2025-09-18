@@ -348,9 +348,7 @@ const StillbirthRegistrationScreen = () => {
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
               onPress={() => setShowTimePicker(true)}
             >
-              <Text>
-                {formData.timeOfDeath || "Time of death (HH:MM AM/PM)"}
-              </Text>
+              <Text>{formData.timeOfDeath || "Time of death (HH:MM)"}</Text>
             </TouchableOpacity>
 
             {showTimePicker && (
