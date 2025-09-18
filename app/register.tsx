@@ -559,7 +559,9 @@ const RegisterScreen = () => {
             style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}
           >
             <View style={tw`p-6 bg-purple-600`}>
-              <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
+              <Text style={tw`text-white text-xl font-bold`}>
+                MOH 369 register
+              </Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
                 Stillbirth Notification
               </Text>

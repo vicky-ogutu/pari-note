@@ -67,15 +67,12 @@ const UsersScreen = () => {
         return;
       }
 
-      const response = await axios.get(
-        `${BASE_URL}/users/user-location`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.get(`${BASE_URL}/users/user-location`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.status === 200) {
         setUsers(response.data);
@@ -264,7 +261,9 @@ const UsersScreen = () => {
       <View style={tw`flex-1 p-5`}>
         {/* Search Section */}
         <View style={tw`mb-6`}>
-          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>Search Users</Text>
+          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>
+            Search Users
+          </Text>
           <View style={tw`flex-row`}>
             <TextInput
               style={tw`flex-1 bg-white p-3 text-gray-500 rounded-l border border-gray-300`}
@@ -314,7 +313,9 @@ const UsersScreen = () => {
           {/* User Details */}
           {selectedUser && (
             <View style={tw`flex-1 bg-white p-5 rounded-lg`}>
-              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>User Details</Text>
+              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>
+                User Details
+              </Text>
 
               <Text style={tw`text-gray-500 mb-2`}>
                 <Text style={tw`font-bold`}>Name:</Text> {selectedUser.name}
@@ -383,7 +384,7 @@ const UsersScreen = () => {
           <View style={tw`w-64 h-full bg-white`}>
             <View style={tw`p-5 bg-purple-500`}>
               <Text style={tw`text-white text-lg font-bold`}>
-                PeriNote Menu
+                MOH 369 register
               </Text>
             </View>
 

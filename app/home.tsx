@@ -214,7 +214,9 @@ const HomeScreen = () => {
           onPress={() => setDrawerVisible(true)}
           position="relative"
         />
-        <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
+        <Text style={tw`text-2xl font-bold text-purple-500`}>
+          MOH 369 register
+        </Text>
         <View style={tw`flex-row items-center`}>
           <TouchableOpacity onPress={handleRefresh} style={tw`mr-3`}>
             <Icon name="refresh" size={24} color="#682483ff" />
@@ -222,7 +224,6 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={handleAddUser}>
             {userRole === "nurse" ? (
               <FilePenIcon color="#682483ff" />
-              
             ) : (
               <UserPlusIcon size={36} color="#682483ff" />
             )}
@@ -336,7 +337,9 @@ const HomeScreen = () => {
             style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}
           >
             <View style={tw`p-6 bg-purple-600`}>
-              <Text style={tw`text-white text-xl font-bold`}>PeriNote</Text>
+              <Text style={tw`text-white text-xl font-bold`}>
+                MOH 369 register
+              </Text>
               <Text style={tw`text-purple-100 text-sm mt-1`}>
                 Stillbirth Notification
               </Text>

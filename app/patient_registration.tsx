@@ -1058,7 +1058,7 @@ const StillbirthRegistrationScreen = () => {
           <View style={tw`w-64 h-full bg-white`}>
             <View style={tw`p-5 bg-purple-500`}>
               <Text style={tw`text-white text-lg font-bold`}>
-                PeriNote Menu
+                MOH 369 register
               </Text>
             </View>
 
