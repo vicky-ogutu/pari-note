@@ -199,9 +199,17 @@ const RegisterScreen = () => {
       return;
     }
 
-    // Check if the selected role is allowed for the current user
-    if (!allowedRoles.includes(selectedRoles[0])) {
-      Alert.alert("Error", "You are not authorized to create this role");
+    // Check if all selected roles are allowed for the current user
+    const unauthorizedRoles = selectedRoles.filter(
+      (role) => !allowedRoles.includes(role)
+    );
+    if (unauthorizedRoles.length > 0) {
+      Alert.alert(
+        "Error",
+        `You are not authorized to create these roles: ${unauthorizedRoles.join(
+          ", "
+        )}`
+      );
       return;
     }
 
@@ -220,13 +228,12 @@ const RegisterScreen = () => {
         return;
       }
 
-      // Prepare the request data
+      // Prepare the request data for multiple roles
       const requestData = {
         email: email,
-        //name: `${firstName} ${lastName}`,
-        name: selectedRoles[0], //send role name, not person’s name
+        name: `${firstName} ${lastName}`,
         password: password,
-        roleId: ROLE_MAPPING[selectedRoles[0]], // Using the first selected role
+        roleIds: selectedRoles.map((role) => ROLE_MAPPING[role]), // Send array of role IDs
         locationId: selectedLocation, // Use the selected location instead of current user's location
       };
 
@@ -280,14 +287,23 @@ const RegisterScreen = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Handle role selection - allow only one role for now
+  // Handle role selection - allow multiple roles
   const toggleRole = (role: string) => {
     // Check if the role is allowed for the current user
-    if (allowedRoles.includes(role)) {
-      setSelectedRoles([role]); // Only allow one role selection
-    } else {
+    if (!allowedRoles.includes(role)) {
       Alert.alert("Error", "You are not authorized to create this role");
+      return;
     }
+
+    setSelectedRoles((prev) => {
+      if (prev.includes(role)) {
+        // Remove role if already selected
+        return prev.filter((r) => r !== role);
+      } else {
+        // Add role if not selected
+        return [...prev, role];
+      }
+    });
   };
 
   const handleLogout = () => {
@@ -329,19 +345,26 @@ const RegisterScreen = () => {
       </View>
 
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-        {/* <View style={tw`items-center mb-8`}>
+        <View style={tw`items-center mb-8`}>
           <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
             Create User Account
           </Text>
           {userRole && (
-            <Text style={tw`text-purple-600 text-sm mt-1`}>{userRole}</Text>
+            <Text style={tw`text-purple-600 text-sm mt-1`}>
+              Logged in as: {userRole}
+            </Text>
           )}
           {allowedRoles.length > 0 && (
             <Text style={tw`text-green-600 text-xs mt-1`}>
               You can create: {allowedRoles.join(", ")}
             </Text>
           )}
-        </View> */}
+          {selectedRoles.length > 0 && (
+            <Text style={tw`text-blue-600 text-xs mt-1`}>
+              Selected: {selectedRoles.join(", ")}
+            </Text>
+          )}
+        </View>
 
         <View style={tw`w-full`}>
           <TextInput
@@ -435,7 +458,7 @@ const RegisterScreen = () => {
           {/* Role Selection Checkboxes */}
           <View style={tw`mb-4`}>
             <Text style={tw`text-gray-500 mb-2 font-medium`}>
-              Select Role *
+              Select Role(s) *
             </Text>
 
             {/* County User */}
@@ -604,19 +627,6 @@ const RegisterScreen = () => {
                         👥 Users
                       </Text>
                     </TouchableOpacity>
-
-                    {/* Register
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/register");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        📝 Register Staff
-                      </Text>
-                    </TouchableOpacity> */}
 
                     {/* Logout */}
                     <TouchableOpacity
