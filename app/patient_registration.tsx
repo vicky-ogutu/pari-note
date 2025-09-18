@@ -324,7 +324,7 @@ const StillbirthRegistrationScreen = () => {
               onPress={() => setShowDatePicker(true)}
             >
               <Text>
-                {formData.dateOfDeath || "Date of death (dd/mm/yyyy)"}
+                {formData.dateOfDeath || "Date of death (yyyy/mm/dd)"}
               </Text>
             </TouchableOpacity>
 
@@ -999,7 +999,9 @@ const StillbirthRegistrationScreen = () => {
           onPress={() => setDrawerVisible(true)}
           position="relative"
         />
-        <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
+        <Text style={tw`text-2xl font-bold text-purple-500`}>
+          MOH 369 register
+        </Text>
         <View style={tw`flex-row items-center`}>
           <TouchableOpacity onPress={() => {}}>
             <FilePenIcon color="#682483ff" />
