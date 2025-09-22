@@ -12,6 +12,7 @@ import {
 } from "react-native";
 import tw from "tailwind-react-native-classnames";
 import * as XLSX from "xlsx";
+import { BASE_URL } from "../constants/ApiConfig";
 
 interface MonthlyReportProps {
   data: {
@@ -24,7 +25,7 @@ interface MonthlyReportProps {
   }[];
 }
 
-// Mock data for monthly linelist - replace this with your actual API call later
+// Mock data for monthly linelist - replace with actual API call later
 const mockMonthlyLinelistData = [
   {
     id: 1,
@@ -70,19 +71,17 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data }) => {
       // Fetch monthly linelist data from API
       let linelistData;
       try {
-        const API_BASE =
-          process.env.EXPO_PUBLIC_API_URL || "https://your-api-domain.com/api";
         const currentDate = new Date();
         const year = currentDate.getFullYear();
         const accessToken = await AsyncStorage.getItem("access_token");
 
         const response = await fetch(
-          `${API_BASE}/reports/monthly-linelist?year=${year}`,
+          `${BASE_URL}/reports/monthly-linelist?year=${year}`,
           {
             method: "GET",
             headers: {
               "Content-Type": "application/json",
-              Authorization: `Bearer ${accessToken}`, // if authentication is required
+              Authorization: `Bearer ${accessToken}`,
             },
           }
         );
@@ -94,9 +93,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data }) => {
         linelistData = await response.json();
       } catch (error) {
         console.error("Error fetching monthly linelist data:", error);
-        // Fall back to mock data if API fails
-        linelistData = mockMonthlyLinelistData;
-        Alert.alert("Info", "Using sample data - API connection failed");
+        // test mock data if API fails
+        //linelistData = mockMonthlyLinelistData;
+        Alert.alert("Info", "- Network connection failed");
       }
 
       // Create worksheet
