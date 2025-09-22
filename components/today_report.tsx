@@ -7,7 +7,7 @@ import { Alert, Platform, Text, TouchableOpacity, View } from "react-native";
 import * as Sharing from "expo-sharing";
 import tw from "tailwind-react-native-classnames";
 import * as XLSX from "xlsx";
-
+import { BASE_URL } from "../constants/ApiConfig";
 interface ReportDashboardProps {
   data?: {
     total: number;
@@ -17,7 +17,7 @@ interface ReportDashboardProps {
   };
 }
 
-// Mock data for linelist - Will comment when I pass API call
+// Mock data for linelist - we Will use to test when API is not available
 const mockLinelistData = [
   {
     id: 1,
@@ -44,7 +44,7 @@ const mockLinelistData = [
     gestationalAge: "30 weeks",
   },
 ];
-//let linelistData;
+let linelistData;
 
 const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
   const downloadLinelistReport = async () => {
@@ -52,22 +52,22 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
       Alert.alert("Download", "Preparing linelist report...");
       const accessToken = await AsyncStorage.getItem("access_token");
 
-      // Using mock data for now
-      const linelistData = mockLinelistData;
+      // Using for mock data
+      //const linelistData = mockLinelistData;
 
-      // const response = await fetch(`${BASE_URL}/users/user-location`, {
-      //     method: 'GET',
-      //     headers: {
-      //       'Content-Type': 'application/json',
-      //       'Authorization': `Bearer ${accessToken}` //
-      //     }
-      //   });
+      const response = await fetch(`${BASE_URL}/users/user-location`, {
+        method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`, //
+        },
+      });
 
-      //   if (!response.ok) {
-      //     throw new Error(`HTTP error! status: ${response.status}`);
-      //   }
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
 
-      //   linelistData = await response.json();
+      linelistData = await response.json();
 
       // Create worksheet
       const ws = XLSX.utils.json_to_sheet(linelistData);

@@ -67,7 +67,7 @@ interface StillbirthReport {
 }
 
 export const mockStillbirthData: FormData[] = [
-  // ... (keep your existing mock data for raw data display if needed)
+  // dummy data for test)
 ];
 
 const HomeScreen = () => {
@@ -314,7 +314,7 @@ const HomeScreen = () => {
         ) : (
           <MonthlyReport
             data={reportData?.monthly || []}
-            //rawData={mockStillbirthData} // This can be kept for detailed view if needed
+            //rawData={mockStillbirthData} // 
           />
         )}
         <DateRangeReport />
