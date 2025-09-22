@@ -962,135 +962,133 @@ const StillbirthRegistrationScreen = () => {
 
       case 6:
         return (
-          <ScrollView style={tw`mb-5`}>
+          <View style={tw`flex-1 mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
               Review All Information <RequiredAsterisk />
             </Text>
-            <ScrollView style={tw`mb-5 max-h-96`}>
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                1. Details of Deceased baby <RequiredAsterisk />
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Date of Death: {formData.dateOfDeath || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Time of Death: {formData.timeOfDeath || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Gestation Weeks: {formData.gestationWeeks || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Baby Outcome: {formData.babyOutcome || "Not provided"}
-              </Text>
 
-              {formData.babyOutcome === "Alive" && (
-                <>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Apgar 1min: {formData.apgar1min || "Not provided"}
-                  </Text>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Apgar 5min: {formData.apgar5min || "Not provided"}
-                  </Text>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Apgar 10min: {formData.apgar10min || "Not provided"}
-                  </Text>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Age at Death: {formData.ageAtDeath || "Not provided"}
-                  </Text>
-                </>
-              )}
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
+              1. Details of Deceased baby <RequiredAsterisk />
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Date of Death: {formData.dateOfDeath || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Time of Death: {formData.timeOfDeath || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Gestation Weeks: {formData.gestationWeeks || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Baby Outcome: {formData.babyOutcome || "Not provided"}
+            </Text>
 
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Birth Weight: {formData.birthWeight || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Sex of Baby: {formData.sexOfBaby || "Not provided"}
-              </Text>
-              {formData.sexOfBaby === "Others" && (
+            {formData.babyOutcome === "Alive" && (
+              <>
                 <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Other Sex: {formData.otherSex || "Not provided"}
+                  Apgar 1min: {formData.apgar1min || "Not provided"}
                 </Text>
-              )}
-
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                2. Mother's details <RequiredAsterisk />
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Mother's Age: {formData.motherAge || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Married: {formData.motherMarried || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Para: {formData.motherPara || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Mother's Outcome: {formData.motherOutcome || "Not provided"}
-              </Text>
-
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                3. Obstetric history and care during Pregnancy{" "}
-                <RequiredAsterisk />
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Pregnancy Type: {formData.pregnancyType || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Antenatal Care: {formData.antenatalCare || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Obstetric Conditions:{" "}
-                {formData.obstetricConditions.join(", ") || "None"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Other Obstetric: {formData.otherObstetric || "Not provided"}
-              </Text>
-
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                4. Care during delivery <RequiredAsterisk />
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Delivery Place: {formData.deliveryPlace || "Not provided"}
-              </Text>
-              {formData.deliveryPlace === "Others" && (
                 <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Other Delivery Place:{" "}
-                  {formData.otherDeliveryPlace || "Not provided"}
+                  Apgar 5min: {formData.apgar5min || "Not provided"}
                 </Text>
-              )}
-              {formData.deliveryPlace === "Facility" && (
                 <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Facility Level: {formData.facilityLevel || "Not provided"}
+                  Apgar 10min: {formData.apgar10min || "Not provided"}
                 </Text>
-              )}
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Delivery Type: {formData.deliveryType || "Not provided"}
-              </Text>
-              {formData.deliveryType === "Other" && (
                 <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Other Delivery Type:{" "}
-                  {formData.otherDeliveryType || "Not provided"}
+                  Age at Death: {formData.ageAtDeath || "Not provided"}
                 </Text>
-              )}
+              </>
+            )}
 
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                5. Cause of death <RequiredAsterisk />
-              </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Birth Weight: {formData.birthWeight || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Sex of Baby: {formData.sexOfBaby || "Not provided"}
+            </Text>
+            {formData.sexOfBaby === "Others" && (
               <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Period of Death: {formData.periodOfDeath || "Not provided"}
+                Other Sex: {formData.otherSex || "Not provided"}
               </Text>
+            )}
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
+              2. Mother's details <RequiredAsterisk />
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Mother's Age: {formData.motherAge || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Married: {formData.motherMarried || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Para: {formData.motherPara || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Mother's Outcome: {formData.motherOutcome || "Not provided"}
+            </Text>
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
+              3. Obstetric history and care during Pregnancy{" "}
+              <RequiredAsterisk />
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Pregnancy Type: {formData.pregnancyType || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Antenatal Care: {formData.antenatalCare || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Obstetric Conditions:{" "}
+              {formData.obstetricConditions.join(", ") || "None"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Other Obstetric: {formData.otherObstetric || "Not provided"}
+            </Text>
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
+              4. Care during delivery <RequiredAsterisk />
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Delivery Place: {formData.deliveryPlace || "Not provided"}
+            </Text>
+            {formData.deliveryPlace === "Others" && (
               <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Perinatal Cause:{" "}
-                {formData.perinatalCause.join(", ") || "Not provided"}
+                Other Delivery Place:{" "}
+                {formData.otherDeliveryPlace || "Not provided"}
               </Text>
+            )}
+            {formData.deliveryPlace === "Facility" && (
               <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Maternal Condition:{" "}
-                {formData.maternalCondition || "Not provided"}
+                Facility Level: {formData.facilityLevel || "Not provided"}
               </Text>
+            )}
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Delivery Type: {formData.deliveryType || "Not provided"}
+            </Text>
+            {formData.deliveryType === "Other" && (
               <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Other Cause: {formData.otherCause || "Not provided"}
+                Other Delivery Type:{" "}
+                {formData.otherDeliveryType || "Not provided"}
               </Text>
-            </ScrollView>
+            )}
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
+              5. Cause of death <RequiredAsterisk />
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Period of Death: {formData.periodOfDeath || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Perinatal Cause:{" "}
+              {formData.perinatalCause.join(", ") || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Maternal Condition: {formData.maternalCondition || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-500`}>
+              Other Cause: {formData.otherCause || "Not provided"}
+            </Text>
 
             <TouchableOpacity
               style={tw`bg-green-300 p-4 rounded mb-3 items-center`}
@@ -1105,7 +1103,7 @@ const StillbirthRegistrationScreen = () => {
             >
               <Text style={tw`text-white font-bold`}>Submit</Text>
             </TouchableOpacity>
-          </ScrollView>
+          </View>
         );
 
       default:
