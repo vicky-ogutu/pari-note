@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { BASE_URL } from "../constants/ApiConfig";
 
+import DateRangeReport from "@/components/DateRangeReport";
 import { FilePenIcon, UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
@@ -316,6 +317,7 @@ const HomeScreen = () => {
             //rawData={mockStillbirthData} // This can be kept for detailed view if needed
           />
         )}
+        <DateRangeReport />
       </ScrollView>
 
       {/* Drawer */}
