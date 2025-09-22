@@ -200,7 +200,68 @@ const StillbirthRegistrationScreen = () => {
     updateFormData("perinatalCause", currentCauses);
   };
 
+  const validateCurrentScreen = () => {
+    switch (currentScreen) {
+      case 1:
+        return (
+          formData.dateOfDeath &&
+          formData.timeOfDeath &&
+          formData.gestationWeeks &&
+          formData.babyOutcome &&
+          formData.birthWeight &&
+          formData.sexOfBaby &&
+          (formData.sexOfBaby !== "Others" || formData.otherSex) &&
+          (formData.babyOutcome !== "Alive" ||
+            (formData.apgar1min &&
+              formData.apgar5min &&
+              formData.apgar10min &&
+              formData.ageAtDeath))
+        );
+      case 2:
+        return (
+          formData.motherAge &&
+          formData.motherMarried &&
+          formData.motherPara &&
+          formData.motherOutcome
+        );
+      case 3:
+        return (
+          formData.pregnancyType &&
+          formData.antenatalCare &&
+          (formData.obstetricConditions.length > 0 || formData.otherObstetric)
+        );
+      case 4:
+        return (
+          formData.deliveryPlace &&
+          (formData.deliveryPlace !== "Others" ||
+            formData.otherDeliveryPlace) &&
+          (formData.deliveryPlace !== "Facility" || formData.facilityLevel) &&
+          formData.deliveryType &&
+          (formData.deliveryType !== "Other" || formData.otherDeliveryType)
+        );
+      case 5:
+        return (
+          formData.periodOfDeath &&
+          (formData.perinatalCause.length > 0 ||
+            formData.maternalCondition ||
+            formData.otherCause)
+        );
+      default:
+        return true;
+    }
+  };
+
   const nextScreen = () => {
+    // if (currentScreen < 6) {
+    //   setCurrentScreen(currentScreen + 1);
+    // }
+    if (!validateCurrentScreen()) {
+      Alert.alert(
+        "Missing information",
+        "Please fill in all required fields (*) before proceeding."
+      );
+      return;
+    }
     if (currentScreen < 6) {
       setCurrentScreen(currentScreen + 1);
     }
@@ -309,23 +370,26 @@ const StillbirthRegistrationScreen = () => {
     }
   };
 
+  const RequiredAsterisk = () => <Text style={tw`text-red-500`}>*</Text>;
+
   const renderScreen = () => {
     switch (currentScreen) {
       case 1:
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              1. Details of Deceased baby
+              1. Details of Deceased baby <RequiredAsterisk />
             </Text>
 
             {/* Date Picker Field */}
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Date of death <RequiredAsterisk />
+            </Text>
             <TouchableOpacity
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text>
-                {formData.dateOfDeath || "Date of death (yyyy/mm/dd)"}
-              </Text>
+              <Text>{formData.dateOfDeath || "Select date (yyyy/mm/dd)"}</Text>
             </TouchableOpacity>
 
             {showDatePicker && (
@@ -344,11 +408,14 @@ const StillbirthRegistrationScreen = () => {
             )}
 
             {/* Time Picker Field */}
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Time of death <RequiredAsterisk />
+            </Text>
             <TouchableOpacity
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
               onPress={() => setShowTimePicker(true)}
             >
-              <Text>{formData.timeOfDeath || "Time of death (HH:MM)"}</Text>
+              <Text>{formData.timeOfDeath || "Select time (HH:MM)"}</Text>
             </TouchableOpacity>
 
             {showTimePicker && (
@@ -366,16 +433,19 @@ const StillbirthRegistrationScreen = () => {
               />
             )}
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Gestation at birth (in weeks) <RequiredAsterisk />
+            </Text>
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Gestation at birth (in weeks)"
+              placeholder="Enter gestation in weeks"
               value={formData.gestationWeeks}
               onChangeText={(text) => updateFormData("gestationWeeks", text)}
               keyboardType="numeric"
             />
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Baby outcome:
+              Baby outcome: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
@@ -401,35 +471,55 @@ const StillbirthRegistrationScreen = () => {
             {formData.babyOutcome === "Alive" && (
               <>
                 <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-                  Apgar score:
+                  Apgar score: <RequiredAsterisk />
                 </Text>
                 <View style={tw`flex-row justify-between mb-4`}>
-                  <TextInput
-                    style={tw`bg-white p-4 rounded border border-gray-300 flex-1 mx-1`}
-                    placeholder="1 min"
-                    value={formData.apgar1min}
-                    onChangeText={(text) => updateFormData("apgar1min", text)}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={tw`bg-white p-4 rounded border border-gray-300 flex-1 mx-1`}
-                    placeholder="5 min"
-                    value={formData.apgar5min}
-                    onChangeText={(text) => updateFormData("apgar5min", text)}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={tw`bg-white p-4 rounded border border-gray-300 flex-1 mx-1`}
-                    placeholder="10 min"
-                    value={formData.apgar10min}
-                    onChangeText={(text) => updateFormData("apgar10min", text)}
-                    keyboardType="numeric"
-                  />
+                  <View style={tw`flex-1 mx-1`}>
+                    <Text style={tw`text-sm font-semibold mb-1 text-gray-500`}>
+                      1 min
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-4 rounded border border-gray-300`}
+                      placeholder="Score"
+                      value={formData.apgar1min}
+                      onChangeText={(text) => updateFormData("apgar1min", text)}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={tw`flex-1 mx-1`}>
+                    <Text style={tw`text-sm font-semibold mb-1 text-gray-500`}>
+                      5 min
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-4 rounded border border-gray-300`}
+                      placeholder="Score"
+                      value={formData.apgar5min}
+                      onChangeText={(text) => updateFormData("apgar5min", text)}
+                      keyboardType="numeric"
+                    />
+                  </View>
+                  <View style={tw`flex-1 mx-1`}>
+                    <Text style={tw`text-sm font-semibold mb-1 text-gray-500`}>
+                      10 min
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-4 rounded border border-gray-300`}
+                      placeholder="Score"
+                      value={formData.apgar10min}
+                      onChangeText={(text) =>
+                        updateFormData("apgar10min", text)
+                      }
+                      keyboardType="numeric"
+                    />
+                  </View>
                 </View>
 
+                <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+                  Age at time of death (in days) <RequiredAsterisk />
+                </Text>
                 <TextInput
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                  placeholder="Age at time of death (in days)"
+                  placeholder="Enter age in days"
                   value={formData.ageAtDeath}
                   onChangeText={(text) => updateFormData("ageAtDeath", text)}
                   keyboardType="numeric"
@@ -437,16 +527,19 @@ const StillbirthRegistrationScreen = () => {
               </>
             )}
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Birth weight (in grams) <RequiredAsterisk />
+            </Text>
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Birth weight (in grams)"
+              placeholder="Enter birth weight in grams"
               value={formData.birthWeight}
               onChangeText={(text) => updateFormData("birthWeight", text)}
               keyboardType="numeric"
             />
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Sex of baby:
+              Sex of baby: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Male", "Female", "Others"].map((option) => (
@@ -468,12 +561,17 @@ const StillbirthRegistrationScreen = () => {
             </View>
 
             {formData.sexOfBaby === "Others" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Specify other sex"
-                value={formData.otherSex}
-                onChangeText={(text) => updateFormData("otherSex", text)}
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+                  Specify other sex <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
+                  placeholder="Enter specification"
+                  value={formData.otherSex}
+                  onChangeText={(text) => updateFormData("otherSex", text)}
+                />
+              </>
             )}
           </View>
         );
@@ -481,19 +579,22 @@ const StillbirthRegistrationScreen = () => {
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              2. Mother's details
+              2. Mother's details <RequiredAsterisk />
             </Text>
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Age (in years) <RequiredAsterisk />
+            </Text>
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Age (in years)"
+              placeholder="Enter mother's age"
               value={formData.motherAge}
               onChangeText={(text) => updateFormData("motherAge", text)}
               keyboardType="numeric"
             />
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Married:
+              Married: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Yes", "No"].map((option) => (
@@ -514,15 +615,18 @@ const StillbirthRegistrationScreen = () => {
               ))}
             </View>
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Para + <RequiredAsterisk />
+            </Text>
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Para +"
+              placeholder="Enter para information"
               value={formData.motherPara}
               onChangeText={(text) => updateFormData("motherPara", text)}
             />
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Mother's outcome:
+              Mother's outcome: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Alive", "Dead", "Not known"].map((option) => (
@@ -549,11 +653,12 @@ const StillbirthRegistrationScreen = () => {
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              3. Obstetric history and care during Pregnancy
+              3. Obstetric history and care during Pregnancy{" "}
+              <RequiredAsterisk />
             </Text>
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Type of pregnancy:
+              Type of pregnancy: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Singleton", "Multiple"].map((option) => (
@@ -575,7 +680,7 @@ const StillbirthRegistrationScreen = () => {
             </View>
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Attendance of Antenatal care:
+              Attendance of Antenatal care: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Yes", "No", "Unknown"].map((option) => (
@@ -597,7 +702,8 @@ const StillbirthRegistrationScreen = () => {
             </View>
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Obstetric/Medical conditions or infections in present pregnancy:
+              Obstetric/Medical conditions or infections in present pregnancy:{" "}
+              <RequiredAsterisk />
             </Text>
             {[
               "Antepartum Hemorrhage",
@@ -631,9 +737,12 @@ const StillbirthRegistrationScreen = () => {
               </TouchableOpacity>
             ))}
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Others (Specify) <RequiredAsterisk />
+            </Text>
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300 mt-2`}
-              placeholder="Others (Specify)"
+              placeholder="Enter other conditions"
               value={formData.otherObstetric}
               onChangeText={(text) => updateFormData("otherObstetric", text)}
             />
@@ -644,11 +753,11 @@ const StillbirthRegistrationScreen = () => {
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              4. Care during delivery
+              4. Care during delivery <RequiredAsterisk />
             </Text>
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Place of delivery:
+              Place of delivery: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Home", "Facility", "Others"].map((option) => (
@@ -670,28 +779,38 @@ const StillbirthRegistrationScreen = () => {
             </View>
 
             {formData.deliveryPlace === "Others" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Specify other delivery place"
-                value={formData.otherDeliveryPlace}
-                onChangeText={(text) =>
-                  updateFormData("otherDeliveryPlace", text)
-                }
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+                  Specify other delivery place <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
+                  placeholder="Enter delivery place"
+                  value={formData.otherDeliveryPlace}
+                  onChangeText={(text) =>
+                    updateFormData("otherDeliveryPlace", text)
+                  }
+                />
+              </>
             )}
 
             {formData.deliveryPlace === "Facility" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Level of care (2, 3, 4, 5, 6)"
-                value={formData.facilityLevel}
-                onChangeText={(text) => updateFormData("facilityLevel", text)}
-                keyboardType="numeric"
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+                  Level of care (2, 3, 4, 5, 6) <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
+                  placeholder="Enter level of care"
+                  value={formData.facilityLevel}
+                  onChangeText={(text) => updateFormData("facilityLevel", text)}
+                  keyboardType="numeric"
+                />
+              </>
             )}
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Type of delivery:
+              Type of delivery: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {[
@@ -720,14 +839,19 @@ const StillbirthRegistrationScreen = () => {
             </View>
 
             {formData.deliveryType === "Other" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Specify other delivery type"
-                value={formData.otherDeliveryType}
-                onChangeText={(text) =>
-                  updateFormData("otherDeliveryType", text)
-                }
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+                  Specify other delivery type <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
+                  placeholder="Enter delivery type"
+                  value={formData.otherDeliveryType}
+                  onChangeText={(text) =>
+                    updateFormData("otherDeliveryType", text)
+                  }
+                />
+              </>
             )}
           </View>
         );
@@ -736,11 +860,11 @@ const StillbirthRegistrationScreen = () => {
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              5. Cause of death
+              5. Cause of death <RequiredAsterisk />
             </Text>
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Period of death:
+              Period of death: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Antepartum", "Intrapartum", "Neonatal", "Unknown"].map(
@@ -764,7 +888,7 @@ const StillbirthRegistrationScreen = () => {
             </View>
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Perinatal cause of death:
+              Perinatal cause of death: <RequiredAsterisk />
             </Text>
             {[
               "Congenital malformations",
@@ -796,7 +920,7 @@ const StillbirthRegistrationScreen = () => {
             ))}
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-500 mt-4`}>
-              Underlying maternal condition:
+              Underlying maternal condition: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {[
@@ -824,9 +948,12 @@ const StillbirthRegistrationScreen = () => {
               ))}
             </View>
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
+              Others (Specify) <RequiredAsterisk />
+            </Text>
             <TextInput
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Others (Specify)"
+              placeholder="Enter other causes"
               value={formData.otherCause}
               onChangeText={(text) => updateFormData("otherCause", text)}
             />
@@ -835,13 +962,13 @@ const StillbirthRegistrationScreen = () => {
 
       case 6:
         return (
-          <View style={tw`mb-5`}>
+          <ScrollView style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              Review All Information
+              Review All Information <RequiredAsterisk />
             </Text>
             <ScrollView style={tw`mb-5 max-h-96`}>
               <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                1. Details of Deceased baby
+                1. Details of Deceased baby <RequiredAsterisk />
               </Text>
               <Text style={tw`text-sm mb-1 text-gray-500`}>
                 Date of Death: {formData.dateOfDeath || "Not provided"}
@@ -886,7 +1013,7 @@ const StillbirthRegistrationScreen = () => {
               )}
 
               <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                2. Mother's details
+                2. Mother's details <RequiredAsterisk />
               </Text>
               <Text style={tw`text-sm mb-1 text-gray-500`}>
                 Mother's Age: {formData.motherAge || "Not provided"}
@@ -902,7 +1029,8 @@ const StillbirthRegistrationScreen = () => {
               </Text>
 
               <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                3. Obstetric history and care during Pregnancy
+                3. Obstetric history and care during Pregnancy{" "}
+                <RequiredAsterisk />
               </Text>
               <Text style={tw`text-sm mb-1 text-gray-500`}>
                 Pregnancy Type: {formData.pregnancyType || "Not provided"}
@@ -919,7 +1047,7 @@ const StillbirthRegistrationScreen = () => {
               </Text>
 
               <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                4. Care during delivery
+                4. Care during delivery <RequiredAsterisk />
               </Text>
               <Text style={tw`text-sm mb-1 text-gray-500`}>
                 Delivery Place: {formData.deliveryPlace || "Not provided"}
@@ -946,10 +1074,10 @@ const StillbirthRegistrationScreen = () => {
               )}
 
               <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                5. Cause of death
+                5. Cause of death <RequiredAsterisk />
               </Text>
               <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Period of D eath: {formData.periodOfDeath || "Not provided"}
+                Period of Death: {formData.periodOfDeath || "Not provided"}
               </Text>
               <Text style={tw`text-sm mb-1 text-gray-500`}>
                 Perinatal Cause:{" "}
@@ -977,7 +1105,7 @@ const StillbirthRegistrationScreen = () => {
             >
               <Text style={tw`text-white font-bold`}>Submit</Text>
             </TouchableOpacity>
-          </View>
+          </ScrollView>
         );
 
       default:
