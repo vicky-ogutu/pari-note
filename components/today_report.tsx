@@ -174,8 +174,8 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
   };
 
   const deliveryPlace = {
-    home: data.deliveryPlace?.home ?? 1,
-    facility: data.deliveryPlace?.facility ?? 2,
+    home: data.deliveryPlace?.home ?? 0,
+    facility: data.deliveryPlace?.facility ?? 0,
   };
 
   // Shared card style
@@ -183,8 +183,8 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
 
   return (
     <View style={tw`p-4`}>
-      <Text style={tw`text-2xl font-bold text-purple-700 mb-6 text-center`}>
-        Today's Stillbirth Report
+      <Text style={tw`text-lg font-bold text-purple-600 mb-4 text-center`}>
+        Today's Report
       </Text>
 
       {/* Row 1 */}

@@ -225,7 +225,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
         disabled={isLoading}
       >
         <Text style={tw`text-white text-lg font-semibold text-center`}>
-          {isLoading ? "Generating Report..." : "📊 Generate Custom Report"}
+          {isLoading ? "Generating Report..." : "📊 Generate Report"}
         </Text>
         <Text style={tw`text-purple-100 text-sm text-center mt-1`}>
           Export data from {formatDate(startDate)} to {formatDate(endDate)}

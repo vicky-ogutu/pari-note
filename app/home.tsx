@@ -73,7 +73,9 @@ export const mockStillbirthData: FormData[] = [
 const HomeScreen = () => {
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
-  const [activeTab, setActiveTab] = useState<"today" | "monthly">("today");
+  const [activeTab, setActiveTab] = useState<"today" | "monthly" | "dateRange">(
+    "today"
+  );
   const [userRole, setUserRole] = useState<string>("");
   const [reportData, setReportData] = useState<StillbirthReport | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -202,6 +204,28 @@ const HomeScreen = () => {
     return userRole !== "nurse";
   };
 
+  // Check if user can see date range reports
+  const canSeeDateRangeReports = () => {
+    return userRole !== "nurse";
+  };
+
+  // Render content based on active tab
+  const renderContent = () => {
+    if (activeTab === "today" || userRole === "nurse") {
+      return <ReportDashboard data={reportData?.today} />;
+    } else if (activeTab === "monthly") {
+      return (
+        <MonthlyReport
+          data={reportData?.monthly || []}
+          //rawData={mockStillbirthData} //
+        />
+      );
+    } else if (activeTab === "dateRange") {
+      return <DateRangeReport />;
+    }
+    return null;
+  };
+
   return (
     <KeyboardAvoidingView
       style={tw`flex-1 bg-purple-100`}
@@ -215,13 +239,11 @@ const HomeScreen = () => {
           onPress={() => setDrawerVisible(true)}
           position="relative"
         />
-        <Text style={tw`text-2xl font-bold text-purple-500`}>
-          MOH 369 register
-        </Text>
+        <Text style={tw`text-2xl font-bold text-purple-500`}>MOH 369</Text>
         <View style={tw`flex-row items-center`}>
-          <TouchableOpacity onPress={handleRefresh} style={tw`mr-3`}>
+          {/* <TouchableOpacity onPress={handleRefresh} style={tw`mr-3`}>
             <Icon name="refresh" size={24} color="#682483ff" />
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           <TouchableOpacity onPress={handleAddUser}>
             {userRole === "nurse" ? (
               <FilePenIcon color="#682483ff" />
@@ -261,6 +283,20 @@ const HomeScreen = () => {
               }`}
             >
               Monthly Report
+            </Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={tw`flex-1 py-3 ${
+              activeTab === "dateRange" ? "border-b-2 border-purple-500" : ""
+            }`}
+            onPress={() => setActiveTab("dateRange")}
+          >
+            <Text
+              style={tw`text-center font-semibold ${
+                activeTab === "dateRange" ? "text-purple-500" : "text-gray-500"
+              }`}
+            >
+              Date Range
             </Text>
           </TouchableOpacity>
         </View>
@@ -309,15 +345,7 @@ const HomeScreen = () => {
           />
         }
       >
-        {activeTab === "today" || userRole === "nurse" ? (
-          <ReportDashboard data={reportData?.today} />
-        ) : (
-          <MonthlyReport
-            data={reportData?.monthly || []}
-            //rawData={mockStillbirthData} // 
-          />
-        )}
-        <DateRangeReport />
+        {renderContent()}
       </ScrollView>
 
       {/* Drawer */}
@@ -425,19 +453,6 @@ const HomeScreen = () => {
                       </Text>
                     </TouchableOpacity>
 
-                    {/* Register
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/register");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        📝 Register User
-                      </Text>
-                    </TouchableOpacity> */}
-
                     {/* Logout */}
                     <TouchableOpacity
                       style={tw`flex-row items-center p-3 rounded-lg mb-2`}
@@ -454,6 +469,21 @@ const HomeScreen = () => {
           </View>
         </View>
       </Modal>
+
+      {/* Floating Refresh Button */}
+      <TouchableOpacity
+        onPress={handleRefresh}
+        style={[
+          tw`absolute bg-purple-600 rounded-full p-4 shadow-lg`,
+          {
+            bottom: 40,
+            right: 20,
+            elevation: 5,
+          },
+        ]}
+      >
+        <Icon name="refresh" size={28} color="#fff" />
+      </TouchableOpacity>
     </KeyboardAvoidingView>
   );
 };
