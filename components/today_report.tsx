@@ -183,9 +183,9 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({ data }) => {
 
   return (
     <View style={tw`p-4`}>
-      <Text style={tw`text-lg font-bold text-purple-600 mb-4 text-center`}>
+      {/* <Text style={tw`text-lg font-bold text-purple-600 mb-4 text-center`}>
         Today's Report
-      </Text>
+      </Text> */}
 
       {/* Row 1 */}
       <View style={tw`flex-row`}>
