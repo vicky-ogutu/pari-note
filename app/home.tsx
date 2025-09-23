@@ -9,7 +9,6 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   RefreshControl,
   ScrollView,
@@ -19,6 +18,7 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
+import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import MonthlyReport from "../components/MonthlyReport";
 import ReportDashboard from "../components/today_report";
@@ -349,126 +349,12 @@ const HomeScreen = () => {
       </ScrollView>
 
       {/* Drawer */}
-      {/* Enhanced Drawer */}
-      <Modal
-        visible={drawerVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
-      >
-        <View style={tw`flex-1`}>
-          <TouchableOpacity
-            style={tw`flex-1 bg-black bg-opacity-50`}
-            onPress={() => setDrawerVisible(false)}
-            activeOpacity={1}
-          />
-
-          <View
-            style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}
-          >
-            <View style={tw`p-6 bg-purple-600`}>
-              <Text style={tw`text-white text-xl font-bold`}>
-                MOH 369 register
-              </Text>
-              <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Stillbirth Notification
-              </Text>
-            </View>
-
-            <ScrollView style={tw`flex-1 p-4`}>
-              <View style={tw`mb-6`}>
-                <Text
-                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
-                >
-                  Main Navigation
-                </Text>
-
-                {userRole === "nurse" && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Report Stillbirth */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/patient_registration");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        📋 Report Stillbirth
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-
-                {(userRole === "admin" ||
-                  userRole === "county user" ||
-                  userRole === "subcounty user") && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Users */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/users");
-                      }}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        👥 Users
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-700 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      <CustomDrawer
+        drawerVisible={drawerVisible}
+        setDrawerVisible={setDrawerVisible}
+        userRole={userRole}
+        handleLogout={handleLogout}
+      />
 
       {/* Floating Refresh Button */}
       <TouchableOpacity

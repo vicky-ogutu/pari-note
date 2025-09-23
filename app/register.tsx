@@ -6,7 +6,6 @@ import { useEffect, useState } from "react";
 import {
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   Text,
@@ -16,6 +15,7 @@ import {
 } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import tw from "tailwind-react-native-classnames";
+import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
 
@@ -198,6 +198,9 @@ const RegisterScreen = () => {
       Alert.alert("Error", "Please select a location");
       return;
     }
+
+    console.log("Current User Role:", userRole);
+    console.log("Allowed Roles for Current User:", allowedRoles);
 
     // Check if all selected roles are allowed for the current user
     const unauthorizedRoles = selectedRoles.filter(
@@ -564,86 +567,13 @@ const RegisterScreen = () => {
         </View>
       </ScrollView>
 
-      {/* Enhanced Drawer */}
-      <Modal
-        visible={drawerVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
-      >
-        <View style={tw`flex-1`}>
-          <TouchableOpacity
-            style={tw`flex-1 bg-black bg-opacity-50`}
-            onPress={() => setDrawerVisible(false)}
-            activeOpacity={1}
-          />
-
-          <View
-            style={tw`absolute left-0 top-0 h-full w-72 bg-white shadow-xl`}
-          >
-            <View style={tw`p-6 bg-purple-600`}>
-              <Text style={tw`text-white text-xl font-bold`}>
-                MOH 369 register
-              </Text>
-              <Text style={tw`text-purple-100 text-sm mt-1`}>
-                Stillbirth Notification
-              </Text>
-            </View>
-
-            <ScrollView style={tw`flex-1 p-4`}>
-              <View style={tw`mb-6`}>
-                <Text
-                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
-                >
-                  Main Navigation
-                </Text>
-
-                {(userRole === "admin" ||
-                  userRole === "county user" ||
-                  userRole === "subcounty user") && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Users */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/users");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        👥 Users
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-      </Modal>
+      {/* Custom Drawer */}
+      <CustomDrawer
+        drawerVisible={drawerVisible}
+        setDrawerVisible={setDrawerVisible}
+        userRole={userRole}
+        handleLogout={handleLogout}
+      />
     </KeyboardAvoidingView>
   );
 };
