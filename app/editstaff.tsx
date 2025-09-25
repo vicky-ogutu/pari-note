@@ -122,7 +122,6 @@ const EditStaffScreen = () => {
   };
 
   const handleUpdate = async () => {
-    // Validate form
     if (
       !formData.name ||
       !formData.email ||
@@ -133,11 +132,11 @@ const EditStaffScreen = () => {
       return;
     }
 
-    // first selected role, but i will adjust for multiple role.
-    const primaryRole = selectedRoles[0];
-    const roleId = allRoles.find((role) => role.name === primaryRole)?.id;
+    const roleIds = selectedRoles
+      .map((roleName) => allRoles.find((role) => role.name === roleName)?.id)
+      .filter((id): id is number => id !== undefined);
 
-    if (!roleId) {
+    if (roleIds.length === 0) {
       Alert.alert("Error", "Invalid role selection");
       return;
     }
@@ -148,15 +147,13 @@ const EditStaffScreen = () => {
       const accessToken = await AsyncStorage.getItem("access_token");
       const userId = params.userId as string;
 
-      // Prepare the data for the API
       const updateData: any = {
         name: formData.name,
         email: formData.email,
         location_id: parseInt(formData.location_id),
-        role_id: roleId,
+        role_ids: roleIds, // send multiple roles
       };
 
-      // Only include password if it's provided
       if (formData.password) {
         updateData.password = formData.password;
       }

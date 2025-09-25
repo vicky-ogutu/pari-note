@@ -199,33 +199,34 @@ const HomeScreen = () => {
     fetchReportData();
   };
 
-  // Check if user can see monthly reports
-  const canSeeMonthlyReports = () => {
-    return userRole !== "nurse";
-  };
+  // // Check if user can see monthly reports
+  // const canSeeMonthlyReports = () => {
+  //   return userRole !== "nurse";
+  // };
 
-  // Check if user can see date range reports
-  const canSeeDateRangeReports = () => {
-    return userRole !== "nurse";
-  };
+  // // Check if user can see date range reports
+  // const canSeeDateRangeReports = () => {
+  //   return userRole !== "nurse";
+  // };
+  const canSeeMonthlyReports = () => true;
+  const canSeeDateRangeReports = () => true;
 
   // Render content based on active tab
+  //const renderContent = () => {
+  // if (activeTab === "today" || userRole === "nurse") {
+  //   return <ReportDashboard data={reportData?.today} />;
+  // }
+  // In HomeScreen.tsx - Update the renderContent function
   const renderContent = () => {
-    if (activeTab === "today" || userRole === "nurse") {
+    if (activeTab === "today") {
       return <ReportDashboard data={reportData?.today} />;
     } else if (activeTab === "monthly") {
-      return (
-        <MonthlyReport
-          data={reportData?.monthly || []}
-          //rawData={mockStillbirthData} //
-        />
-      );
+      return <MonthlyReport data={reportData?.monthly || []} />;
     } else if (activeTab === "dateRange") {
       return <DateRangeReport />;
     }
     return null;
   };
-
   return (
     <KeyboardAvoidingView
       style={tw`flex-1 bg-purple-100`}
@@ -255,59 +256,59 @@ const HomeScreen = () => {
       </View>
 
       {/* Tab Navigation - Conditionally render based on user role */}
-      {canSeeMonthlyReports() ? (
-        <View style={tw`flex-row bg-white border-b border-gray-200`}>
-          <TouchableOpacity
-            style={tw`flex-1 py-3 ${
-              activeTab === "today" ? "border-b-2 border-purple-500" : ""
+      {/* {canSeeMonthlyReports() ? ( */}
+      <View style={tw`flex-row bg-white border-b border-gray-200`}>
+        <TouchableOpacity
+          style={tw`flex-1 py-3 ${
+            activeTab === "today" ? "border-b-2 border-purple-500" : ""
+          }`}
+          onPress={() => setActiveTab("today")}
+        >
+          <Text
+            style={tw`text-center font-semibold ${
+              activeTab === "today" ? "text-purple-500" : "text-gray-500"
             }`}
-            onPress={() => setActiveTab("today")}
           >
-            <Text
-              style={tw`text-center font-semibold ${
-                activeTab === "today" ? "text-purple-500" : "text-gray-500"
-              }`}
-            >
-              Today's Report
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={tw`flex-1 py-3 ${
-              activeTab === "monthly" ? "border-b-2 border-purple-500" : ""
-            }`}
-            onPress={() => setActiveTab("monthly")}
-          >
-            <Text
-              style={tw`text-center font-semibold ${
-                activeTab === "monthly" ? "text-purple-500" : "text-gray-500"
-              }`}
-            >
-              Monthly Report
-            </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={tw`flex-1 py-3 ${
-              activeTab === "dateRange" ? "border-b-2 border-purple-500" : ""
-            }`}
-            onPress={() => setActiveTab("dateRange")}
-          >
-            <Text
-              style={tw`text-center font-semibold ${
-                activeTab === "dateRange" ? "text-purple-500" : "text-gray-500"
-              }`}
-            >
-              Date Range
-            </Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        // For nurses, show only the Today's Report tab
-        <View style={tw`bg-white border-b border-gray-200 py-3`}>
-          <Text style={tw`text-center font-semibold text-purple-500`}>
             Today's Report
           </Text>
-        </View>
-      )}
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={tw`flex-1 py-3 ${
+            activeTab === "monthly" ? "border-b-2 border-purple-500" : ""
+          }`}
+          onPress={() => setActiveTab("monthly")}
+        >
+          <Text
+            style={tw`text-center font-semibold ${
+              activeTab === "monthly" ? "text-purple-500" : "text-gray-500"
+            }`}
+          >
+            Monthly Report
+          </Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={tw`flex-1 py-3 ${
+            activeTab === "dateRange" ? "border-b-2 border-purple-500" : ""
+          }`}
+          onPress={() => setActiveTab("dateRange")}
+        >
+          <Text
+            style={tw`text-center font-semibold ${
+              activeTab === "dateRange" ? "text-purple-500" : "text-gray-500"
+            }`}
+          >
+            Date Range
+          </Text>
+        </TouchableOpacity>
+      </View>
+      {/* // ) : (
+      //   // For nurses, show only the Today's Report tab
+      //   <View style={tw`bg-white border-b border-gray-200 py-3`}>
+      //     <Text style={tw`text-center font-semibold text-purple-500`}>
+      //       Today's Report
+      //     </Text>
+      //   </View>
+      // )} */}
 
       {/* Load Indicator */}
       {isLoading && (

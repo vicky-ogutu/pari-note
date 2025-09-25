@@ -14,8 +14,9 @@ interface DrawerProps {
 interface UserData {
   name: string;
   location: string;
-  //facility: string;
   email?: string;
+  subcounty?: string;
+  county?: string;
 }
 
 const CustomDrawer: React.FC<DrawerProps> = ({
@@ -32,14 +33,17 @@ const CustomDrawer: React.FC<DrawerProps> = ({
     try {
       const name = await AsyncStorage.getItem("user_name");
       const location = await AsyncStorage.getItem("location_name");
-      const facility = await AsyncStorage.getItem("user_facility");
       const email = await AsyncStorage.getItem("user_email");
+      const subcounty = await AsyncStorage.getItem("subcounty_name");
+      const county = await AsyncStorage.getItem("county_name");
 
       if (name || location) {
         setUserData({
           name: name || "Unknown User",
           location: location || "Unknown Location",
           email: email || undefined,
+          subcounty: subcounty || undefined,
+          county: county || undefined,
         });
       }
     } catch (error) {
@@ -60,6 +64,44 @@ const CustomDrawer: React.FC<DrawerProps> = ({
       .map((word) => word.charAt(0).toUpperCase())
       .slice(0, 2)
       .join("");
+  };
+
+  // Function to determine location display text based on user role
+  const getLocationDisplayText = () => {
+    if (!userData) return "Location not set";
+
+    // For nurses (facility users), show facility, subcounty, and county
+    if (userRole === "nurse") {
+      let locationText = userData.location || "Facility not set";
+      if (userData.subcounty) {
+        locationText += `, ${userData.subcounty}`;
+      }
+      if (userData.county) {
+        locationText += `, ${userData.county}`;
+      }
+      return locationText;
+    }
+
+    // For subcounty users, show subcounty and county
+    if (userRole === "subcounty user") {
+      let locationText = userData.subcounty || "Subcounty not set";
+      if (userData.county) {
+        locationText += `, ${userData.county}`;
+      }
+      return locationText;
+    }
+
+    // For county users, show county only
+    if (userRole === "county user") {
+      return userData.county || "County not set";
+    }
+
+    // For admin, show the primary location or all locations
+    if (userRole === "admin") {
+      return userData.location || "Admin Access";
+    }
+
+    return userData.location || "Location not set";
   };
 
   return (
@@ -105,24 +147,18 @@ const CustomDrawer: React.FC<DrawerProps> = ({
             {/* User Details */}
             <View style={tw`bg-purple-400 rounded-lg p-3`}>
               <View style={tw`flex-row items-center mb-1`}>
-                {/* <Text style={tw`text-purple-200 text-xs font-semibold mr-2`}>
-                  
-                </Text> */}
                 <Text style={tw`text-white text-xs`}>
-                  {userData?.location || "Location not set"}
+                  {getLocationDisplayText()}
                 </Text>
               </View>
-              {/* <View style={tw`flex-row items-center`}>
-                <Text style={tw`text-purple-200 text-xs font-semibold mr-2`}>🏥</Text>
-                <Text style={tw`text-white text-xs`}>
-                  {userData?.facility || "Facility not set"}
+              <View style={tw`flex-row items-center`}>
+                <Text
+                  style={tw`text-purple-200 text-xs font-semibold capitalize`}
+                >
+                  {userRole || "user"}
                 </Text>
-              </View> */}
+              </View>
             </View>
-
-            {/* <Text style={tw`text-white text-lg font-bold mt-3`}>
-              MOH 369 Register
-            </Text> */}
           </View>
 
           {/* Content */}
@@ -198,6 +234,34 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                   >
                     <Text style={tw`text-gray-500 font-medium ml-2`}>
                       👥 Users
+                    </Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                    onPress={handleLogout}
+                  >
+                    <Text style={tw`text-gray-500 font-medium ml-2`}>
+                      🚪 Logout
+                    </Text>
+                  </TouchableOpacity>
+                </>
+              )}
+
+              {/* Fallback for unknown roles */}
+              {!["nurse", "admin", "county user", "subcounty user"].includes(
+                userRole
+              ) && (
+                <>
+                  <TouchableOpacity
+                    style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                    onPress={() => {
+                      setDrawerVisible(false);
+                      router.push("/home");
+                    }}
+                  >
+                    <Text style={tw`text-gray-500 font-medium ml-2`}>
+                      🏠 Dashboard
                     </Text>
                   </TouchableOpacity>
 

@@ -1,10 +1,6 @@
 // app/login.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-// import {
-//   allowScreenCaptureAsync,
-//   preventScreenCaptureAsync,
-// } from "expo-screen-capture";
 import { useState } from "react";
 import {
   Alert,
@@ -25,24 +21,6 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Prevent black screen in Google Meet screen share
-  // useEffect(() => {
-  //   const enableScreenShare = async () => {
-  //     try {
-  //       await preventScreenCaptureAsync();
-  //     } catch (err) {
-  //       console.warn("Failed to prevent screen capture:", err);
-  //     }
-  //   };
-  //   enableScreenShare();
-
-  //   return () => {
-  //     allowScreenCaptureAsync().catch(() =>
-  //       console.warn("Failed to allow screen capture back")
-  //     );
-  //   };
-  // }, []);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -68,18 +46,24 @@ export default function LoginScreen() {
 
       const data = await response.json();
 
+      // Extract role information (assuming first role if multiple exist)
+      const userRole =
+        data.user.roles && data.user.roles.length > 0
+          ? data.user.roles[0]
+          : { name: "nurse", id: 4, permissions: [] }; // Default to nurse if no roles
+
       // Store authentication data
       await AsyncStorage.multiSet([
         ["access_token", data.access_token],
-        ["role", data.user.role.name],
-        ["role_id", data.user.role.id.toString()],
+        ["role", userRole.name],
+        ["role_id", userRole.id?.toString() || "4"],
         ["user_id", data.user.id.toString()],
         ["user_name", data.user.name],
         ["user_email", data.user.email],
         ["location_id", data.user.location?.id?.toString() || ""],
         ["location_name", data.user.location?.name || ""],
         ["location_type", data.user.location?.type || ""],
-        ["permissions", JSON.stringify(data.user.role.permissions || [])],
+        ["permissions", JSON.stringify(userRole.permissions || [])],
 
         // Store the missing location hierarchy data
         ["subcounty_id", data.user.location?.parent?.id?.toString() || ""],
@@ -93,16 +77,17 @@ export default function LoginScreen() {
 
       console.log("Login successful, stored data:", {
         token: data.access_token,
-        role: data.user.role.name,
+        role: userRole.name,
         userId: data.user.id,
         locationId: data.user.location?.id,
       });
 
       // Redirect based on role
-      switch (data.user.role.name) {
+      switch (userRole.name) {
         case "admin":
         case "county user":
         case "subcounty user":
+        case "nurse":
           router.replace("/home");
           break;
         default:
