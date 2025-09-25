@@ -90,17 +90,6 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
 
     // For stillbirths, determine if fresh or macerated based on common medical criteria
     if (baby.outcome?.toLowerCase() === "stillbirth") {
-      // Criteria for macerated stillbirth:
-      // - Signs of skin maceration (peeling, discoloration)
-      // - Usually occurs >24 hours before delivery
-      // - No Apgar scores or very low scores indicating death before delivery
-
-      // Criteria for fresh stillbirth:
-      // - No signs of maceration
-      // - Usually occurs during labor or shortly before delivery
-      // - Might have some Apgar scores if death occurred during delivery
-
-      // Simple heuristic based on available data:
       if (baby.ageAtDeathDays !== undefined && baby.ageAtDeathDays > 0) {
         return "Macerated";
       }
@@ -361,7 +350,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       >
         <View style={tw`flex-1 p-4 bg-white`}>
           <View style={tw`flex-row justify-between items-center mb-4`}>
-            <Text style={tw`text-sm font-bold text-purple-600`}>MOH 369</Text>
+            <Text style={tw`text- font-bold text-purple-600`}>MOH 369</Text>
             <TouchableOpacity
               onPress={() => setPreviewVisible(false)}
               style={tw`p-2`}

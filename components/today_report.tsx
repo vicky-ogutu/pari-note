@@ -50,6 +50,17 @@ interface RawDataItem {
   weight?: string;
   motherAge?: string;
   gestationalAge?: string;
+  // Add fields that match the API response structure
+  location?: {
+    name?: string;
+    facilityName?: string;
+  };
+  babies?: any[];
+  dateOfNotification?: string;
+  outcome?: string;
+  sex?: string;
+  healthFacility?: string;
+  facilityName?: string;
 }
 
 interface TileData {
@@ -67,13 +78,29 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
   const [previewData, setPreviewData] = useState<PreviewData[]>([]);
   const [loading, setLoading] = useState(false);
   const [tileData, setTileData] = useState<TileData | null>(null);
-  const [dataLoading, setDataLoading] = useState(false); // Start as false since we have propData
+  const [dataLoading, setDataLoading] = useState(false);
+  const [locationName, setLocationName] = useState<string>("");
 
   // Function to get today's date in YYYY-MM-DD format
   const getTodayDate = () => {
     const today = new Date();
     return today.toISOString().split("T")[0];
   };
+
+  // Load location name on component mount
+  useEffect(() => {
+    const loadLocationName = async () => {
+      try {
+        const name = await AsyncStorage.getItem("location_name");
+        if (name) {
+          setLocationName(name);
+        }
+      } catch (error) {
+        console.error("Error loading location name:", error);
+      }
+    };
+    loadLocationName();
+  }, []);
 
   // Function to fetch today's data
   const fetchTodayData = async (): Promise<RawDataItem[]> => {
@@ -104,13 +131,23 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
       }
 
       const result = await response.json();
-      const rawData: RawDataItem[] = result.data || [];
+      console.log("Full API Response:", JSON.stringify(result, null, 2)); // Detailed log
+
+      const rawData: RawDataItem[] = result.data || result || [];
+
+      console.log("Raw data length:", rawData.length);
+      if (rawData.length > 0) {
+        console.log(
+          "First item structure:",
+          JSON.stringify(rawData[0], null, 2)
+        );
+      }
 
       // Process the raw data to create tile data
       const processedData = processRawData(rawData);
       setTileData({
         ...processedData,
-        rawData, // Store raw data for preview and download
+        rawData,
       });
 
       return rawData;
@@ -124,42 +161,59 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
   };
 
   // Process raw data to create tile statistics
-  const processRawData = (
-    rawData: RawDataItem[]
-  ): Omit<TileData, "rawData"> => {
-    const total = rawData.length;
+  const processRawData = (rawData: any[]): Omit<TileData, "rawData"> => {
+    // Flatten the data if it has babies array
+    const flattenedData = rawData.flatMap((item) => {
+      if (item.babies && item.babies.length > 0) {
+        return item.babies.map((baby: any) => ({
+          ...item,
+          ...baby,
+          sex: baby.sex,
+          type: baby.outcome || baby.type,
+        }));
+      }
+      return item;
+    });
+
+    console.log("Flattened data for processing:", flattenedData); // Debug log
+
+    const total = flattenedData.length;
 
     // Calculate sex distribution
     const sex = {
-      female: rawData.filter(
-        (item: RawDataItem) => item.female && Number(item.female) > 0
+      female: flattenedData.filter(
+        (item) =>
+          item.sex === "Female" || (item.female && Number(item.female) > 0)
       ).length,
-      male: rawData.filter(
-        (item: RawDataItem) => item.male && Number(item.male) > 0
+      male: flattenedData.filter(
+        (item) => item.sex === "Male" || (item.male && Number(item.male) > 0)
       ).length,
     };
 
     // Calculate type distribution
     const type = {
-      fresh: rawData.filter(
-        (item: RawDataItem) =>
-          item.type?.toLowerCase().includes("fresh") || item.type === "fresh"
+      fresh: flattenedData.filter(
+        (item) =>
+          item.type?.toLowerCase().includes("fresh") ||
+          item.type === "fresh" ||
+          item.outcome?.toLowerCase().includes("fresh")
       ).length,
-      macerated: rawData.filter(
-        (item: RawDataItem) =>
+      macerated: flattenedData.filter(
+        (item) =>
           item.type?.toLowerCase().includes("macerated") ||
-          item.type === "macerated"
+          item.type === "macerated" ||
+          item.outcome?.toLowerCase().includes("macerated")
       ).length,
     };
 
     // Calculate delivery place distribution
     const place = {
-      home: rawData.filter(
-        (item: RawDataItem) =>
+      home: flattenedData.filter(
+        (item) =>
           item.place?.toLowerCase().includes("home") || item.place === "home"
       ).length,
-      facility: rawData.filter(
-        (item: RawDataItem) =>
+      facility: flattenedData.filter(
+        (item) =>
           item.place?.toLowerCase().includes("facility") ||
           item.facility ||
           item.place === "facility"
@@ -169,21 +223,66 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
     return { total, sex, type, place };
   };
 
-  // Function to prepare preview data
-  const preparePreviewData = (rawData: RawDataItem[]): PreviewData[] => {
-    return rawData.map((item: RawDataItem) => ({
-      sex: item.female ? "Female" : item.male ? "Male" : "Unknown",
-      type: item.type || "Unknown",
-      facility: item.facility || "Unknown",
-      female: item.female?.toString() || "",
-      male: item.male?.toString() || "",
-      date: item.date || "",
-      time: item.time || "",
-      place: item.place || "",
-      weight: item.weight || "",
-      motherAge: item.motherAge || "",
-      gestationalAge: item.gestationalAge || "",
-    }));
+  // Function to prepare preview data - properly handle API response structure
+  const preparePreviewData = (rawData: any[]): PreviewData[] => {
+    console.log("Raw data for preview:", rawData); // Debug log
+
+    return rawData.flatMap((item: any) => {
+      // Extract facility name - try different possible fields
+      let facilityName = "Unknown";
+
+      // Try different possible facility field names from API
+      if (item.facility) {
+        facilityName = item.facility;
+      } else if (item.location && typeof item.location === "object") {
+        facilityName =
+          item.location.name || item.location.facilityName || "Unknown";
+      } else if (item.healthFacility) {
+        facilityName = item.healthFacility;
+      } else if (item.facilityName) {
+        facilityName = item.facilityName;
+      }
+
+      console.log("Facility extracted:", facilityName, "from item:", item); // Debug log
+
+      // Handle cases where there might be multiple babies
+      if (item.babies && item.babies.length > 0) {
+        return item.babies.map((baby: any) => ({
+          sex:
+            baby.sex ||
+            (baby.female ? "Female" : baby.male ? "Male" : "Unknown"),
+          type: baby.outcome || baby.type || "Unknown",
+          facility: facilityName,
+          female: baby.sex === "Female" ? "1" : baby.female ? "1" : "",
+          male: baby.sex === "Male" ? "1" : baby.male ? "1" : "",
+          date: item.dateOfNotification || item.date || "",
+          time: item.time || "",
+          place: item.place || baby.place || "",
+          weight: baby.weight || "",
+          motherAge: item.motherAge || "",
+          gestationalAge: baby.gestationalAge || "",
+        }));
+      }
+
+      // For items without babies array
+      return [
+        {
+          sex:
+            item.sex ||
+            (item.female ? "Female" : item.male ? "Male" : "Unknown"),
+          type: item.outcome || item.type || "Unknown",
+          facility: facilityName,
+          female: item.female?.toString() || "",
+          male: item.male?.toString() || "",
+          date: item.dateOfNotification || item.date || "",
+          time: item.time || "",
+          place: item.place || "",
+          weight: item.weight || "",
+          motherAge: item.motherAge || "",
+          gestationalAge: item.gestationalAge || "",
+        },
+      ];
+    });
   };
 
   // Create mock raw data based on tile statistics for preview/download when using propData
@@ -198,7 +297,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
         female: 1,
         male: 0,
         type: i < stats.type.fresh ? "fresh" : "macerated",
-        facility: "Health Facility",
+        facility: "Facility",
         place: i < stats.place.home ? "home" : "facility",
         date: getTodayDate(),
       });
@@ -210,7 +309,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
         female: 0,
         male: 1,
         type: i + stats.sex.female < stats.type.fresh ? "fresh" : "macerated",
-        facility: "Health Facility",
+        facility: "Facility",
         place: i + stats.sex.female < stats.place.home ? "home" : "facility",
         date: getTodayDate(),
       });
@@ -244,7 +343,6 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
           facility: propData.place?.facility || 0,
         },
       };
-
       const mockRawData = createMockRawDataFromStats(stats);
       setTileData({
         ...stats,
@@ -253,13 +351,20 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
     } else {
       // If no props provided, fetch data from API
       fetchTodayData();
+
+      // 🔄 Auto-refresh every 60 seconds
+      const interval = setInterval(() => {
+        fetchTodayData();
+      }, 60000);
+
+      // Clear interval on unmount
+      return () => clearInterval(interval);
     }
   }, [propData]);
 
   const handleTotalPress = async () => {
     try {
       setLoading(true);
-
       let rawData: RawDataItem[] = [];
 
       // If we have tileData with rawData, use it
@@ -312,7 +417,6 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
   const downloadLinelistReport = async () => {
     try {
       Alert.alert("Download", "Preparing linelist report...");
-
       let rawData: RawDataItem[] = [];
 
       // Use the same data that was used for preview
@@ -353,17 +457,52 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
       }
 
       // Prepare data for Excel
-      const excelData = rawData.map((item: RawDataItem) => ({
-        Sex: item.female ? "Female" : item.male ? "Male" : "Unknown",
-        Type: item.type || "Unknown",
-        Facility: item.facility || "Unknown",
-        Date: item.date || "",
-        Time: item.time || "",
-        "Delivery Place": item.place || "",
-        Weight: item.weight || "",
-        "Mother's Age": item.motherAge || "",
-        "Gestational Age": item.gestationalAge || "",
-      }));
+      const excelData = rawData.flatMap((item: any) => {
+        // Extract facility name same as above
+        let facilityName = "Unknown";
+        if (item.facility) {
+          facilityName = item.facility;
+        } else if (item.location && typeof item.location === "object") {
+          facilityName =
+            item.location.name || item.location.facilityName || "Unknown";
+        } else if (item.healthFacility) {
+          facilityName = item.healthFacility;
+        } else if (item.facilityName) {
+          facilityName = item.facilityName;
+        }
+
+        if (item.babies && item.babies.length > 0) {
+          return item.babies.map((baby: any) => ({
+            Sex:
+              baby.sex ||
+              (baby.female ? "Female" : baby.male ? "Male" : "Unknown"),
+            Type: baby.outcome || baby.type || "Unknown",
+            Facility: facilityName,
+            Date: item.dateOfNotification || item.date || "",
+            Time: item.time || "",
+            "Delivery Place": item.place || baby.place || "",
+            Weight: baby.weight || "",
+            "Mother's Age": item.motherAge || "",
+            "Gestational Age": baby.gestationalAge || "",
+          }));
+        }
+
+        return [
+          {
+            Sex:
+              item.sex ||
+              (item.female ? "Female" : item.male ? "Male" : "Unknown"),
+            Type: item.outcome || item.type || "Unknown",
+            Facility: facilityName,
+            Date: item.dateOfNotification || item.date || "",
+            Time: item.time || "",
+            "Delivery Place": item.place || "",
+            Weight: item.weight || "",
+            "Mother's Age": item.motherAge || "",
+            "Gestational Age": item.gestationalAge || "",
+          },
+        ];
+      });
 
       // Create worksheet
       const ws = XLSX.utils.json_to_sheet(excelData);
@@ -427,7 +566,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
     );
   }
 
-  // Only show "No data" if we  have no data
+  // Only show "No data" if we have no data
   if (!tileData && !propData) {
     return (
       <View style={tw`flex-1 justify-center items-center p-4`}>
@@ -502,7 +641,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
 
           <Text style={tw`text-gray-600 mb-4`}>
             Showing data for {getTodayDate()} - Location:{" "}
-            {AsyncStorage.getItem("location_name")}
+            {locationName || "Unknown"}
           </Text>
 
           {loading ? (
@@ -532,6 +671,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
                         Date
                       </Text>
                     </View>
+
                     {/* Table Rows */}
                     {previewData.map((item: PreviewData, index: number) => (
                       <View
@@ -561,6 +701,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
                     Cancel
                   </Text>
                 </TouchableOpacity>
+
                 <TouchableOpacity
                   onPress={downloadLinelistReport}
                   style={tw`flex-1 bg-purple-600 py-3 rounded-lg`}
