@@ -20,10 +20,10 @@ import { BASE_URL } from "../constants/ApiConfig";
 interface DateRangeReportProps {}
 
 interface PreviewData {
-  date: string;
   sex: string;
   type: string;
   facility: string;
+  date: string;
   weight: string;
   motherAge: string;
   gestationalAge: string;
@@ -39,12 +39,17 @@ interface ApiNotification {
   mother: {
     age: number;
     placeOfDelivery: string;
+    typeOfDelivery?: string;
   };
   babies: Array<{
     sex: string;
-    type: string;
-    weight: number;
-    gestationalAge: number;
+    outcome: string;
+    birthWeight: number;
+    gestationWeeks: number;
+    ageAtDeathDays?: number;
+    apgarScore1min?: string;
+    apgarScore5min?: string;
+    apgarScore10min?: string;
   }>;
 }
 
@@ -74,6 +79,42 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     if (selectedDate) {
       setEndDate(selectedDate);
     }
+  };
+
+  // Function to determine if stillbirth is Fresh or Macerated
+  const determineStillbirthType = (baby: any): string => {
+    // If it's a live birth, return "Live birth"
+    if (baby.outcome?.toLowerCase() === "live birth") {
+      return "Live birth";
+    }
+
+    // For stillbirths, determine if fresh or macerated based on common medical criteria
+    if (baby.outcome?.toLowerCase() === "stillbirth") {
+      // Criteria for macerated stillbirth:
+      // - Signs of skin maceration (peeling, discoloration)
+      // - Usually occurs >24 hours before delivery
+      // - No Apgar scores or very low scores indicating death before delivery
+
+      // Criteria for fresh stillbirth:
+      // - No signs of maceration
+      // - Usually occurs during labor or shortly before delivery
+      // - Might have some Apgar scores if death occurred during delivery
+
+      // Simple heuristic based on available data:
+      if (baby.ageAtDeathDays !== undefined && baby.ageAtDeathDays > 0) {
+        return "Macerated";
+      }
+
+      // If Apgar scores are present but very low, likely fresh stillbirth during delivery
+      if (baby.apgarScore1min || baby.apgarScore5min || baby.apgarScore10min) {
+        return "Fresh";
+      }
+
+      // Default to "Fresh" if no specific indicators
+      return "Fresh";
+    }
+
+    return baby.outcome || "Unknown";
   };
 
   // Function to fetch date range data
@@ -122,7 +163,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     }
   };
 
-  // Process API data to create preview data
+  // Process API data to create preview data in order: sex, type, facility, date
   const processApiData = (apiData: ApiNotification[]): PreviewData[] => {
     if (!apiData || apiData.length === 0) return [];
 
@@ -131,17 +172,19 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     apiData.forEach((notification) => {
       // Process each baby in the notification
       notification.babies?.forEach((baby) => {
+        const stillbirthType = determineStillbirthType(baby);
+
         previewData.push({
-          date: notification.dateOfNotification || "",
           sex: baby.sex || "Unknown",
-          type: baby.type || "Unknown",
+          type: stillbirthType,
           facility: notification.location?.name || "Unknown",
-          weight: baby.weight ? `${baby.weight} kg` : "",
+          date: notification.dateOfNotification || "",
+          weight: baby.birthWeight ? `${baby.birthWeight} g` : "",
           motherAge: notification.mother?.age
             ? `${notification.mother.age} years`
             : "",
-          gestationalAge: baby.gestationalAge
-            ? `${baby.gestationalAge} weeks`
+          gestationalAge: baby.gestationWeeks
+            ? `${baby.gestationWeeks} weeks`
             : "",
           deliveryPlace: notification.mother?.placeOfDelivery || "Unknown",
         });
@@ -150,10 +193,10 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       // If no babies array, create a basic entry from notification data
       if (!notification.babies || notification.babies.length === 0) {
         previewData.push({
-          date: notification.dateOfNotification || "",
           sex: "Unknown",
           type: "Unknown",
           facility: notification.location?.name || "Unknown",
+          date: notification.dateOfNotification || "",
           weight: "",
           motherAge: notification.mother?.age
             ? `${notification.mother.age} years`
@@ -243,12 +286,12 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
         return;
       }
 
-      // Prepare data for Excel
+      // Prepare data for Excel in order: sex, type, facility, date
       const excelData = processApiData(dataToUse).map((item) => ({
-        Date: item.date,
         Sex: item.sex,
         Type: item.type,
         Facility: item.facility,
+        Date: item.date,
         Weight: item.weight,
         "Mother's Age": item.motherAge,
         "Gestational Age": item.gestationalAge,
@@ -318,9 +361,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       >
         <View style={tw`flex-1 p-4 bg-white`}>
           <View style={tw`flex-row justify-between items-center mb-4`}>
-            <Text style={tw`text-xl font-bold text-purple-600`}>
-              MOH 369 Preview
-            </Text>
+            <Text style={tw`text-sm font-bold text-purple-600`}>MOH 369</Text>
             <TouchableOpacity
               onPress={() => setPreviewVisible(false)}
               style={tw`p-2`}
@@ -343,47 +384,41 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
               <ScrollView style={tw`flex-1 mb-4`}>
                 {previewData.length > 0 ? (
                   <View style={tw`border border-gray-200 rounded-lg`}>
-                    {/* Table Header */}
+                    {/* Table Header - Order: sex, type, facility, date */}
                     <View
                       style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}
                     >
                       <Text
                         style={tw`flex-1 font-bold text-purple-600 text-xs`}
                       >
-                        Date
+                        Sex
                       </Text>
                       <Text
                         style={tw`flex-1 font-bold text-purple-600 text-xs`}
                       >
-                        Sex
-                      </Text>
-                      {/* <Text
-                        style={tw`flex-1 font-bold text-purple-600 text-xs`}
-                      >
                         Type
-                      </Text> */}
+                      </Text>
                       <Text
                         style={tw`flex-1 font-bold text-purple-600 text-xs`}
                       >
                         Facility
                       </Text>
-                      {/* <Text
+                      <Text
                         style={tw`flex-1 font-bold text-purple-600 text-xs`}
                       >
-                        Weight
-                      </Text> */}
+                        Date
+                      </Text>
                     </View>
-                    {/* Table Rows */}
+                    {/* Table Rows - Order: sex, type, facility, date */}
                     {previewData.map((item: PreviewData, index: number) => (
                       <View
                         key={index}
                         style={tw`flex-row p-3 border-b border-gray-100`}
                       >
-                        <Text style={tw`flex-1 text-xs`}>{item.date}</Text>
                         <Text style={tw`flex-1 text-xs`}>{item.sex}</Text>
-                        {/* <Text style={tw`flex-1 text-xs`}>{item.type}</Text> */}
+                        <Text style={tw`flex-1 text-xs`}>{item.type}</Text>
                         <Text style={tw`flex-1 text-xs`}>{item.facility}</Text>
-                        {/* <Text style={tw`flex-1 text-xs`}>{item.weight}</Text> */}
+                        <Text style={tw`flex-1 text-xs`}>{item.date}</Text>
                       </View>
                     ))}
                   </View>

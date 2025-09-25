@@ -69,11 +69,34 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
   const [dataLoading, setDataLoading] = useState(false);
 
   // Function to get month dates from month string (e.g., "January 2024")
+  // Function to get month dates from month string (e.g., "September 2025")
   const getMonthDates = (monthString: string) => {
     try {
       const [monthName, yearStr] = monthString.split(" ");
       const year = parseInt(yearStr);
-      const monthIndex = new Date(`${monthName} 1, ${year}`).getMonth();
+
+      // Create a map of month names to month indices (0-11)
+      const monthMap: { [key: string]: number } = {
+        january: 0,
+        february: 1,
+        march: 2,
+        april: 3,
+        may: 4,
+        june: 5,
+        july: 6,
+        august: 7,
+        september: 8,
+        october: 9,
+        november: 10,
+        december: 11,
+      };
+
+      const monthLower = monthName.toLowerCase();
+      const monthIndex = monthMap[monthLower];
+
+      if (monthIndex === undefined) {
+        throw new Error(`Invalid month name: ${monthName}`);
+      }
 
       const startDate = new Date(year, monthIndex, 1);
       const endDate = new Date(year, monthIndex + 1, 0);
@@ -161,18 +184,29 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
   // };
   // Function to prepare preview data
 
-  const preparePreviewData = (rawData: RawDataItem[]): PreviewData[] => {
-    return rawData.map((item: any) => ({
-      sex:
-        item.babies && item.babies.length > 0
-          ? item.babies[0].sex || "Unknown"
-          : "Unknown",
-      type: item.mother?.typeOfDelivery || "Unknown",
-      facility: item.location?.name || "Unknown",
-      date: item.dateOfNotification || "",
-    }));
-  };
+  const preparePreviewData = (rawData: any[]): PreviewData[] => {
+    return rawData.flatMap((item: any) => {
+      // Handle cases where there might be multiple babies
+      if (item.babies && item.babies.length > 0) {
+        return item.babies.map((baby: any) => ({
+          sex: baby.sex || "Unknown",
+          type: baby.outcome || "Unknown", // Use baby's outcome as Type
+          facility: item.location?.name || "Unknown",
+          date: item.dateOfNotification || "",
+        }));
+      }
 
+      // Fallback for items without babies array
+      return [
+        {
+          sex: "Unknown",
+          type: "Unknown",
+          facility: item.location?.name || "Unknown",
+          date: item.dateOfNotification || "",
+        },
+      ];
+    });
+  };
   // Initialize tile data from props
   useEffect(() => {
     if (propData && propData.length > 0) {
@@ -245,16 +279,25 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
         return;
       }
 
-      // Prepare data for Excel
-      const excelData = rawData.map((item: any) => ({
-        Date: item.dateOfNotification || "",
-        Sex:
-          item.babies && item.babies.length > 0
-            ? item.babies[0].sex || "Unknown"
-            : "Unknown",
-        Type: item.mother?.typeOfDelivery || "Unknown",
-        Facility: item.location?.name || "Unknown",
-      }));
+      // Prepare data for Excel - using the same order: sex, type, facility, date
+      const excelData = rawData.flatMap((item: any) => {
+        if (item.babies && item.babies.length > 0) {
+          return item.babies.map((baby: any) => ({
+            Sex: baby.sex || "Unknown",
+            Type: baby.outcome || "Unknown", // Baby's outcome as Type
+            Facility: item.location?.name || "Unknown",
+            Date: item.dateOfNotification || "",
+          }));
+        }
+        return [
+          {
+            Sex: "Unknown",
+            Type: "Unknown",
+            Facility: item.location?.name || "Unknown",
+            Date: item.dateOfNotification || "",
+          },
+        ];
+      });
 
       // Create worksheet
       const ws = XLSX.utils.json_to_sheet(excelData);
@@ -346,7 +389,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
         <View style={tw`flex-1 p-4 bg-white`}>
           <View style={tw`flex-row justify-between items-center mb-4`}>
             <Text style={tw`text-sm font-bold text-purple-600`}>
-              Monthly Report Preview - {selectedMonth}
+              MOH 369 - {selectedMonth}
             </Text>
             <TouchableOpacity
               onPress={() => setPreviewVisible(false)}
@@ -370,7 +413,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
               <ScrollView style={tw`flex-1 mb-4`}>
                 {previewData.length > 0 ? (
                   <View style={tw`border border-gray-200 rounded-lg`}>
-                    {/* Table Header */}
+                    {/* Table Header
                     <View
                       style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}
                     >
@@ -386,6 +429,23 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
                       <Text style={tw`flex-1 font-bold text-purple-600`}>
                         Facility
                       </Text>
+                    </View> */}
+                    {/* Table Header */}
+                    <View
+                      style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}
+                    >
+                      <Text style={tw`flex-1 font-bold text-purple-600`}>
+                        Sex
+                      </Text>
+                      <Text style={tw`flex-1 font-bold text-purple-600`}>
+                        Type
+                      </Text>
+                      <Text style={tw`flex-1 font-bold text-purple-600`}>
+                        Facility
+                      </Text>
+                      <Text style={tw`flex-1 font-bold text-purple-600`}>
+                        Date
+                      </Text>
                     </View>
                     {/* Table Rows */}
                     {previewData.map((item: PreviewData, index: number) => (
@@ -393,10 +453,10 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
                         key={index}
                         style={tw`flex-row p-3 border-b border-gray-100`}
                       >
-                        <Text style={tw`flex-1 text-xs`}>{item.date}</Text>
                         <Text style={tw`flex-1`}>{item.sex}</Text>
                         <Text style={tw`flex-1`}>{item.type}</Text>
                         <Text style={tw`flex-1 text-xs`}>{item.facility}</Text>
+                        <Text style={tw`flex-1 text-xs`}>{item.date}</Text>
                       </View>
                     ))}
                   </View>
