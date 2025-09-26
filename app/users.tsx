@@ -19,17 +19,19 @@ import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
 
-// User type definition based on API response
+// ✅ User type definition with roles as an array
+export type Role = {
+  id: number;
+  name: string;
+  permissions: any[];
+};
+
 export type User = {
   id: number;
   email: string;
   name: string;
   phone?: string;
-  role: {
-    id: number;
-    name: string;
-    permissions: any[];
-  };
+  roles: Role[]; // <-- now it's an array
   location: {
     id: number;
     name: string;
@@ -146,7 +148,7 @@ const UsersScreen = () => {
       (user) =>
         user.name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
-        user.role.name.toLowerCase().includes(query) ||
+        user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
         (user.phone && user.phone.includes(query))
     );
 
@@ -163,7 +165,8 @@ const UsersScreen = () => {
   };
 
   const handleEditUser = (user: User) => {
-    // Navigate to the edit screen with the user data
+    const primaryRole = user.roles[0]; // pick first role for now
+
     router.push({
       pathname: "/editstaff",
       params: {
@@ -171,8 +174,8 @@ const UsersScreen = () => {
         name: user.name,
         email: user.email,
         phone: user.phone || "",
-        role: user.role.name,
-        roleId: user.role.id.toString(),
+        role: primaryRole?.name || "",
+        roleId: primaryRole?.id?.toString() || "",
         locationId: user.location.id.toString(),
         locationName: user.location.name,
       },
@@ -183,11 +186,17 @@ const UsersScreen = () => {
     router.push("/register");
   };
 
-  const formatRoleName = (roleName: string) => {
-    return roleName
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+  const formatRoles = (roles: Role[]) => {
+    if (!roles || roles.length === 0) return "No role assigned";
+
+    return roles
+      .map((r) =>
+        r.name
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      )
+      .join(", ");
   };
 
   const renderUserItem = ({ item }: { item: User }) => (
@@ -203,7 +212,7 @@ const UsersScreen = () => {
         <Text style={tw`text-gray-500 text-sm`}>{item.phone}</Text>
       )}
       <Text style={tw`text-purple-500 text-xs font-medium`}>
-        Role: {formatRoleName(item.role.name)}
+        Roles: {formatRoles(item.roles)}
       </Text>
       <Text style={tw`text-green-600 text-xs font-medium`}>
         Location: {item.location.name} ({item.location.type})
@@ -329,8 +338,8 @@ const UsersScreen = () => {
                 </Text>
               )}
               <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Role:</Text>{" "}
-                {formatRoleName(selectedUser.role.name)}
+                <Text style={tw`font-bold`}>Roles:</Text>{" "}
+                {formatRoles(selectedUser.roles)}
               </Text>
               <Text style={tw`text-gray-500 mb-4`}>
                 <Text style={tw`font-bold`}>Location:</Text>{" "}
@@ -374,7 +383,6 @@ const UsersScreen = () => {
       <CustomDrawer
         drawerVisible={drawerVisible}
         setDrawerVisible={setDrawerVisible}
-        // userRole={userRole}
         handleLogout={handleLogout}
       />
     </View>
