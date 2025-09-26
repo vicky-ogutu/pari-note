@@ -81,19 +81,9 @@ const CustomDrawer: React.FC<DrawerProps> = ({
   };
 
   // Function to get display name for multiple roles
-  const getRoleDisplayText = (): string => {
+  const getRolesDisplayText = (): string => {
     if (userRoles.length === 0) return "user";
-    if (userRoles.length === 1) return getPrimaryRole().replace("_", " ");
-
-    // For multiple roles, show the primary role + count of additional roles
-    const primaryRole = getPrimaryRole();
-    const otherRolesCount = userRoles.length - 1;
-
-    if (otherRolesCount > 0) {
-      return `${primaryRole.replace("_", " ")} +${otherRolesCount}`;
-    }
-
-    return primaryRole.replace("_", " ");
+    return userRoles.map((r) => r.replace("_", " ")).join(", ");
   };
 
   // Function to determine location display text based on user roles
@@ -205,7 +195,7 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                 <Text
                   style={tw`text-purple-200 text-xs font-semibold capitalize`}
                 >
-                  {getRoleDisplayText()}
+                  {getRolesDisplayText()}
                 </Text>
                 {userRoles.length > 1 && (
                   <Text style={tw`text-purple-200 text-xs ml-1`}>
@@ -245,8 +235,10 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                 </Text>
               </TouchableOpacity>
 
-              {/* User Management - County/Subcounty users only */}
-              {(canAccess("users") || canAccess("register")) && (
+              {/* User Management - hidden if ONLY nurse */}
+              {!(
+                userRoles.length === 1 && userRoles[0].toLowerCase() === "nurse"
+              ) && (
                 <View style={tw`mb-2`}>
                   <Text
                     style={tw`text-gray-400 text-xs font-semibold pl-3 mb-1`}
@@ -254,30 +246,27 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                     User Management
                   </Text>
 
-                  {canAccess("users") && (
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg`}
-                      onPress={() => handleNavigation("users")}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        👥 View Users
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  <TouchableOpacity
+                    style={tw`flex-row items-center p-3 rounded-lg`}
+                    onPress={() => handleNavigation("users")}
+                  >
+                    <Text style={tw`text-gray-500 font-medium ml-2`}>
+                      👥 View Users
+                    </Text>
+                  </TouchableOpacity>
 
-                  {canAccess("register") && (
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg`}
-                      onPress={() => handleNavigation("register")}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        📝 Register Staff
-                      </Text>
-                    </TouchableOpacity>
-                  )}
+                  <TouchableOpacity
+                    style={tw`flex-row items-center p-3 rounded-lg`}
+                    onPress={() => handleNavigation("register")}
+                  >
+                    <Text style={tw`text-gray-500 font-medium ml-2`}>
+                      📝 Register Staff
+                    </Text>
+                  </TouchableOpacity>
                 </View>
               )}
 
+              {/* Register User - Accessible to county and subcounty users */}
               {/* Logout - Always visible */}
               <TouchableOpacity
                 style={tw`flex-row items-center p-3 rounded-lg mt-4`}
