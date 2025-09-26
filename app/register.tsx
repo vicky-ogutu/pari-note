@@ -571,7 +571,6 @@ const RegisterScreen = () => {
       <CustomDrawer
         drawerVisible={drawerVisible}
         setDrawerVisible={setDrawerVisible}
-        userRole={userRole}
         handleLogout={handleLogout}
       />
     </KeyboardAvoidingView>

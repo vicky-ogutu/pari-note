@@ -77,10 +77,10 @@ const EditStaffScreen = () => {
 
   // All roles
   const allRoles = [
-    { id: 1, name: "admin", displayName: "Facility in-charge" },
-    { id: 2, name: "county user", displayName: "County admin" },
-    { id: 3, name: "subcounty user", displayName: "Subcounty admin" },
-    { id: 4, name: "nurse", displayName: "HCW" },
+    { id: 2, name: "county user", displayName: "County User" },
+    { id: 3, name: "subcounty user", displayName: "Subcounty User" },
+    { id: 1, name: "admin", displayName: "Facility In-charge" },
+    { id: 4, name: "nurse", displayName: "Nurse" },
   ];
 
   useEffect(() => {
@@ -99,21 +99,37 @@ const EditStaffScreen = () => {
 
   const getCurrentUserRole = async () => {
     try {
-      const role = await AsyncStorage.getItem("role");
-      setCurrentUserRole(role || "");
+      const stored = await AsyncStorage.getItem("roles"); // 👈 use "roles"
+      if (!stored) return;
+
+      const parsedRoles: string[] = JSON.parse(stored); // always array
+      console.log("Parsed roles from storage:", parsedRoles);
+
+      setCurrentUserRole(parsedRoles.join(", "));
+
+      // Combine allowed roles
+      const combined = new Set<string>();
+      parsedRoles.forEach((r) => {
+        getAllowedRoles(r.trim().toLowerCase()).forEach((ar) =>
+          combined.add(ar)
+        );
+      });
+
+      setAllowedRoles(Array.from(combined));
+      console.log("Allowed roles:", Array.from(combined));
     } catch (error) {
-      console.error("Error getting user role:", error);
+      console.error("Error getting user roles:", error);
     }
   };
 
   const getAllowedRoles = (userRole: string): string[] => {
     switch (userRole) {
       case "county user":
-        return ["subcounty user", "admin", "nurse"];
+        return ["county user", "subcounty user", "admin", "nurse"];
       case "subcounty user":
-        return ["admin", "nurse"];
+        return ["subcounty user", "admin", "nurse"];
       case "admin":
-        return ["nurse"];
+        return ["admin", "nurse"];
       case "nurse":
         return [];
       default:
@@ -191,13 +207,11 @@ const EditStaffScreen = () => {
       return;
     }
 
-    setSelectedRoles((prev) => {
-      if (prev.includes(roleName)) {
-        return prev.filter((role) => role !== roleName);
-      } else {
-        return [...prev, roleName];
-      }
-    });
+    setSelectedRoles((prev) =>
+      prev.includes(roleName)
+        ? prev.filter((role) => role !== roleName)
+        : [...prev, roleName]
+    );
   };
 
   const updateField = (field: keyof typeof formData, value: string) => {
@@ -364,7 +378,6 @@ const EditStaffScreen = () => {
       <CustomDrawer
         drawerVisible={drawerVisible}
         setDrawerVisible={setDrawerVisible}
-        userRole={currentUserRole}
         handleLogout={handleLogout}
       />
     </KeyboardAvoidingView>

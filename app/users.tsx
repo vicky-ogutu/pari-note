@@ -19,7 +19,7 @@ import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
 
-// ✅ User type definition with roles as an array
+//  User type definition with roles as an array
 export type Role = {
   id: number;
   name: string;
