@@ -1,71 +1,71 @@
+// usePermissions.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useEffect, useState } from "react";
+import { permissionRules, ScreenName } from "../components/permissions";
 
-export type Role = "county_user" | "subcounty_user" | "nurse";
-export type ScreenName =
-  | "home"
-  | "register"
-  | "users"
-  | "editstaff"
-  | "patient_registration";
-
-export const screenPermissions: Record<ScreenName, readonly Role[]> = {
-  home: ["county_user", "subcounty_user", "nurse"],
-  register: ["county_user", "subcounty_user"],
-  users: ["county_user", "subcounty_user"],
-  editstaff: ["county_user", "subcounty_user"],
-  patient_registration: ["nurse"],
-} as const;
-// Updated usePermissions hook
 export const usePermissions = () => {
-  const [userRoles, setUserRoles] = useState<Role[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [userRoles, setUserRoles] = useState<string[]>([]);
 
   useEffect(() => {
-    loadUserRoles();
+    const loadPermissions = async () => {
+      try {
+        // Try to get all roles first
+        const rolesJson = await AsyncStorage.getItem("roles");
+        console.log("usePermissions - Roles JSON from storage:", rolesJson);
+
+        if (rolesJson) {
+          const rolesArray = JSON.parse(rolesJson);
+          setUserRoles(Array.isArray(rolesArray) ? rolesArray : [rolesArray]);
+        } else {
+          // Fallback to single role
+          const singleRole = await AsyncStorage.getItem("role");
+          console.log("usePermissions - Single role from storage:", singleRole);
+          setUserRoles(singleRole ? [singleRole] : ["nurse"]);
+        }
+      } catch (error) {
+        console.error("Error loading permissions:", error);
+        setUserRoles(["nurse"]);
+      }
+    };
+
+    loadPermissions();
   }, []);
 
-  const loadUserRoles = async () => {
-    try {
-      // Try to get roles from the new format first
-      const rolesString = await AsyncStorage.getItem("roles");
+  // const canAccess = (screen: ScreenName): boolean => {
+  //   const rules = permissionRules[screen];
+  //   if (!rules) return false;
 
-      if (rolesString) {
-        // Parse the roles array
-        const roles = JSON.parse(rolesString) as Role[];
-        setUserRoles(roles);
-      } else {
-        // Fallback to the old single role format
-        const singleRole = (await AsyncStorage.getItem("role")) as Role | null;
-        if (singleRole) {
-          const rolesArray = [singleRole];
-          setUserRoles(rolesArray);
-          // Update storage to new format for future use
-          await AsyncStorage.setItem("roles", JSON.stringify(rolesArray));
-        }
-      }
-    } catch (error) {
-      console.error("Error loading user roles:", error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  //   console.log(`Permission check for ${screen}:`, {
+  //     userRoles,
+  //     requiredRoles: rules.roles,
+  //     hasRequiredRole: userRoles.some((role) =>
+  //       rules.roles.includes(role as Role)
+  //     ),
+  //   });
 
+  //   return userRoles.some((role) => rules.roles.includes(role as Role));
+  // };
   const canAccess = (screen: ScreenName): boolean => {
-    if (userRoles.length === 0) return false;
-    const allowedRoles = screenPermissions[screen];
-    return userRoles.some((role) => allowedRoles.includes(role));
-  };
+    // Allow access while loading to prevent false denials
+    //if (isLoading) return true;
 
-  const hasRole = (role: Role): boolean => {
+    const rules = permissionRules[screen];
+    if (!rules) return false;
+
+    // More flexible matching
+    const hasAccess = userRoles.some((userRole) =>
+      rules.roles.some(
+        (requiredRole) =>
+          userRole.toLowerCase().includes(requiredRole.toLowerCase()) ||
+          requiredRole.toLowerCase().includes(userRole.toLowerCase())
+      )
+    );
+
+    return hasAccess;
+  };
+  const hasRole = (role: string): boolean => {
     return userRoles.includes(role);
   };
 
-  return {
-    userRoles,
-    isLoading,
-    canAccess,
-    hasRole,
-    reloadPermissions: loadUserRoles,
-  };
+  return { userRoles, canAccess, hasRole };
 };

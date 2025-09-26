@@ -41,65 +41,61 @@ export default function LoginScreen() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.log("Login failed response:", errorData);
         throw new Error(errorData.message || "Login failed");
       }
 
       const data = await response.json();
+      console.log("Login success response:", data);
 
-      // Extract role information (assuming first role if multiple exist)
-      const userRole =
+      // Handle roles (string array from API)
+      const rolesArray =
         data.user.roles && data.user.roles.length > 0
-          ? data.user.roles[0]
-          : { name: "nurse", id: 4, permissions: [] }; // Default to nurse if no roles
+          ? data.user.roles
+          : ["nurse"];
+      const primaryRole = rolesArray[0]; // pick first role as default for navigation
 
-      // Store authentication data
+      // Save user/session data
       await AsyncStorage.multiSet([
-        ["access_token", data.access_token],
-        ["role", userRole.name],
-        ["role_id", userRole.id?.toString() || "4"],
-        ["user_id", data.user.id.toString()],
-        ["user_name", data.user.name],
-        ["user_email", data.user.email],
+        ["access_token", data.access_token || ""],
+        ["roles", JSON.stringify(rolesArray)], // <-- store ALL roles
+        ["primary_role", primaryRole || "nurse"], // <-- store default role
+        ["user_id", data.user.id?.toString() || ""],
+        ["user_name", data.user.name || ""],
+        ["user_email", data.user.email || ""],
         ["location_id", data.user.location?.id?.toString() || ""],
         ["location_name", data.user.location?.name || ""],
         ["location_type", data.user.location?.type || ""],
-        ["permissions", JSON.stringify(userRole.permissions || [])],
-
-        // Store the missing location hierarchy data
         ["subcounty_id", data.user.location?.parent?.id?.toString() || ""],
         ["subcounty_name", data.user.location?.parent?.name || ""],
         ["county_id", data.user.location?.parent?.parent?.id?.toString() || ""],
         ["county_name", data.user.location?.parent?.parent?.name || ""],
-
-        // Store the entire location hierarchy as JSON for easy retrieval
         ["location_hierarchy", JSON.stringify(data.user.location || {})],
       ]);
 
       console.log("Login successful, stored data:", {
         token: data.access_token,
-        role: userRole.name,
+        roles: rolesArray,
         userId: data.user.id,
         locationId: data.user.location?.id,
       });
 
-      // Redirect based on role
-      switch (userRole.name) {
-        case "admin":
-        case "county user":
-        case "subcounty user":
-        case "nurse":
-          router.replace("/home");
-          break;
-        default:
-          router.replace("/home");
-          break;
+      // Decide navigation based on roles
+      const normalizedRoles = rolesArray.map((r: string) => r.toLowerCase());
+
+      if (
+        normalizedRoles.includes("admin") ||
+        normalizedRoles.includes("county user") ||
+        normalizedRoles.includes("subcounty user") ||
+        normalizedRoles.includes("nurse")
+      ) {
+        router.replace("/home");
+      } else {
+        router.replace("/home"); // default
       }
     } catch (error: any) {
       console.error("Login error:", error);
-      Alert.alert(
-        "Error",
-        error.message || "Invalid credentials or network error"
-      );
+      Alert.alert("Error", error.message || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }

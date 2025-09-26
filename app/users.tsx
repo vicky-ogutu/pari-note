@@ -374,7 +374,7 @@ const UsersScreen = () => {
       <CustomDrawer
         drawerVisible={drawerVisible}
         setDrawerVisible={setDrawerVisible}
-        userRole={userRole}
+        // userRole={userRole}
         handleLogout={handleLogout}
       />
     </View>

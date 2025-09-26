@@ -1,5 +1,8 @@
 // components/permissions.ts
-export type Role = "county_user" | "subcounty_user" | "nurse";
+
+// Define roles exactly as they are returned from backend
+export type Role = "county user" | "subcounty user" | "nurse" | "admin";
+
 export type ScreenName =
   | "home"
   | "register"
@@ -7,10 +10,26 @@ export type ScreenName =
   | "editstaff"
   | "patient_registration";
 
-export const screenPermissions = {
-  home: ["county_user", "subcounty_user", "nurse"],
-  register: ["county_user", "subcounty_user"],
-  users: ["county_user", "subcounty_user"],
-  editstaff: ["county_user", "subcounty_user"],
-  patient_registration: ["county_user", "subcounty_user", "nurse"],
-} as const satisfies Record<ScreenName, Role[]>;
+// Define the permission rules interface
+export interface PermissionRule {
+  roles: Role[];
+}
+
+// Map screens to the roles that can access them
+export const permissionRules: Record<ScreenName, PermissionRule> = {
+  home: {
+    roles: ["county user", "subcounty user", "nurse", "admin"],
+  },
+  register: {
+    roles: ["county user", "subcounty user", "admin"],
+  },
+  users: {
+    roles: ["county user", "subcounty user", "admin"], //
+  },
+  editstaff: {
+    roles: ["county user", "subcounty user", "admin"],
+  },
+  patient_registration: {
+    roles: ["county user", "subcounty user", "nurse", "admin"],
+  },
+};
