@@ -240,36 +240,36 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                 userRoles.length === 1 && userRoles[0].toLowerCase() === "nurse"
               ) && (
                 <View style={tw`mb-2`}>
-                  <Text
+                  {/* Register User - Accessible to county and subcounty users */}
+                  {/* <Text
                     style={tw`text-gray-400 text-xs font-semibold pl-3 mb-1`}
                   >
                     User Management
-                  </Text>
+                  </Text> */}
 
                   <TouchableOpacity
                     style={tw`flex-row items-center p-3 rounded-lg`}
                     onPress={() => handleNavigation("users")}
                   >
                     <Text style={tw`text-gray-500 font-medium ml-2`}>
-                      👥 View Users
+                      👥 Users
                     </Text>
                   </TouchableOpacity>
 
-                  <TouchableOpacity
+                  {/* <TouchableOpacity
                     style={tw`flex-row items-center p-3 rounded-lg`}
                     onPress={() => handleNavigation("register")}
                   >
                     <Text style={tw`text-gray-500 font-medium ml-2`}>
                       📝 Register Staff
                     </Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> */}
                 </View>
               )}
 
-              {/* Register User - Accessible to county and subcounty users */}
               {/* Logout - Always visible */}
               <TouchableOpacity
-                style={tw`flex-row items-center p-3 rounded-lg mt-4`}
+                style={tw`flex-row items-center p-50 rounded-lg mt-4`}
                 onPress={handleLogout}
               >
                 <Text style={tw`text-gray-500 font-medium ml-2`}>
