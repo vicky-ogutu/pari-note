@@ -13,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import tw from "tailwind-react-native-classnames";
 import { BASE_URL } from "../constants/ApiConfig";
 
@@ -21,6 +22,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -127,14 +129,26 @@ export default function LoginScreen() {
             autoCapitalize="none"
           />
 
-          <TextInput
-            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={tw`relative mb-4`}>
+            <TextInput
+              style={tw`bg-gray-100 p-4 rounded-lg border border-gray-300 pr-10`} // extra padding right
+              placeholder="Password"
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword} // 👈 toggle
+            />
+            <TouchableOpacity
+              style={tw`absolute right-3 top-4`}
+              onPress={() => setShowPassword((prev) => !prev)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={22}
+                color="#666"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2 ${
