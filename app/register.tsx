@@ -39,9 +39,9 @@ const ROLE_MAPPING: { [key: string]: number } = {
 
 // Who can create whom
 const ROLE_HIERARCHY: { [key: string]: string[] } = {
-  "county user": ["subcounty user", "admin", "nurse"],
-  "subcounty user": ["admin", "nurse"],
-  admin: ["nurse"],
+  "county user": ["county user", "subcounty user", "admin", "nurse"], // can register all below
+  "subcounty user": ["subcounty user", "admin", "nurse"],
+  admin: ["admin", "nurse"],
   nurse: [],
 };
 
@@ -75,7 +75,26 @@ const RegisterScreen = () => {
   useEffect(() => {
     const getUserData = async () => {
       try {
-        const role = await AsyncStorage.getItem("role");
+        const storedRoles = await AsyncStorage.getItem("roles"); // array
+        const parsedRoles: string[] = storedRoles
+          ? JSON.parse(storedRoles)
+          : [];
+
+        console.log("Current user roles from storage:", parsedRoles);
+        setUserRole(parsedRoles.join(", "));
+
+        // Merge allowed roles for all assigned roles
+        const combined = new Set<string>();
+        parsedRoles.forEach((r) => {
+          const normalized = r.toLowerCase().trim();
+          const allowed = ROLE_HIERARCHY[normalized] || [];
+          allowed.forEach((ar) => combined.add(ar));
+        });
+
+        setAllowedRoles(Array.from(combined));
+        console.log("Allowed roles merged:", Array.from(combined));
+
+        // Location setup (unchanged)
         const locationIdStr = await AsyncStorage.getItem("location_id");
         const locationName = await AsyncStorage.getItem("location_name");
         const locationType = await AsyncStorage.getItem("location_type");
@@ -84,23 +103,7 @@ const RegisterScreen = () => {
         const countyId = await AsyncStorage.getItem("county_id");
         const countyName = await AsyncStorage.getItem("county_name");
 
-        console.log("Current user role from storage:", role);
-        setUserRole(role || "");
-        setLocationId(locationIdStr ? parseInt(locationIdStr) : null);
-
-        // Set allowed roles based on current user's role
-        if (role && ROLE_HIERARCHY[role]) {
-          console.log("Allowed roles for", role, ":", ROLE_HIERARCHY[role]);
-          setAllowedRoles(ROLE_HIERARCHY[role]);
-        } else {
-          console.log("No allowed roles for role:", role);
-          setAllowedRoles([]);
-        }
-
-        // Build available locations from stored data
         const availableLocations: Location[] = [];
-
-        // Add current location if available
         if (locationIdStr && locationName && locationType) {
           availableLocations.push({
             id: parseInt(locationIdStr),
@@ -108,8 +111,6 @@ const RegisterScreen = () => {
             type: locationType,
           });
         }
-
-        // Add subcounty if available
         if (subcountyId && subcountyName) {
           availableLocations.push({
             id: parseInt(subcountyId),
@@ -117,8 +118,6 @@ const RegisterScreen = () => {
             type: "subcounty",
           });
         }
-
-        // Add county if available
         if (countyId && countyName) {
           availableLocations.push({
             id: parseInt(countyId),
@@ -129,7 +128,6 @@ const RegisterScreen = () => {
 
         setLocations(availableLocations);
 
-        // Set default selected location to current location
         if (locationIdStr) {
           setSelectedLocation(parseInt(locationIdStr));
         } else if (availableLocations.length > 0) {
