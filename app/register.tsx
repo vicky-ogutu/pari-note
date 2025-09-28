@@ -511,7 +511,6 @@ const RegisterScreen = () => {
       style={tw`flex-1 bg-white`}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Header */}
       <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
         <HamburgerButton onPress={() => setDrawerVisible(true)} position="relative" />
         <Text style={tw`text-2xl font-bold text-purple-500`}>Create user</Text>
