@@ -2,7 +2,7 @@
 import DateRangeReport from "@/components/DateRangeReport";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
-import { UserPlusIcon } from "lucide-react-native";
+import { FilePenIcon, UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
   ActivityIndicator,
@@ -83,15 +83,8 @@ const HomeScreen = () => {
   const {
     userRoles,
     canAccess,
-    isLoading: permissionsLoading,
   } = usePermissions();
 
-  useEffect(() => {
-    const getUserRole = async () => {
-      const role = await AsyncStorage.getItem("role");
-    };
-    getUserRole();
-  }, []);
 
   // Fetch report data when component mounts or activeTab changes
   useEffect(() => {
@@ -141,11 +134,11 @@ const HomeScreen = () => {
 
   // NO PERMISSION CHECKS - Everyone can add users
   const handleAddUser = () => {
-    if (userRoles.length == 1 && userRoles[0] == "nurse") {
-      Alert.alert("Access Denied", "Nurses are not allowed to register users.");
-      return;
+    if (userRoles.length == 1 && userRoles.includes('nurse')) {
+      router.push("/patient_registration");
+    } else {
+      router.push("/register");
     }
-    router.push("/register");
   };
 
   const clearAuthTokens = async () => {
@@ -205,15 +198,15 @@ const HomeScreen = () => {
     return null;
   };
 
-  // Show loading while permissions are being loaded
-  if (permissionsLoading) {
-    return (
-      <View style={tw`flex-1 justify-center items-center bg-purple-100`}>
-        <ActivityIndicator size="large" color="#682483ff" />
-        <Text style={tw`mt-4 text-purple-600`}>Loading...</Text>
-      </View>
-    );
-  }
+  // // Show loading while permissions are being loaded
+  // if (permissionsLoading) {
+  //   return (
+  //     <View style={tw`flex-1 justify-center items-center bg-purple-100`}>
+  //       <ActivityIndicator size="large" color="#682483ff" />
+  //       <Text style={tw`mt-4 text-purple-600`}>Loading...</Text>
+  //     </View>
+  //   );
+  // }
 
   return (
     <KeyboardAvoidingView
@@ -231,8 +224,13 @@ const HomeScreen = () => {
         <Text style={tw`text-2xl font-bold text-purple-500`}>MOH 369</Text>
         <View style={tw`flex-row items-center`}>
           <TouchableOpacity onPress={handleAddUser}>
-            <UserPlusIcon size={36} color="#682483ff" />
-          </TouchableOpacity>
+            {userRoles?.includes("nurse") ? (
+              <FilePenIcon color="#682483ff" />
+              
+            ) : (
+              <UserPlusIcon size={36} color="#682483ff" />
+            )}
+            </TouchableOpacity>
         </View>
       </View>
 

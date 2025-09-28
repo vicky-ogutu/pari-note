@@ -20,7 +20,7 @@ import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
 
-// Define the form data type
+// Types
 type FormData = {
   firstName: string;
   lastName: string;
@@ -30,30 +30,47 @@ type FormData = {
   phone: string;
 };
 
-// Define role mapping to roleId
+interface Location {
+  id: string;
+  name: string;
+  type: string;
+  parentId: string | null;
+  children: Location[];
+}
+
+interface LocationOption {
+  label: string;
+  value: string;
+  type: string;
+  level: number;
+  parentId?: string | null;
+  isBackOption?: boolean;
+}
+
+// Constants
 const ROLE_MAPPING: { [key: string]: number } = {
   "county user": 2,
   "subcounty user": 3,
-  admin: 1, // facility in-charge admin
-  nurse: 4, // HCW
+  admin: 1,
+  nurse: 4,
 };
 
-// Who can create whom
 const ROLE_HIERARCHY: { [key: string]: string[] } = {
-  "county user": ["county user", "subcounty user", "admin", "nurse"], // can register all below
+  "county user": ["county user", "subcounty user", "admin", "nurse"],
   "subcounty user": ["subcounty user", "admin", "nurse"],
   admin: ["admin", "nurse"],
-  nurse: [],
+  nurse: ["nurse"],
 };
 
-// Define location type
-interface Location {
-  id: number;
-  name: string;
-  type: string;
-}
+const ROLE_DISPLAY_NAMES: { [key: string]: string } = {
+  "county user": "County Admin",
+  "subcounty user": "Subcounty Admin",
+  admin: "Facility In-Charge",
+  nurse: "HCW",
+};
 
 const RegisterScreen = () => {
+  // State
   const [formData, setFormData] = useState<FormData>({
     firstName: "",
     lastName: "",
@@ -67,82 +84,200 @@ const RegisterScreen = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
   const [selectedRoles, setSelectedRoles] = useState<string[]>([]);
-  const [locationId, setLocationId] = useState<number | null>(null);
   const [allowedRoles, setAllowedRoles] = useState<string[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
-  const [selectedLocation, setSelectedLocation] = useState<number | null>(null);
+  const [locationTree, setLocationTree] = useState<Location | null>(null);
+  const [locationOptions, setLocationOptions] = useState<LocationOption[]>([]);
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
+  const [selectedLocationPath, setSelectedLocationPath] = useState<Location[]>([]);
   const [isFocus, setIsFocus] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [dropdownKey, setDropdownKey] = useState(0);
 
+  // Effects
   useEffect(() => {
-    const getUserData = async () => {
-      try {
-        const storedRoles = await AsyncStorage.getItem("roles"); // array
-        const parsedRoles: string[] = storedRoles
-          ? JSON.parse(storedRoles)
-          : [];
-
-        console.log("Current user roles from storage:", parsedRoles);
-        setUserRole(parsedRoles.join(", "));
-
-        // Merge allowed roles for all assigned roles
-        const combined = new Set<string>();
-        parsedRoles.forEach((r) => {
-          const normalized = r.toLowerCase().trim();
-          const allowed = ROLE_HIERARCHY[normalized] || [];
-          allowed.forEach((ar) => combined.add(ar));
-        });
-
-        setAllowedRoles(Array.from(combined));
-        console.log("Allowed roles merged:", Array.from(combined));
-
-        // Location setup (unchanged)
-        const locationIdStr = await AsyncStorage.getItem("location_id");
-        const locationName = await AsyncStorage.getItem("location_name");
-        const locationType = await AsyncStorage.getItem("location_type");
-        const subcountyId = await AsyncStorage.getItem("subcounty_id");
-        const subcountyName = await AsyncStorage.getItem("subcounty_name");
-        const countyId = await AsyncStorage.getItem("county_id");
-        const countyName = await AsyncStorage.getItem("county_name");
-
-        const availableLocations: Location[] = [];
-        if (locationIdStr && locationName && locationType) {
-          availableLocations.push({
-            id: parseInt(locationIdStr),
-            name: locationName,
-            type: locationType,
-          });
-        }
-        if (subcountyId && subcountyName) {
-          availableLocations.push({
-            id: parseInt(subcountyId),
-            name: subcountyName,
-            type: "subcounty",
-          });
-        }
-        if (countyId && countyName) {
-          availableLocations.push({
-            id: parseInt(countyId),
-            name: countyName,
-            type: "county",
-          });
-        }
-
-        setLocations(availableLocations);
-
-        if (locationIdStr) {
-          setSelectedLocation(parseInt(locationIdStr));
-        } else if (availableLocations.length > 0) {
-          setSelectedLocation(availableLocations[0].id);
-        }
-      } catch (error) {
-        console.error("Error retrieving user data:", error);
-      }
-    };
-    getUserData();
+    initializeUserData();
   }, []);
 
-  //clear authentication tokens
+  useEffect(() => {
+    if (locationTree) {
+      buildLocationOptions();
+    }
+  }, [locationTree, selectedLocationPath]);
+
+  // Functions
+  const initializeUserData = async () => {
+    try {
+      const [storedRoles, userId] = await Promise.all([
+        AsyncStorage.getItem("roles"),
+        AsyncStorage.getItem("user_id"),
+      ]);
+
+      const parsedRoles: string[] = storedRoles ? JSON.parse(storedRoles) : [];
+      setUserRole(parsedRoles.join(", "));
+
+      // Set allowed roles
+      const combinedRoles = new Set<string>();
+      parsedRoles.forEach((role) => {
+        const normalized = role.toLowerCase().trim();
+        const allowed = ROLE_HIERARCHY[normalized] || [];
+        allowed.forEach((ar) => combinedRoles.add(ar));
+      });
+      setAllowedRoles(Array.from(combinedRoles));
+
+      // Load location tree if user ID exists
+      if (userId) {
+        await loadLocationTree(userId);
+      }
+    } catch (error) {
+      console.error("Error initializing user data:", error);
+      Alert.alert("Error", "Failed to initialize user data");
+    }
+  };
+
+  const loadLocationTree = async (userId: string) => {
+    try {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      if (!accessToken) {
+        console.error("No access token available");
+        return;
+      }
+
+      const response = await axios.get(
+        `${BASE_URL}/users/${userId}/location-tree`,
+        {
+          headers: {
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (response.data) {
+        // Handle both response formats
+        const locationData = response.data.location || response.data;
+        setLocationTree(locationData);
+        // Set initial selected location to the root
+        setSelectedLocation(locationData.id.toString());
+        setSelectedLocationPath([locationData]);
+        setDropdownKey(prev => prev + 1);
+      }
+    } catch (error) {
+      console.error("Error loading location tree:", error);
+      Alert.alert("Error", "Failed to load location data");
+    }
+  };
+
+  const buildLocationOptions = () => {
+    if (!locationTree) return;
+
+    let currentLevel = locationTree;
+    const path = [...selectedLocationPath];
+
+    // Navigate to the current level based on selected path
+    for (let i = 1; i < path.length; i++) {
+      const nextLocation = path[i];
+      const childLocation = currentLevel.children.find(
+        (child) => child.id === nextLocation.id
+      );
+      if (childLocation) {
+        currentLevel = childLocation;
+      }
+    }
+
+    const options: LocationOption[] = [];
+
+    // Add "Back" option if we're not at the root level
+    if (path.length > 1) {
+      options.push({
+        label: `← Back to ${path[path.length - 2].name}`,
+        value: 'back',
+        type: 'back',
+        level: path.length - 2,
+        isBackOption: true
+      });
+    }
+
+    // Add current level children
+    if (currentLevel.children && currentLevel.children.length > 0) {
+      options.push(
+        ...currentLevel.children.map((child) => ({
+          label: `${child.name} (${child.type})`,
+          value: child.id.toString(),
+          type: child.type,
+          level: path.length,
+          parentId: child.parentId,
+        }))
+      );
+    }
+
+    // Add option to select current level if it has no children or is the last level
+    if (!currentLevel.children || currentLevel.children.length === 0 || isLowestLevel(currentLevel)) {
+      options.push({
+        label: `Select ${currentLevel.name}`,
+        value: currentLevel.id.toString(),
+        type: currentLevel.type,
+        level: path.length - 1,
+        parentId: currentLevel.parentId,
+      });
+    }
+
+    console.log("Location options built:", options);
+    setLocationOptions(options);
+    setDropdownKey(prev => prev + 1);
+  };
+
+  const isLowestLevel = (location: Location): boolean => {
+    return location.type === "facility" || !location.children || location.children.length === 0;
+  };
+
+  const handleLocationSelect = (locationId: string) => {
+    if (!locationTree) return;
+
+    if (locationId === 'back') {
+      if (selectedLocationPath.length > 1) {
+        const newPath = selectedLocationPath.slice(0, -1);
+        const newLocation = newPath[newPath.length - 1];
+        setSelectedLocationPath(newPath);
+        setSelectedLocation(newLocation.id.toString());
+      }
+      return;
+    }
+
+    const findLocationPath = (
+      current: Location,
+      targetId: string,
+      path: Location[] = []
+    ): Location[] | null => {
+      const newPath = [...path, current];
+
+      if (current.id.toString() === targetId) {
+        return newPath;
+      }
+
+      if (current.children) {
+        for (const child of current.children) {
+          const result = findLocationPath(child, targetId, newPath);
+          if (result) return result;
+        }
+      }
+
+      return null;
+    };
+
+    const newPath = findLocationPath(locationTree, locationId);
+    if (newPath) {
+      setSelectedLocationPath(newPath);
+      setSelectedLocation(locationId);
+    }
+  };
+
+  const handleLocationChange = (item: LocationOption) => {
+    if (item && item.value) {
+      console.log("Location selected:", item);
+      handleLocationSelect(item.value);
+    }
+    setIsFocus(false);
+  };
+
   const clearAuthTokens = async () => {
     try {
       await AsyncStorage.multiRemove([
@@ -170,79 +305,86 @@ const RegisterScreen = () => {
     router.push("/register");
   };
 
-  const handleRegister = async () => {
-    const { firstName, lastName, email, password, confirmPassword, phone } =
-      formData;
+  const updateFormData = (field: keyof FormData, value: string) => {
+    setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const toggleRole = (role: string) => {
+    if (!allowedRoles.includes(role)) {
+      Alert.alert("Error", "You are not authorized to create this role");
+      return;
+    }
+
+    setSelectedRoles((prev) =>
+      prev.includes(role) ? prev.filter((r) => r !== role) : [...prev, role]
+    );
+  };
+
+  const validateForm = (): boolean => {
+    const { firstName, lastName, email, password, confirmPassword, phone } = formData;
 
     if (!firstName || !lastName || !email || !password || !confirmPassword) {
       Alert.alert("Error", "Please fill in all required fields");
-      return;
+      return false;
     }
 
     if (password !== confirmPassword) {
       Alert.alert("Error", "Passwords do not match");
-      return;
+      return false;
     }
 
     if (password.length < 6) {
       Alert.alert("Error", "Password must be at least 6 characters long");
-      return;
+      return false;
     }
 
     if (selectedRoles.length === 0) {
       Alert.alert("Error", "Please select at least one role");
-      return;
+      return false;
     }
 
     if (!selectedLocation) {
       Alert.alert("Error", "Please select a location");
-      return;
+      return false;
     }
 
-    console.log("Current User Role:", userRole);
-    console.log("Allowed Roles for Current User:", allowedRoles);
-
-    // Check if all selected roles are allowed for the current user
     const unauthorizedRoles = selectedRoles.filter(
       (role) => !allowedRoles.includes(role)
     );
     if (unauthorizedRoles.length > 0) {
       Alert.alert(
         "Error",
-        `You are not authorized to create these roles: ${unauthorizedRoles.join(
-          ", "
-        )}`
+        `You are not authorized to create these roles: ${unauthorizedRoles.join(", ")}`
       );
-      return;
+      return false;
     }
+
+    return true;
+  };
+
+  const handleRegister = async () => {
+    if (!validateForm()) return;
 
     setIsLoading(true);
 
     try {
-      // Get the access token
       const accessToken = await AsyncStorage.getItem("access_token");
-      console.log("Access Token:", accessToken);
-      console.log("User Role:", userRole);
-      console.log("Selected Location ID:", selectedLocation);
-
       if (!accessToken) {
         Alert.alert("Error", "Authentication token not found");
-        setIsLoading(false);
         return;
       }
 
-      // Prepare the request data for multiple roles
       const requestData = {
-        email: email,
-        name: `${firstName} ${lastName}`,
-        password: password,
-        roleIds: selectedRoles.map((role) => ROLE_MAPPING[role]), // Send array of role IDs
-        locationId: selectedLocation, // Use the selected location instead of current user's location
+        email: formData.email,
+        name: `${formData.firstName} ${formData.lastName}`,
+        password: formData.password,
+        roleIds: selectedRoles.map((role) => ROLE_MAPPING[role]),
+        locationId: selectedLocation,
+        phone: formData.phone || undefined,
       };
 
-      console.log("Request Data:", requestData);
+      console.log("Registration request data:", requestData);
 
-      // Make the API call
       const response = await axios.post(
         `${BASE_URL}/users/register`,
         requestData,
@@ -264,61 +406,21 @@ const RegisterScreen = () => {
       }
     } catch (error: any) {
       console.error("Registration error:", error);
-
-      if (error.response) {
-        // The request was made and the server responded with a status code
-        const errorMessage =
-          error.response.data?.message || "Registration failed";
-        Alert.alert("Error", errorMessage);
-      } else if (error.request) {
-        // The request was made but no response was received
-        Alert.alert(
-          "Error",
-          "No response from server. Please check your connection."
-        );
-      } else {
-        // Something happened in setting up the request that triggered an Error
-        Alert.alert("Error", "An unexpected error occurred");
-      }
+      const errorMessage = error.response?.data?.message || 
+        error.request ? "No response from server" : "An unexpected error occurred";
+      Alert.alert("Error", errorMessage);
     } finally {
       setIsLoading(false);
     }
   };
 
-  // Define the type for the field parameter
-  const updateFormData = (field: keyof FormData, value: string) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  // Handle role selection - allow multiple roles
-  const toggleRole = (role: string) => {
-    // Check if the role is allowed for the current user
-    if (!allowedRoles.includes(role)) {
-      Alert.alert("Error", "You are not authorized to create this role");
-      return;
-    }
-
-    setSelectedRoles((prev) => {
-      if (prev.includes(role)) {
-        // Remove role if already selected
-        return prev.filter((r) => r !== role);
-      } else {
-        // Add role if not selected
-        return [...prev, role];
-      }
-    });
-  };
-
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
-      {
-        text: "Cancel",
-        style: "cancel",
-      },
+      { text: "Cancel", style: "cancel" },
       {
         text: "Logout",
-        onPress: () => {
-          clearAuthTokens();
+        onPress: async () => {
+          await clearAuthTokens();
           router.replace("/login");
         },
         style: "destructive",
@@ -326,266 +428,203 @@ const RegisterScreen = () => {
     ]);
   };
 
+  const renderRoleCheckbox = (role: string, displayName: string) => (
+    <TouchableOpacity
+      style={tw`flex-row items-center mb-3 ${
+        !allowedRoles.includes(role) ? "opacity-50" : ""
+      }`}
+      onPress={() => toggleRole(role)}
+      disabled={!allowedRoles.includes(role)}
+    >
+      <View
+        style={tw`w-6 h-6 border border-gray-400 rounded-md mr-3 justify-center items-center ${
+          selectedRoles.includes(role)
+            ? "bg-purple-600 border-purple-600"
+            : "bg-white"
+        }`}
+      >
+        {selectedRoles.includes(role) && (
+          <Ionicons name="checkmark" size={16} color="white" />
+        )}
+      </View>
+      <Text style={tw`text-gray-700`}>{displayName}</Text>
+    </TouchableOpacity>
+  );
+
+  const renderInputField = (
+    field: keyof FormData,
+    placeholder: string,
+    options: any = {}
+  ) => (
+    <TextInput
+      style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
+      placeholder={placeholder}
+      placeholderTextColor="#999"
+      value={formData[field]}
+      onChangeText={(text) => updateFormData(field, text)}
+      {...options}
+    />
+  );
+
+  const renderPasswordField = (field: keyof FormData, placeholder: string) => (
+    <View style={tw`relative mb-4`}>
+      <TextInput
+        style={tw`bg-gray-100 p-4 rounded-lg border border-gray-300 pr-12`}
+        placeholder={placeholder}
+        placeholderTextColor="#999"
+        value={formData[field]}
+        onChangeText={(text) => updateFormData(field, text)}
+        secureTextEntry={!showPassword}
+      />
+      <TouchableOpacity
+        style={tw`absolute right-3 top-4`}
+        onPress={() => setShowPassword((prev) => !prev)}
+      >
+        <Ionicons
+          name={showPassword ? "eye-off" : "eye"}
+          size={22}
+          color="#666"
+        />
+      </TouchableOpacity>
+    </View>
+  );
+
+  const renderLocationItem = (item: LocationOption) => (
+    <View style={tw`p-4 border-b border-gray-200 ${
+      item.isBackOption ? 'bg-gray-50' : ''
+    }`}>
+      <Text style={tw`text-gray-700 text-base ${
+        item.isBackOption ? 'text-purple-600 font-medium' : ''
+      }`}>
+        {item.label}
+      </Text>
+      {!item.isBackOption && (
+        <Text style={tw`text-gray-500 text-xs mt-1`}>
+          {item.type.charAt(0).toUpperCase() + item.type.slice(1)}
+        </Text>
+      )}
+    </View>
+  );
+
   return (
     <KeyboardAvoidingView
       style={tw`flex-1 bg-white`}
       behavior={Platform.OS === "ios" ? "padding" : "height"}
     >
-      {/* Header with Menu Button - Updated UI from second file */}
-      <View
-        style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}
-      >
-        <HamburgerButton
-          onPress={() => setDrawerVisible(true)}
-          position="relative"
-        />
+      <View style={tw`flex-row justify-between items-center p-5 bg-white border-b border-gray-300`}>
+        <HamburgerButton onPress={() => setDrawerVisible(true)} position="relative" />
         <Text style={tw`text-2xl font-bold text-purple-500`}>Create user</Text>
-        <View style={tw`flex-row items-center`}>
-          <TouchableOpacity onPress={handleAddUser}>
-            <UserPlusIcon color="#682483ff" />
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity onPress={handleAddUser}>
+          <UserPlusIcon color="#682483" />
+        </TouchableOpacity>
       </View>
 
-      <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
-        <View style={tw`items-center mb-8`}>
-          <Text style={tw`text-2xl font-bold text-gray-800 mb-2`}>
-            Create User Account
-          </Text>
-          {userRole && (
-            <Text style={tw`text-purple-600 text-sm mt-1`}>
-              Logged in as: {userRole}
-            </Text>
-          )}
-          {allowedRoles.length > 0 && (
-            <Text style={tw`text-green-600 text-xs mt-1`}>
-              You can create: {allowedRoles.join(", ")}
-            </Text>
-          )}
-          {selectedRoles.length > 0 && (
-            <Text style={tw`text-blue-600 text-xs mt-1`}>
-              Selected: {selectedRoles.join(", ")}
-            </Text>
-          )}
-        </View>
-
+      <ScrollView contentContainerStyle={tw`flex-grow p-5`}>
         <View style={tw`w-full`}>
-          <TextInput
-            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="First Name *"
-            placeholderTextColor="#999"
-            value={formData.firstName}
-            onChangeText={(text) => updateFormData("firstName", text)}
-          />
+          {/* Personal Information */}
+          <Text style={tw`text-lg font-bold text-gray-500 mb-4`}>Personal Information</Text>
+          
+          {renderInputField("firstName", "First Name *")}
+          {renderInputField("lastName", "Last Name *")}
+          {renderInputField("email", "Email *", {
+            keyboardType: "email-address",
+            autoCapitalize: "none",
+          })}
+          {renderInputField("phone", "Phone Number", {
+            keyboardType: "phone-pad",
+          })}
 
-          <TextInput
-            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="Last Name *"
-            placeholderTextColor="#999"
-            value={formData.lastName}
-            onChangeText={(text) => updateFormData("lastName", text)}
-          />
+          {/* Password Section */}
+          <Text style={tw`text-lg font-bold text-gray-500 mb-4 mt-2`}>Security</Text>
+          {renderPasswordField("password", "Password *")}
+          {renderPasswordField("confirmPassword", "Confirm Password *")}
 
-          <TextInput
-            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="Email *"
-            placeholderTextColor="#999"
-            value={formData.email}
-            onChangeText={(text) => updateFormData("email", text)}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-
-          <TextInput
-            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="Phone Number"
-            placeholderTextColor="#999"
-            value={formData.phone}
-            onChangeText={(text) => updateFormData("phone", text)}
-            keyboardType="phone-pad"
-          />
-
-          <View style={tw`relative mb-4`}>
-            <TextInput
-              style={tw`bg-gray-100 p-4 rounded-lg border border-gray-300 pr-10`} // extra padding right
-              placeholder="Password"
-              placeholderTextColor="#999"
-              value={formData.password}
-              onChangeText={(text) => updateFormData("password", text)}
-              secureTextEntry={!showPassword} // 👈 toggle
-            />
-            <TouchableOpacity
-              style={tw`absolute right-3 top-4`}
-              onPress={() => setShowPassword((prev) => !prev)}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={22}
-                color="#666"
-              />
-            </TouchableOpacity>
-          </View>
-
-          <View style={tw`relative mb-4`}>
-            <TextInput
-              style={tw`bg-gray-100 p-4 rounded-lg border border-gray-300 pr-10`} // extra padding right
-              placeholder="Confirm Password *"
-              placeholderTextColor="#999"
-              value={formData.confirmPassword}
-              onChangeText={(text) => updateFormData("confirmPassword", text)}
-              secureTextEntry={!showPassword} // 👈 toggle
-            />
-            <TouchableOpacity
-              style={tw`absolute right-3 top-4`}
-              onPress={() => setShowPassword((prev) => !prev)}
-            >
-              <Ionicons
-                name={showPassword ? "eye-off" : "eye"}
-                size={22}
-                color="#666"
-              />
-            </TouchableOpacity>
-          </View>
-
-          {/* Location Dropdown */}
-          {locations.length > 0 && (
-            <View style={tw`mb-4`}>
-              <Text style={tw`text-gray-500 mb-2 font-medium`}>
-                Select Location *
-              </Text>
+          {/* Location Selection */}
+          <Text style={tw`text-lg font-bold text-gray-500 mb-4 mt-2`}>Location & Role</Text>
+          
+          {locationOptions.length > 0 ? (
+            <View style={tw`mb-6`}>
+              <Text style={tw`text-gray-700 mb-2 font-medium`}>Select Location *</Text>
               <Dropdown
+                key={dropdownKey}
                 style={[
-                  tw`bg-gray-100 p-4 rounded-lg border border-gray-300`,
-                  isFocus && { borderColor: "blue" },
+                  tw`bg-gray-100 p-4 rounded-lg border border-gray-300 min-h-16`,
+                  isFocus && { borderColor: "#682483", borderWidth: 2 },
                 ]}
-                placeholderStyle={tw`text-gray-500`}
-                selectedTextStyle={tw`text-gray-500`}
-                inputSearchStyle={tw`h-10 text-gray-500`}
-                data={locations.map((loc) => ({
-                  label: `${loc.name} (${loc.type})`,
-                  value: loc.id,
-                }))}
+                placeholderStyle={tw`text-gray-500 text-base`}
+                selectedTextStyle={tw`text-gray-700 text-base`}
+                inputSearchStyle={tw`h-12 text-gray-700 text-base`}
+                itemTextStyle={tw`text-gray-700 text-base`}
+                containerStyle={tw`rounded-lg border border-gray-300 shadow-lg`}
+                data={locationOptions}
                 search
-                maxHeight={300}
+                maxHeight={400}
                 labelField="label"
                 valueField="value"
                 placeholder={!isFocus ? "Select location" : "..."}
-                searchPlaceholder="Search..."
+                searchPlaceholder="Search locations..."
                 value={selectedLocation}
                 onFocus={() => setIsFocus(true)}
                 onBlur={() => setIsFocus(false)}
-                onChange={(item) => {
-                  setSelectedLocation(item.value);
-                  setIsFocus(false);
-                }}
+                onChange={handleLocationChange}
+                renderItem={renderLocationItem}
               />
+              {selectedLocationPath.length > 0 && (
+                <View style={tw`flex-row flex-wrap mt-2`}>
+                  <Text style={tw`text-gray-600 text-sm mr-1`}>Path: </Text>
+                  {selectedLocationPath.map((loc, index) => (
+                    <TouchableOpacity
+                      key={loc.id}
+                      onPress={() => {
+                        if (index < selectedLocationPath.length - 1) {
+                          const newPath = selectedLocationPath.slice(0, index + 1);
+                          const newLocation = newPath[newPath.length - 1];
+                          setSelectedLocationPath(newPath);
+                          setSelectedLocation(newLocation.id.toString());
+                        }
+                      }}
+                    >
+                      <Text style={tw`text-purple-600 text-sm ${
+                        index < selectedLocationPath.length - 1 ? 'underline' : 'font-medium'
+                      }`}>
+                        {loc.name}
+                        {index < selectedLocationPath.length - 1 && " > "}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+          ) : (
+            <View style={tw`mb-6`}>
+              <Text style={tw`text-gray-700 mb-2 font-medium`}>Select Location *</Text>
+              <View style={tw`bg-gray-100 p-4 rounded-lg border border-gray-300 min-h-16 justify-center`}>
+                <Text style={tw`text-gray-500 text-base`}>
+                  {locationTree ? "Loading locations..." : "No locations available"}
+                </Text>
+              </View>
             </View>
           )}
 
-          {/* Role Selection Checkboxes */}
-          <View style={tw`mb-4`}>
-            <Text style={tw`text-gray-500 mb-2 font-medium`}>
-              Select Role(s) *
-            </Text>
-
-            {/* County User */}
-            <TouchableOpacity
-              style={tw`flex-row items-center mb-2 ${
-                !allowedRoles.includes("county user") ? "opacity-50" : ""
-              }`}
-              onPress={() => toggleRole("county user")}
-              disabled={!allowedRoles.includes("county user")}
-            >
-              <View
-                style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("county user")
-                    ? "bg-purple-600 border-purple-600"
-                    : "bg-white"
-                }`}
-              >
-                {selectedRoles.includes("county user") && (
-                  <Text style={tw`text-white font-sm`}>✓</Text>
-                )}
-              </View>
-              <Text style={tw`text-gray-500`}>County admin</Text>
-            </TouchableOpacity>
-
-            {/* Subcounty User */}
-            <TouchableOpacity
-              style={tw`flex-row items-center mb-2 ${
-                !allowedRoles.includes("subcounty user") ? "opacity-50" : ""
-              }`}
-              onPress={() => toggleRole("subcounty user")}
-              disabled={!allowedRoles.includes("subcounty user")}
-            >
-              <View
-                style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("subcounty user")
-                    ? "bg-purple-600 border-purple-600"
-                    : "bg-white"
-                }`}
-              >
-                {selectedRoles.includes("subcounty user") && (
-                  <Text style={tw`text-white font-bold`}>✓</Text>
-                )}
-              </View>
-              <Text style={tw`text-gray-500`}>Subcounty admin</Text>
-            </TouchableOpacity>
-
-            {/* Admin (Facility In-Charge) */}
-            <TouchableOpacity
-              style={tw`flex-row items-center mb-2 ${
-                !allowedRoles.includes("admin") ? "opacity-50" : ""
-              }`}
-              onPress={() => toggleRole("admin")}
-              disabled={!allowedRoles.includes("admin")}
-            >
-              <View
-                style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("admin")
-                    ? "bg-purple-600 border-purple-600"
-                    : "bg-white"
-                }`}
-              >
-                {selectedRoles.includes("admin") && (
-                  <Text style={tw`text-white font-bold`}>✓</Text>
-                )}
-              </View>
-              <Text style={tw`text-gray-500`}>Facility in-charge</Text>
-            </TouchableOpacity>
-
-            {/* Nurse */}
-            <TouchableOpacity
-              style={tw`flex-row items-center mb-2 ${
-                !allowedRoles.includes("nurse") ? "opacity-50" : ""
-              }`}
-              onPress={() => toggleRole("nurse")}
-              disabled={!allowedRoles.includes("nurse")}
-            >
-              <View
-                style={tw`w-6 h-6 border border-gray-400 rounded-md mr-2 justify-center items-center ${
-                  selectedRoles.includes("nurse")
-                    ? "bg-purple-600 border-purple-600"
-                    : "bg-white"
-                }`}
-              >
-                {selectedRoles.includes("nurse") && (
-                  <Text style={tw`text-white font-bold`}>✓</Text>
-                )}
-              </View>
-              <Text style={tw`text-gray-500`}>HCW</Text>
-            </TouchableOpacity>
+          {/* Role Selection */}
+          <View style={tw`mb-6`}>
+            <Text style={tw`text-gray-700 mb-3 font-medium`}>Select Role(s) *</Text>
+            {renderRoleCheckbox("county user", ROLE_DISPLAY_NAMES["county user"])}
+            {renderRoleCheckbox("subcounty user", ROLE_DISPLAY_NAMES["subcounty user"])}
+            {renderRoleCheckbox("admin", ROLE_DISPLAY_NAMES["admin"])}
+            {renderRoleCheckbox("nurse", ROLE_DISPLAY_NAMES["nurse"])}
           </View>
 
+          {/* Submit Button */}
           <TouchableOpacity
-            style={tw`bg-purple-600 p-4 rounded-lg items-center mt-2 shadow-lg ${
+            style={tw`bg-purple-600 p-4 rounded-lg items-center mt-4 shadow-lg ${
               isLoading ? "opacity-50" : ""
             }`}
             onPress={handleRegister}
             disabled={isLoading}
           >
-            <Text style={tw`text-white text-base font-bold`}>
-              {isLoading ? "Creating..." : "Create User"}
+            <Text style={tw`text-white text-lg font-bold`}>
+              {isLoading ? "Creating User..." : "Create User"}
             </Text>
           </TouchableOpacity>
         </View>
