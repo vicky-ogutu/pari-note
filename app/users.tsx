@@ -8,7 +8,6 @@ import {
   ActivityIndicator,
   Alert,
   FlatList,
-  Modal,
   Text,
   TextInput,
   TouchableOpacity,
@@ -16,20 +15,23 @@ import {
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
+import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
 
-// User type definition based on API response
+//  User type definition with roles as an array
+export type Role = {
+  id: number;
+  name: string;
+  permissions: any[];
+};
+
 export type User = {
   id: number;
   email: string;
   name: string;
   phone?: string;
-  role: {
-    id: number;
-    name: string;
-    permissions: any[];
-  };
+  roles: Role[]; // <-- now it's an array
   location: {
     id: number;
     name: string;
@@ -67,15 +69,12 @@ const UsersScreen = () => {
         return;
       }
 
-      const response = await axios.get(
-        `${BASE_URL}/users/user-location`,
-        {
-          headers: {
-            Authorization: `Bearer ${accessToken}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.get(`${BASE_URL}/users/user-location`, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       if (response.status === 200) {
         setUsers(response.data);
@@ -149,7 +148,7 @@ const UsersScreen = () => {
       (user) =>
         user.name.toLowerCase().includes(query) ||
         user.email.toLowerCase().includes(query) ||
-        user.role.name.toLowerCase().includes(query) ||
+        user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
         (user.phone && user.phone.includes(query))
     );
 
@@ -166,7 +165,8 @@ const UsersScreen = () => {
   };
 
   const handleEditUser = (user: User) => {
-    // Navigate to the edit screen with the user data
+    const primaryRole = user.roles[0]; // pick first role for now
+
     router.push({
       pathname: "/editstaff",
       params: {
@@ -174,8 +174,8 @@ const UsersScreen = () => {
         name: user.name,
         email: user.email,
         phone: user.phone || "",
-        role: user.role.name,
-        roleId: user.role.id.toString(),
+        role: primaryRole?.name || "",
+        roleId: primaryRole?.id?.toString() || "",
         locationId: user.location.id.toString(),
         locationName: user.location.name,
       },
@@ -186,11 +186,17 @@ const UsersScreen = () => {
     router.push("/register");
   };
 
-  const formatRoleName = (roleName: string) => {
-    return roleName
-      .split(" ")
-      .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(" ");
+  const formatRoles = (roles: Role[]) => {
+    if (!roles || roles.length === 0) return "No role assigned";
+
+    return roles
+      .map((r) =>
+        r.name
+          .split(" ")
+          .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+          .join(" ")
+      )
+      .join(", ");
   };
 
   const renderUserItem = ({ item }: { item: User }) => (
@@ -206,7 +212,7 @@ const UsersScreen = () => {
         <Text style={tw`text-gray-500 text-sm`}>{item.phone}</Text>
       )}
       <Text style={tw`text-purple-500 text-xs font-medium`}>
-        Role: {formatRoleName(item.role.name)}
+        Roles: {formatRoles(item.roles)}
       </Text>
       <Text style={tw`text-green-600 text-xs font-medium`}>
         Location: {item.location.name} ({item.location.type})
@@ -264,7 +270,9 @@ const UsersScreen = () => {
       <View style={tw`flex-1 p-5`}>
         {/* Search Section */}
         <View style={tw`mb-6`}>
-          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>Search Users</Text>
+          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>
+            Search Users
+          </Text>
           <View style={tw`flex-row`}>
             <TextInput
               style={tw`flex-1 bg-white p-3 text-gray-500 rounded-l border border-gray-300`}
@@ -314,7 +322,9 @@ const UsersScreen = () => {
           {/* User Details */}
           {selectedUser && (
             <View style={tw`flex-1 bg-white p-5 rounded-lg`}>
-              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>User Details</Text>
+              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>
+                User Details
+              </Text>
 
               <Text style={tw`text-gray-500 mb-2`}>
                 <Text style={tw`font-bold`}>Name:</Text> {selectedUser.name}
@@ -328,8 +338,8 @@ const UsersScreen = () => {
                 </Text>
               )}
               <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Role:</Text>{" "}
-                {formatRoleName(selectedUser.role.name)}
+                <Text style={tw`font-bold`}>Roles:</Text>{" "}
+                {formatRoles(selectedUser.roles)}
               </Text>
               <Text style={tw`text-gray-500 mb-4`}>
                 <Text style={tw`font-bold`}>Location:</Text>{" "}
@@ -369,118 +379,12 @@ const UsersScreen = () => {
         )}
       </View>
 
-      {/* Drawer */}
-      <Modal
-        visible={drawerVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
-      >
-        <TouchableOpacity
-          style={tw`flex-1 bg-black bg-opacity-50`}
-          onPress={() => setDrawerVisible(false)}
-        >
-          <View style={tw`w-64 h-full bg-white`}>
-            <View style={tw`p-5 bg-purple-500`}>
-              <Text style={tw`text-white text-lg font-bold`}>
-                PeriNote Menu
-              </Text>
-            </View>
-
-            <View style={tw`flex-1 p-4`}>
-              <View style={tw`mb-6`}>
-                <Text
-                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
-                >
-                  Main Navigation
-                </Text>
-
-                {userRole === "nurse" && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Report Stillbirth */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/patient_registration");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        📋 Report Stillbirth
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-
-                {(userRole === "admin" ||
-                  userRole === "county user" ||
-                  userRole === "subcounty user") && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Users */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/users");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        👥 Users
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </View>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      {/* Custom Drawer */}
+      <CustomDrawer
+        drawerVisible={drawerVisible}
+        setDrawerVisible={setDrawerVisible}
+        handleLogout={handleLogout}
+      />
     </View>
   );
 };

@@ -1,10 +1,6 @@
 // app/login.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useRouter } from "expo-router";
-// import {
-//   allowScreenCaptureAsync,
-//   preventScreenCaptureAsync,
-// } from "expo-screen-capture";
 import { useState } from "react";
 import {
   Alert,
@@ -17,6 +13,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import Ionicons from "react-native-vector-icons/Ionicons";
 import tw from "tailwind-react-native-classnames";
 import { BASE_URL } from "../constants/ApiConfig";
 
@@ -25,24 +22,7 @@ export default function LoginScreen() {
   const [password, setPassword] = useState("");
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
-
-  // Prevent black screen in Google Meet screen share
-  // useEffect(() => {
-  //   const enableScreenShare = async () => {
-  //     try {
-  //       await preventScreenCaptureAsync();
-  //     } catch (err) {
-  //       console.warn("Failed to prevent screen capture:", err);
-  //     }
-  //   };
-  //   enableScreenShare();
-
-  //   return () => {
-  //     allowScreenCaptureAsync().catch(() =>
-  //       console.warn("Failed to allow screen capture back")
-  //     );
-  //   };
-  // }, []);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleLogin = async () => {
     if (!email || !password) {
@@ -63,58 +43,59 @@ export default function LoginScreen() {
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
+        console.log("Login failed response:", errorData);
         throw new Error(errorData.message || "Login failed");
       }
 
       const data = await response.json();
+      console.log("Login success response:", data);
 
-      // Store authentication data
+      // Handle roles (string array from API)
+      const rolesArray =
+        data.user.roles && data.user.roles.length > 0
+          ? data.user.roles
+          : ["nurse"];
+      const primaryRole = rolesArray[0]; // pick first role as default for navigation
+
+      // Save user/session data
       await AsyncStorage.multiSet([
-        ["access_token", data.access_token],
-        ["role", data.user.role.name],
-        ["role_id", data.user.role.id.toString()],
-        ["user_id", data.user.id.toString()],
-        ["user_name", data.user.name],
-        ["user_email", data.user.email],
+        ["access_token", data.access_token || ""],
+        ["roles", JSON.stringify(rolesArray)], // <-- store ALL roles
+        ["primary_role", primaryRole || "nurse"], // <-- store default role
+        ["user_id", data.user.id?.toString() || ""],
+        ["user_name", data.user.name || ""],
+        ["user_email", data.user.email || ""],
         ["location_id", data.user.location?.id?.toString() || ""],
         ["location_name", data.user.location?.name || ""],
         ["location_type", data.user.location?.type || ""],
-        ["permissions", JSON.stringify(data.user.role.permissions || [])],
-
-        // Store the missing location hierarchy data
         ["subcounty_id", data.user.location?.parent?.id?.toString() || ""],
         ["subcounty_name", data.user.location?.parent?.name || ""],
         ["county_id", data.user.location?.parent?.parent?.id?.toString() || ""],
         ["county_name", data.user.location?.parent?.parent?.name || ""],
-
-        // Store the entire location hierarchy as JSON for easy retrieval
         ["location_hierarchy", JSON.stringify(data.user.location || {})],
       ]);
 
       console.log("Login successful, stored data:", {
         token: data.access_token,
-        role: data.user.role.name,
+        roles: rolesArray,
         userId: data.user.id,
         locationId: data.user.location?.id,
       });
 
-      // Redirect based on role
-      switch (data.user.role.name) {
-        case "admin":
-        case "county user":
-        case "subcounty user":
-          router.replace("/home");
-          break;
-        default:
-          router.replace("/home");
-          break;
-      }
+      // Decide navigation based on roles
+      const normalizedRoles = rolesArray.map((r: string) => r.toLowerCase());
+
+      if (
+        normalizedRoles.includes("admin") ||
+        normalizedRoles.includes("county user") ||
+        normalizedRoles.includes("subcounty user") ||
+        normalizedRoles.includes("nurse")
+      ) {
+        router.replace("/home");
+      } 
     } catch (error: any) {
       console.error("Login error:", error);
-      Alert.alert(
-        "Error",
-        error.message || "Invalid credentials or network error"
-      );
+      Alert.alert("Error", error.message || "Invalid credentials");
     } finally {
       setIsLoading(false);
     }
@@ -128,10 +109,13 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
         <View style={tw`items-center mb-10`}>
           <Image
-            source={require("../assets/images/splash-logo.jpeg")}
+            source={require("../assets/images/logo.png")}
             style={tw`w-40 h-40 mb-4`}
             resizeMode="contain"
           />
+                    <Text style={tw`text-purple-500 text-4xl font-bold mb-2 text-center`}>
+            MOH 369 Register
+          </Text>
           <Text style={tw`text-gray-600 text-base`}>Sign in to continue</Text>
         </View>
 
@@ -146,14 +130,26 @@ export default function LoginScreen() {
             autoCapitalize="none"
           />
 
-          <TextInput
-            style={tw`bg-gray-100 p-4 rounded-lg mb-4 border border-gray-300`}
-            placeholder="Password"
-            placeholderTextColor="#999"
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
+          <View style={tw`relative mb-4`}>
+            <TextInput
+              style={tw`bg-gray-100 p-4 rounded-lg border border-gray-300 pr-10`} // extra padding right
+              placeholder="Password"
+              placeholderTextColor="#999"
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword} // 👈 toggle
+            />
+            <TouchableOpacity
+              style={tw`absolute right-3 top-4`}
+              onPress={() => setShowPassword((prev) => !prev)}
+            >
+              <Ionicons
+                name={showPassword ? "eye-off" : "eye"}
+                size={22}
+                color="#666"
+              />
+            </TouchableOpacity>
+          </View>
 
           <TouchableOpacity
             style={tw`bg-purple-500 p-4 rounded-lg items-center mt-2 ${

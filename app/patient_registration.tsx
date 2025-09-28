@@ -1,14 +1,11 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import { router } from "expo-router";
+import { FilePenIcon } from "lucide-react-native";
 import React, { useEffect, useState } from "react";
-import HamburgerButton from "../components/HamburgerButton";
-import { BASE_URL } from "../constants/ApiConfig";
-
 import {
   Alert,
   KeyboardAvoidingView,
-  Modal,
   Platform,
   ScrollView,
   Text,
@@ -16,9 +13,10 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-
-import { FilePenIcon } from "lucide-react-native";
 import tw from "tailwind-react-native-classnames";
+import CustomDrawer from "../components/CustomDrawer";
+import HamburgerButton from "../components/HamburgerButton";
+import { BASE_URL } from "../constants/ApiConfig";
 
 // Define types for our form data
 type FormData = {
@@ -99,18 +97,36 @@ const StillbirthRegistrationScreen = () => {
   const [showTimePicker, setShowTimePicker] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
+  const [userInfo, setUserInfo] = useState<{
+    name: string;
+    role: string;
+    location: string;
+  } | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
-    const getUserRole = async () => {
-      const role = await AsyncStorage.getItem("role");
-      setUserRole(role || "");
+    const getUserInfo = async () => {
+      try {
+        const [userName, userRole, locationName] = await Promise.all([
+          AsyncStorage.getItem("user_name"),
+          AsyncStorage.getItem("role"),
+          AsyncStorage.getItem("location_name"),
+        ]);
+
+        setUserRole(userRole || "");
+        setUserInfo({
+          name: userName || "User",
+          role: userRole || "nurse",
+          location: locationName || "Unknown Location",
+        });
+      } catch (error) {
+        console.error("Error loading user info:", error);
+      }
     };
-    getUserRole();
+    getUserInfo();
   }, []);
 
-  //const accessToken = AsyncStorage.getItem("access_token");
-
-  //clear authentication tokens
+  // Clear authentication tokens
   const clearAuthTokens = async () => {
     try {
       await AsyncStorage.multiRemove([
@@ -124,11 +140,17 @@ const StillbirthRegistrationScreen = () => {
         "location_name",
         "location_type",
         "permissions",
+        "subcounty_id",
+        "subcounty_name",
+        "county_id",
+        "county_name",
+        "location_hierarchy",
       ]);
     } catch (error) {
       console.error("Error clearing auth tokens:", error);
     }
   };
+
   const handleLogout = () => {
     Alert.alert("Logout", "Are you sure you want to logout?", [
       {
@@ -150,27 +172,15 @@ const StillbirthRegistrationScreen = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // const formatDate = (date: Date) => {
-  //   return date.toLocaleDateString("en-GB"); // dd/mm/yyyy
-  // };
-
   const formatDate = (date: Date) => {
-    // Return YYYY-MM-DD
     return date.toISOString().split("T")[0];
   };
-
-  // const formatTime = (date: Date) => {
-  //   return date.toLocaleTimeString("en-US", {
-  //     hour: "2-digit",
-  //     minute: "2-digit",
-  //   }); // HH:MM AM/PM
-  // };
 
   const formatTime = (date: Date) => {
     return date.toLocaleTimeString("en-GB", {
       hour: "2-digit",
       minute: "2-digit",
-      hour12: false, // ensures 24-hour format
+      hour12: false,
     });
   };
 
@@ -200,7 +210,79 @@ const StillbirthRegistrationScreen = () => {
     updateFormData("perinatalCause", currentCauses);
   };
 
+  const validateCurrentScreen = () => {
+    switch (currentScreen) {
+      case 1:
+        return (
+          formData.dateOfDeath &&
+          formData.timeOfDeath &&
+          formData.gestationWeeks &&
+          formData.babyOutcome &&
+          formData.birthWeight &&
+          formData.sexOfBaby &&
+          (formData.sexOfBaby !== "Others" || formData.otherSex) &&
+          (formData.babyOutcome !== "Alive" ||
+            (formData.apgar1min &&
+              formData.apgar5min &&
+              formData.apgar10min &&
+              formData.ageAtDeath))
+        );
+      case 2: {
+        if (
+          !formData.motherAge ||
+          !formData.motherMarried ||
+          !formData.motherPara ||
+          !formData.motherOutcome
+        ) {
+          return false;
+        }
+
+        const age = Number(formData.motherAge);
+        if (isNaN(age) || age < 14 || age > 70) {
+          Alert.alert(
+            "Invalid Age",
+            "Mother's age must be between 14 and 70 years."
+          );
+          return false;
+        }
+
+        return true;
+      }
+      case 3:
+        return (
+          formData.pregnancyType &&
+          formData.antenatalCare &&
+          (formData.obstetricConditions.length > 0 || formData.otherObstetric)
+        );
+      case 4:
+        return (
+          formData.deliveryPlace &&
+          (formData.deliveryPlace !== "Others" ||
+            formData.otherDeliveryPlace) &&
+          (formData.deliveryPlace !== "Facility" || formData.facilityLevel) &&
+          formData.deliveryType &&
+          (formData.deliveryType !== "Other" || formData.otherDeliveryType)
+        );
+      case 5:
+        return (
+          formData.periodOfDeath &&
+          (formData.perinatalCause.length > 0 ||
+            formData.maternalCondition ||
+            formData.otherCause)
+        );
+      default:
+        return true;
+    }
+  };
+
   const nextScreen = () => {
+    if (!validateCurrentScreen()) {
+      Alert.alert(
+        "Missing information",
+        "Please fill in all required fields (*) before proceeding."
+      );
+      return;
+    }
     if (currentScreen < 6) {
       setCurrentScreen(currentScreen + 1);
     }
@@ -212,37 +294,36 @@ const StillbirthRegistrationScreen = () => {
     }
   };
 
-  // const submitForm = () => {
-  //   Alert.alert("Success", "Stillbirth registration submitted successfully!", [
-  //     { text: "OK", onPress: () => console.log("Form submitted", formData) },
-  //   ]);
-  // };
   const submitForm = async () => {
-    try {
-      const accessToken = await AsyncStorage.getItem("access_token");
-      const locationName = await AsyncStorage.getItem("location_name");
-      const locationId = await AsyncStorage.getItem("location_id");
-      const locationType = await AsyncStorage.getItem("location_type");
+    if (isSubmitting) return;
 
-      console.log("Access Token:", accessToken);
-      console.log("Location:", locationName);
+    setIsSubmitting(true);
+    try {
+      const [accessToken, locationId, locationName, locationType] =
+        await Promise.all([
+          AsyncStorage.getItem("access_token"),
+          AsyncStorage.getItem("location_id"),
+          AsyncStorage.getItem("location_name"),
+          AsyncStorage.getItem("location_type"),
+        ]);
+
+      console.log("User Info:", userInfo);
+      console.log("Location ID:", locationId);
+      console.log("Location Name:", locationName);
 
       if (!accessToken) {
-        throw new Error("User not logged in");
+        throw new Error("User not authenticated. Please login again.");
       }
 
-      // Build the payload according to your API contract
-      const payload = {
-        // facilityName: locationName || "Unknown Facility",
-        // mflCode: locationId || "00000",
-        // dateOfNotification: new Date().toISOString().split("T")[0],
-        // locality: locationType === "subcounty" ? locationName : "",
-        // county: locationType === "county" ? locationName : "Unknown County",
-        // subCounty: locationType === "subcounty" ? locationName : "",
-        // levelOfCare: formData.facilityLevel || "Level 6",
-        // managingAuthority: "MOH",
+      if (!locationId) {
+        throw new Error(
+          "Location information not found. Please contact administrator."
+        );
+      }
 
-        locationId: locationId ? parseInt(locationId) : null, // Must be integer
+      // Build the payload according to API contract
+      const payload = {
+        locationId: parseInt(locationId),
         dateOfNotification: new Date().toISOString().split("T")[0],
 
         mother: {
@@ -266,9 +347,9 @@ const StillbirthRegistrationScreen = () => {
             timeOfDeath: formData.timeOfDeath,
             gestationWeeks: parseInt(formData.gestationWeeks) || null,
             outcome: formData.babyOutcome,
-            apgarScore1min: formData.apgar1min,
-            apgarScore5min: formData.apgar5min,
-            apgarScore10min: formData.apgar10min,
+            apgarScore1min: formData.apgar1min || null,
+            apgarScore5min: formData.apgar5min || null,
+            apgarScore10min: formData.apgar10min || null,
             ageAtDeathDays: parseInt(formData.ageAtDeath) || 0,
             birthWeight: parseInt(formData.birthWeight) || null,
             sex:
@@ -280,7 +361,6 @@ const StillbirthRegistrationScreen = () => {
       };
 
       console.log("Submitting payload:", payload);
-      //const response = await fetch(`${BASE_URL}/auth/login`, {
 
       const response = await fetch(`${BASE_URL}/notifications`, {
         method: "POST",
@@ -292,39 +372,70 @@ const StillbirthRegistrationScreen = () => {
       });
 
       if (!response.ok) {
-        const err = await response.text();
-        throw new Error(err || "Failed to submit form");
+        const errorText = await response.text();
+        console.error("Server error response:", errorText);
+
+        let errorMessage = "Failed to submit form";
+        try {
+          const errorData = JSON.parse(errorText);
+          errorMessage = errorData.message || errorData.error || errorMessage;
+        } catch (e) {
+          errorMessage = errorText || errorMessage;
+        }
+
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
-      Alert.alert("Success", "Stillbirth registration submitted successfully!");
-      console.log("Server response:", data);
 
-      // Optionally reset form
-      setFormData(initialFormData);
-      setCurrentScreen(1);
+      Alert.alert(
+        "Success",
+        "Stillbirth registration submitted successfully!",
+        [
+          {
+            text: "OK",
+            onPress: () => {
+              // Reset form and go back to screen 1
+              setFormData(initialFormData);
+              setCurrentScreen(1);
+            },
+          },
+        ]
+      );
+
+      console.log("Server response:", data);
     } catch (error: any) {
       console.error("Error submitting form:", error);
-      Alert.alert("Error", error.message || "Something went wrong");
+      Alert.alert(
+        "Submission Error",
+        error.message || "Something went wrong. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const RequiredAsterisk = () => <Text style={tw`text-red-500`}>*</Text>;
 
   const renderScreen = () => {
     switch (currentScreen) {
       case 1:
         return (
           <View style={tw`mb-5`}>
-            <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              1. Details of Deceased baby
+            <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
+              1. Details of Deceased baby <RequiredAsterisk />
             </Text>
 
             {/* Date Picker Field */}
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Date of death <RequiredAsterisk />
+            </Text>
             <TouchableOpacity
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
               onPress={() => setShowDatePicker(true)}
             >
-              <Text>
-                {formData.dateOfDeath || "Date of death (dd/mm/yyyy)"}
+              <Text style={tw`text-gray-700`}>
+                {formData.dateOfDeath || "Select date (YYYY-MM-DD)"}
               </Text>
             </TouchableOpacity>
 
@@ -336,7 +447,6 @@ const StillbirthRegistrationScreen = () => {
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    // Store as ISO string instead of formatted string
                     updateFormData("dateOfDeath", formatDate(selectedDate));
                   }
                 }}
@@ -344,12 +454,15 @@ const StillbirthRegistrationScreen = () => {
             )}
 
             {/* Time Picker Field */}
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Time of death <RequiredAsterisk />
+            </Text>
             <TouchableOpacity
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
               onPress={() => setShowTimePicker(true)}
             >
-              <Text>
-                {formData.timeOfDeath || "Time of death (HH:MM AM/PM)"}
+              <Text style={tw`text-gray-700`}>
+                {formData.timeOfDeath || "Select time (HH:MM)"}
               </Text>
             </TouchableOpacity>
 
@@ -357,7 +470,7 @@ const StillbirthRegistrationScreen = () => {
               <DateTimePicker
                 value={new Date()}
                 mode="time"
-                is24Hour={false} // 12-hour format with AM/PM
+                is24Hour={true}
                 display={Platform.OS === "ios" ? "spinner" : "default"}
                 onChange={(event, selectedDate) => {
                   setShowTimePicker(false);
@@ -368,16 +481,20 @@ const StillbirthRegistrationScreen = () => {
               />
             )}
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Gestation at birth (in weeks) <RequiredAsterisk />
+            </Text>
             <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Gestation at birth (in weeks)"
+              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+              placeholder="Enter gestation in weeks"
+              placeholderTextColor="#9CA3AF"
               value={formData.gestationWeeks}
               onChangeText={(text) => updateFormData("gestationWeeks", text)}
               keyboardType="numeric"
             />
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Baby outcome:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Baby outcome: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
@@ -394,7 +511,7 @@ const StillbirthRegistrationScreen = () => {
                         <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                       )}
                     </View>
-                    <Text style={tw`text-gray-500`}>{option}</Text>
+                    <Text style={tw`text-gray-700`}>{option}</Text>
                   </TouchableOpacity>
                 )
               )}
@@ -402,36 +519,63 @@ const StillbirthRegistrationScreen = () => {
 
             {formData.babyOutcome === "Alive" && (
               <>
-                <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-                  Apgar score:
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Apgar score: <RequiredAsterisk />
                 </Text>
                 <View style={tw`flex-row justify-between mb-4`}>
-                  <TextInput
-                    style={tw`bg-white p-4 rounded border border-gray-300 flex-1 mx-1`}
-                    placeholder="1 min"
-                    value={formData.apgar1min}
-                    onChangeText={(text) => updateFormData("apgar1min", text)}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={tw`bg-white p-4 rounded border border-gray-300 flex-1 mx-1`}
-                    placeholder="5 min"
-                    value={formData.apgar5min}
-                    onChangeText={(text) => updateFormData("apgar5min", text)}
-                    keyboardType="numeric"
-                  />
-                  <TextInput
-                    style={tw`bg-white p-4 rounded border border-gray-300 flex-1 mx-1`}
-                    placeholder="10 min"
-                    value={formData.apgar10min}
-                    onChangeText={(text) => updateFormData("apgar10min", text)}
-                    keyboardType="numeric"
-                  />
+                  <View style={tw`flex-1 mx-1`}>
+                    <Text style={tw`text-sm font-semibold mb-1 text-gray-600`}>
+                      1 min
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
+                      placeholder="0-10"
+                      placeholderTextColor="#9CA3AF"
+                      value={formData.apgar1min}
+                      onChangeText={(text) => updateFormData("apgar1min", text)}
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                  </View>
+                  <View style={tw`flex-1 mx-1`}>
+                    <Text style={tw`text-sm font-semibold mb-1 text-gray-600`}>
+                      5 min
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
+                      placeholder="0-10"
+                      placeholderTextColor="#9CA3AF"
+                      value={formData.apgar5min}
+                      onChangeText={(text) => updateFormData("apgar5min", text)}
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                  </View>
+                  <View style={tw`flex-1 mx-1`}>
+                    <Text style={tw`text-sm font-semibold mb-1 text-gray-600`}>
+                      10 min
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
+                      placeholder="0-10"
+                      placeholderTextColor="#9CA3AF"
+                      value={formData.apgar10min}
+                      onChangeText={(text) =>
+                        updateFormData("apgar10min", text)
+                      }
+                      keyboardType="numeric"
+                      maxLength={2}
+                    />
+                  </View>
                 </View>
 
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Age at time of death (in days) <RequiredAsterisk />
+                </Text>
                 <TextInput
-                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                  placeholder="Age at time of death (in days)"
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                  placeholder="Enter age in days"
+                  placeholderTextColor="#9CA3AF"
                   value={formData.ageAtDeath}
                   onChangeText={(text) => updateFormData("ageAtDeath", text)}
                   keyboardType="numeric"
@@ -439,16 +583,20 @@ const StillbirthRegistrationScreen = () => {
               </>
             )}
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Birth weight (in grams) <RequiredAsterisk />
+            </Text>
             <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Birth weight (in grams)"
+              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+              placeholder="Enter birth weight in grams"
+              placeholderTextColor="#9CA3AF"
               value={formData.birthWeight}
               onChangeText={(text) => updateFormData("birthWeight", text)}
               keyboardType="numeric"
             />
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Sex of baby:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Sex of baby: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Male", "Female", "Others"].map((option) => (
@@ -464,38 +612,50 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             {formData.sexOfBaby === "Others" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Specify other sex"
-                value={formData.otherSex}
-                onChangeText={(text) => updateFormData("otherSex", text)}
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Specify other sex <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                  placeholder="Enter specification"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.otherSex}
+                  onChangeText={(text) => updateFormData("otherSex", text)}
+                />
+              </>
             )}
           </View>
         );
+
+      // Cases 2-5 remain the same as your original code, just updating text colors for consistency
       case 2:
         return (
           <View style={tw`mb-5`}>
-            <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              2. Mother's details
+            <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
+              2. Mother's details <RequiredAsterisk />
             </Text>
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Age (in years) <RequiredAsterisk />
+            </Text>
             <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Age (in years)"
+              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+              placeholder="Enter mother's age"
+              placeholderTextColor="#9CA3AF"
               value={formData.motherAge}
               onChangeText={(text) => updateFormData("motherAge", text)}
               keyboardType="numeric"
             />
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Married:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Married: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Yes", "No"].map((option) => (
@@ -511,20 +671,24 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Para + <RequiredAsterisk />
+            </Text>
             <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Para +"
+              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+              placeholder="Enter para information"
+              placeholderTextColor="#9CA3AF"
               value={formData.motherPara}
               onChangeText={(text) => updateFormData("motherPara", text)}
             />
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Mother's outcome:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Mother's outcome: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Alive", "Dead", "Not known"].map((option) => (
@@ -540,7 +704,7 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
@@ -550,12 +714,13 @@ const StillbirthRegistrationScreen = () => {
       case 3:
         return (
           <View style={tw`mb-5`}>
-            <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              3. Obstetric history and care during Pregnancy
+            <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
+              3. Obstetric history and care during Pregnancy{" "}
+              <RequiredAsterisk />
             </Text>
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Type of pregnancy:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Type of pregnancy: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Singleton", "Multiple"].map((option) => (
@@ -571,13 +736,13 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Attendance of Antenatal care:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Attendance of Antenatal care: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Yes", "No", "Unknown"].map((option) => (
@@ -593,13 +758,14 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Obstetric/Medical conditions or infections in present pregnancy:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Obstetric/Medical conditions or infections in present pregnancy:{" "}
+              <RequiredAsterisk />
             </Text>
             {[
               "Antepartum Hemorrhage",
@@ -629,13 +795,17 @@ const StillbirthRegistrationScreen = () => {
                     <Text style={tw`text-purple-500 font-bold`}>✓</Text>
                   )}
                 </View>
-                <Text style={tw`text-gray-500`}>{condition}</Text>
+                <Text style={tw`text-gray-700`}>{condition}</Text>
               </TouchableOpacity>
             ))}
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Others (Specify) <RequiredAsterisk />
+            </Text>
             <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 mt-2`}
-              placeholder="Others (Specify)"
+              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+              placeholder="Enter other conditions"
+              placeholderTextColor="#9CA3AF"
               value={formData.otherObstetric}
               onChangeText={(text) => updateFormData("otherObstetric", text)}
             />
@@ -645,12 +815,12 @@ const StillbirthRegistrationScreen = () => {
       case 4:
         return (
           <View style={tw`mb-5`}>
-            <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              4. Care during delivery
+            <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
+              4. Care during delivery <RequiredAsterisk />
             </Text>
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Place of delivery:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Place of delivery: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Home", "Facility", "Others"].map((option) => (
@@ -666,34 +836,46 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             {formData.deliveryPlace === "Others" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Specify other delivery place"
-                value={formData.otherDeliveryPlace}
-                onChangeText={(text) =>
-                  updateFormData("otherDeliveryPlace", text)
-                }
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Specify other delivery place <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                  placeholder="Enter delivery place"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.otherDeliveryPlace}
+                  onChangeText={(text) =>
+                    updateFormData("otherDeliveryPlace", text)
+                  }
+                />
+              </>
             )}
 
             {formData.deliveryPlace === "Facility" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Level of care (2, 3, 4, 5, 6)"
-                value={formData.facilityLevel}
-                onChangeText={(text) => updateFormData("facilityLevel", text)}
-                keyboardType="numeric"
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Level of care (2, 3, 4, 5, 6) <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                  placeholder="Enter level of care"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.facilityLevel}
+                  onChangeText={(text) => updateFormData("facilityLevel", text)}
+                  keyboardType="numeric"
+                />
+              </>
             )}
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Type of delivery:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Type of delivery: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {[
@@ -716,20 +898,26 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
             {formData.deliveryType === "Other" && (
-              <TextInput
-                style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-                placeholder="Specify other delivery type"
-                value={formData.otherDeliveryType}
-                onChangeText={(text) =>
-                  updateFormData("otherDeliveryType", text)
-                }
-              />
+              <>
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Specify other delivery type <RequiredAsterisk />
+                </Text>
+                <TextInput
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                  placeholder="Enter delivery type"
+                  placeholderTextColor="#9CA3AF"
+                  value={formData.otherDeliveryType}
+                  onChangeText={(text) =>
+                    updateFormData("otherDeliveryType", text)
+                  }
+                />
+              </>
             )}
           </View>
         );
@@ -737,12 +925,12 @@ const StillbirthRegistrationScreen = () => {
       case 5:
         return (
           <View style={tw`mb-5`}>
-            <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
-              5. Cause of death
+            <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
+              5. Cause of death <RequiredAsterisk />
             </Text>
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Period of death:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Period of death: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {["Antepartum", "Intrapartum", "Neonatal", "Unknown"].map(
@@ -759,14 +947,14 @@ const StillbirthRegistrationScreen = () => {
                         <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                       )}
                     </View>
-                    <Text style={tw`text-gray-500`}>{option}</Text>
+                    <Text style={tw`text-gray-700`}>{option}</Text>
                   </TouchableOpacity>
                 )
               )}
             </View>
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500`}>
-              Perinatal cause of death:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Perinatal cause of death: <RequiredAsterisk />
             </Text>
             {[
               "Congenital malformations",
@@ -793,12 +981,12 @@ const StillbirthRegistrationScreen = () => {
                     <Text style={tw`text-purple-500 font-bold`}>✓</Text>
                   )}
                 </View>
-                <Text style={tw`text-gray-500`}>{cause}</Text>
+                <Text style={tw`text-gray-700`}>{cause}</Text>
               </TouchableOpacity>
             ))}
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-500 mt-4`}>
-              Underlying maternal condition:
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600 mt-4`}>
+              Underlying maternal condition: <RequiredAsterisk />
             </Text>
             <View style={tw`mb-4`}>
               {[
@@ -821,14 +1009,18 @@ const StillbirthRegistrationScreen = () => {
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
-                  <Text style={tw`text-gray-500`}>{option}</Text>
+                  <Text style={tw`text-gray-700`}>{option}</Text>
                 </TouchableOpacity>
               ))}
             </View>
 
+            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+              Others (Specify) <RequiredAsterisk />
+            </Text>
             <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              placeholder="Others (Specify)"
+              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+              placeholder="Enter other causes"
+              placeholderTextColor="#9CA3AF"
               value={formData.otherCause}
               onChangeText={(text) => updateFormData("otherCause", text)}
             />
@@ -837,147 +1029,161 @@ const StillbirthRegistrationScreen = () => {
 
       case 6:
         return (
-          <View style={tw`mb-5`}>
-            <Text style={tw`text-lg font-bold mb-5 text-gray-500`}>
+          <View style={tw`flex-1 mb-5`}>
+            <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
               Review All Information
             </Text>
-            <ScrollView style={tw`mb-5 max-h-96`}>
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                1. Details of Deceased baby
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Date of Death: {formData.dateOfDeath || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Time of Death: {formData.timeOfDeath || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Gestation Weeks: {formData.gestationWeeks || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Baby Outcome: {formData.babyOutcome || "Not provided"}
-              </Text>
 
-              {formData.babyOutcome === "Alive" && (
-                <>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Apgar 1min: {formData.apgar1min || "Not provided"}
-                  </Text>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Apgar 5min: {formData.apgar5min || "Not provided"}
-                  </Text>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Apgar 10min: {formData.apgar10min || "Not provided"}
-                  </Text>
-                  <Text style={tw`text-sm mb-1 text-gray-500`}>
-                    Age at Death: {formData.ageAtDeath || "Not provided"}
-                  </Text>
-                </>
-              )}
+            {/* User and Location Info */}
+            <View style={tw`bg-purple-50 p-3 rounded-lg mb-4`}>
+              <Text style={tw`text-purple-700 font-semibold text-center`}>
+                {userInfo?.location || "Unknown Location"}
+              </Text>
+              <Text style={tw`text-purple-600 text-xs text-center`}>
+                Registered by: {userInfo?.name} ({userInfo?.role}) •{" "}
+                {new Date().toLocaleDateString()}
+              </Text>
+            </View>
 
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Birth Weight: {formData.birthWeight || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Sex of Baby: {formData.sexOfBaby || "Not provided"}
-              </Text>
-              {formData.sexOfBaby === "Others" && (
-                <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Other Sex: {formData.otherSex || "Not provided"}
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
+              1. Details of Deceased baby
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Date of Death: {formData.dateOfDeath || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Time of Death: {formData.timeOfDeath || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Gestation Weeks: {formData.gestationWeeks || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Baby Outcome: {formData.babyOutcome || "Not provided"}
+            </Text>
+
+            {formData.babyOutcome === "Alive" && (
+              <>
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Apgar 1min: {formData.apgar1min || "Not provided"}
                 </Text>
-              )}
-
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                2. Mother's details
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Mother's Age: {formData.motherAge || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Married: {formData.motherMarried || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Para: {formData.motherPara || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Mother's Outcome: {formData.motherOutcome || "Not provided"}
-              </Text>
-
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                3. Obstetric history and care during Pregnancy
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Pregnancy Type: {formData.pregnancyType || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Antenatal Care: {formData.antenatalCare || "Not provided"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Obstetric Conditions:{" "}
-                {formData.obstetricConditions.join(", ") || "None"}
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Other Obstetric: {formData.otherObstetric || "Not provided"}
-              </Text>
-
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                4. Care during delivery
-              </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Delivery Place: {formData.deliveryPlace || "Not provided"}
-              </Text>
-              {formData.deliveryPlace === "Others" && (
-                <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Other Delivery Place:{" "}
-                  {formData.otherDeliveryPlace || "Not provided"}
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Apgar 5min: {formData.apgar5min || "Not provided"}
                 </Text>
-              )}
-              {formData.deliveryPlace === "Facility" && (
-                <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Facility Level: {formData.facilityLevel || "Not provided"}
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Apgar 10min: {formData.apgar10min || "Not provided"}
                 </Text>
-              )}
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Delivery Type: {formData.deliveryType || "Not provided"}
-              </Text>
-              {formData.deliveryType === "Other" && (
-                <Text style={tw`text-sm mb-1 text-gray-500`}>
-                  Other Delivery Type:{" "}
-                  {formData.otherDeliveryType || "Not provided"}
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Age at Death: {formData.ageAtDeath || "Not provided"}
                 </Text>
-              )}
+              </>
+            )}
 
-              <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-500`}>
-                5. Cause of death
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Birth Weight: {formData.birthWeight || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Sex of Baby: {formData.sexOfBaby || "Not provided"}
+            </Text>
+            {formData.sexOfBaby === "Others" && (
+              <Text style={tw`text-sm mb-1 text-gray-600`}>
+                Other Sex: {formData.otherSex || "Not provided"}
               </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Period of D eath: {formData.periodOfDeath || "Not provided"}
+            )}
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
+              2. Mother's details
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Mother's Age: {formData.motherAge || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Married: {formData.motherMarried || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Para: {formData.motherPara || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Mother's Outcome: {formData.motherOutcome || "Not provided"}
+            </Text>
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
+              3. Obstetric history and care during Pregnancy
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Pregnancy Type: {formData.pregnancyType || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Antenatal Care: {formData.antenatalCare || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Obstetric Conditions:{" "}
+              {formData.obstetricConditions.join(", ") || "None"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Other Obstetric: {formData.otherObstetric || "Not provided"}
+            </Text>
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
+              4. Care during delivery
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Delivery Place: {formData.deliveryPlace || "Not provided"}
+            </Text>
+            {formData.deliveryPlace === "Others" && (
+              <Text style={tw`text-sm mb-1 text-gray-600`}>
+                Other Delivery Place:{" "}
+                {formData.otherDeliveryPlace || "Not provided"}
               </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Perinatal Cause:{" "}
-                {formData.perinatalCause.join(", ") || "Not provided"}
+            )}
+            {formData.deliveryPlace === "Facility" && (
+              <Text style={tw`text-sm mb-1 text-gray-600`}>
+                Facility Level: {formData.facilityLevel || "Not provided"}
               </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Maternal Condition:{" "}
-                {formData.maternalCondition || "Not provided"}
+            )}
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Delivery Type: {formData.deliveryType || "Not provided"}
+            </Text>
+            {formData.deliveryType === "Other" && (
+              <Text style={tw`text-sm mb-1 text-gray-600`}>
+                Other Delivery Type:{" "}
+                {formData.otherDeliveryType || "Not provided"}
               </Text>
-              <Text style={tw`text-sm mb-1 text-gray-500`}>
-                Other Cause: {formData.otherCause || "Not provided"}
-              </Text>
-            </ScrollView>
+            )}
+
+            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
+              5. Cause of death
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Period of Death: {formData.periodOfDeath || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Perinatal Cause:{" "}
+              {formData.perinatalCause.join(", ") || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Maternal Condition: {formData.maternalCondition || "Not provided"}
+            </Text>
+            <Text style={tw`text-sm mb-1 text-gray-600`}>
+              Other Cause: {formData.otherCause || "Not provided"}
+            </Text>
 
             <TouchableOpacity
-              style={tw`bg-green-300 p-4 rounded mb-3 items-center`}
+              style={tw`bg-gray-500 p-4 rounded mb-3 items-center`}
               onPress={() => setCurrentScreen(1)}
             >
               <Text style={tw`text-white font-bold`}>Edit Information</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={tw`bg-purple-500 p-4 rounded items-center`}
+              style={tw`bg-purple-500 p-4 rounded items-center ${
+                isSubmitting ? "opacity-50" : ""
+              }`}
               onPress={submitForm}
+              disabled={isSubmitting}
             >
-              <Text style={tw`text-white font-bold`}>Submit</Text>
+              <Text style={tw`text-white font-bold`}>
+                {isSubmitting ? "Submitting..." : "Submit Registration"}
+              </Text>
             </TouchableOpacity>
           </View>
         );
@@ -999,17 +1205,19 @@ const StillbirthRegistrationScreen = () => {
           onPress={() => setDrawerVisible(true)}
           position="relative"
         />
-        <Text style={tw`text-2xl font-bold text-purple-500`}>PeriNote</Text>
+        <Text style={tw`text-2xl font-bold text-purple-500`}>
+          MOH 369 Register
+        </Text>
         <View style={tw`flex-row items-center`}>
           <TouchableOpacity onPress={() => {}}>
-            <FilePenIcon color="#682483ff" />
+            <FilePenIcon color="#682483" />
           </TouchableOpacity>
         </View>
       </View>
 
       <View style={tw`flex-1`}>
         <ScrollView
-          contentContainerStyle={tw`p-5 pb-32 `} // Increased bottom padding
+          contentContainerStyle={tw`p-5 pb-32`}
           showsVerticalScrollIndicator={true}
         >
           {renderScreen()}
@@ -1018,7 +1226,7 @@ const StillbirthRegistrationScreen = () => {
         {/* Navigation buttons fixed at the bottom */}
         {currentScreen < 6 && (
           <View
-            style={tw`absolute bottom-5 left-5 right-5 flex-row justify-between`}
+            style={tw`absolute bottom-10 left-5 right-5 flex-row justify-between`}
           >
             {currentScreen > 1 && (
               <TouchableOpacity
@@ -1045,117 +1253,12 @@ const StillbirthRegistrationScreen = () => {
       </View>
 
       {/* Drawer */}
-      <Modal
-        visible={drawerVisible}
-        animationType="slide"
-        transparent={true}
-        onRequestClose={() => setDrawerVisible(false)}
-      >
-        <TouchableOpacity
-          style={tw`flex-1 bg-black bg-opacity-50`}
-          onPress={() => setDrawerVisible(false)}
-        >
-          <View style={tw`w-64 h-full bg-white`}>
-            <View style={tw`p-5 bg-purple-500`}>
-              <Text style={tw`text-white text-lg font-bold`}>
-                PeriNote Menu
-              </Text>
-            </View>
-
-            <ScrollView style={tw`flex-1 p-4`}>
-              <View style={tw`mb-6`}>
-                <Text
-                  style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
-                >
-                  Main Navigation
-                </Text>
-
-                {userRole === "nurse" && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Report Stillbirth */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/patient_registration");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        📋 Report Stillbirth
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-
-                {(userRole === "admin" ||
-                  userRole === "county user" ||
-                  userRole === "subcounty user") && (
-                  <>
-                    {/* Dashboard */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/home");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🏠 Dashboard
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Users */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={() => {
-                        setDrawerVisible(false);
-                        router.push("/users");
-                      }}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        👥 Users
-                      </Text>
-                    </TouchableOpacity>
-
-                    {/* Logout */}
-                    <TouchableOpacity
-                      style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                      onPress={handleLogout}
-                    >
-                      <Text style={tw`text-gray-500 font-medium ml-2`}>
-                        🚪 Logout
-                      </Text>
-                    </TouchableOpacity>
-                  </>
-                )}
-              </View>
-            </ScrollView>
-          </View>
-        </TouchableOpacity>
-      </Modal>
+      <CustomDrawer
+        drawerVisible={drawerVisible}
+        setDrawerVisible={setDrawerVisible}
+        userRole={userRole}
+        handleLogout={handleLogout}
+      />
     </KeyboardAvoidingView>
   );
 };
