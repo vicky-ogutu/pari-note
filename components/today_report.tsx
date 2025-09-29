@@ -111,54 +111,135 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
       const locationId = await AsyncStorage.getItem("location_id");
 
       if (!locationId) {
-        Alert.alert("Error", "Location ID not found");
+        console.log("No location ID available");
         return [];
       }
 
       const response = await fetch(
-        `${BASE_URL}/notifications/stillbirths/records/${locationId}?startDate=${today}&endDate=${today}`,
+        `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${today}&endDate=${today}`,
         {
-          method: "GET",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
         }
       );
 
+      // If no content or not found, return empty array (not an error)
+      if (response.status === 204 || response.status === 404) {
+        console.log("No data found for today");
+        return [];
+      }
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log("Full API Response:", JSON.stringify(result, null, 2)); // Detailed log
+      console.log("API Success - Raw response:", result);
 
-      const rawData: RawDataItem[] = result.data || result || [];
+      // Handle different response structures
+      const rawData = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+        ? result.data
+        : [];
 
-      console.log("Raw data length:", rawData.length);
+      console.log(`Processed ${rawData.length} records`);
+
       if (rawData.length > 0) {
-        console.log(
-          "First item structure:",
-          JSON.stringify(rawData[0], null, 2)
-        );
+        const processedData = processRawData(rawData);
+        setTileData({ ...processedData, rawData });
+      } else {
+        console.log("No records found in response");
       }
-
-      // Process the raw data to create tile data
-      const processedData = processRawData(rawData);
-      setTileData({
-        ...processedData,
-        rawData,
-      });
 
       return rawData;
     } catch (error) {
-      console.error("Error fetching today's data:", error);
-      Alert.alert("Error", "Failed to fetch today's data. Please try again.");
+      // Proper error typing
+      if (error instanceof Error) {
+        console.error("Fetch error:", error.message);
+
+        // Only show alert for actual network errors
+        if (
+          error.message.includes("Network") ||
+          error.message.includes("Failed to fetch") ||
+          error.message.includes("fetch")
+        ) {
+          Alert.alert(
+            "Error",
+            "Failed to fetch today's data. Please check your connection and try again."
+          );
+        }
+      } else {
+        console.error("Unknown error type:", error);
+        Alert.alert(
+          "Error",
+          "An unexpected error occurred while fetching data."
+        );
+      }
+
       return [];
     } finally {
       setDataLoading(false);
     }
   };
+  // const fetchTodayData = async (): Promise<RawDataItem[]> => {
+  //   try {
+  //     setDataLoading(true);
+  //     const accessToken = await AsyncStorage.getItem("access_token");
+  //     const today = getTodayDate();
+  //     const locationId = await AsyncStorage.getItem("location_id");
+
+  //     if (!locationId) {
+  //       Alert.alert("Error", "Location ID not found");
+  //       return [];
+  //     }
+
+  //     const response = await fetch(
+  //       `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${today}&endDate=${today}`,
+
+  //       {
+  //         method: "GET",
+  //         headers: {
+  //           "Content-Type": "application/json",
+  //           Authorization: `Bearer ${accessToken}`,
+  //         },
+  //       }
+  //     );
+
+  //     if (!response.ok) {
+  //       throw new Error(`HTTP error! status: ${response.status}`);
+  //     }
+
+  //     const result = await response.json();
+  //     console.log("Full API Response:", JSON.stringify(result, null, 2)); // Detailed log
+
+  //     const rawData: RawDataItem[] = result.data || result || [];
+
+  //     console.log("Raw data length:", rawData.length);
+  //     if (rawData.length > 0) {
+  //       console.log(
+  //         "First item structure:",
+  //         JSON.stringify(rawData[0], null, 2)
+  //       );
+  //     }
+
+  //     // Process the raw data to create tile data
+  //     const processedData = processRawData(rawData);
+  //     setTileData({
+  //       ...processedData,
+  //       rawData,
+  //     });
+
+  //     return rawData;
+  //   } catch (error) {
+  //     console.error("Error fetching today's data:", error);
+  //     Alert.alert("Error", "Failed to fetch today's data. Please try again.");
+  //     return [];
+  //   } finally {
+  //     setDataLoading(false);
+  //   }
+  // };
 
   // Process raw data to create tile statistics
   const processRawData = (rawData: any[]): Omit<TileData, "rawData"> => {
@@ -252,7 +333,7 @@ const ReportDashboard: React.FC<ReportDashboardProps> = ({
             baby.sex ||
             (baby.female ? "Female" : baby.male ? "Male" : "Unknown"),
           type: baby.outcome || baby.type || "Unknown",
-          facility: facilityName,
+          facility: item.facility,
           female: baby.sex === "Female" ? "1" : baby.female ? "1" : "",
           male: baby.sex === "Male" ? "1" : baby.male ? "1" : "",
           date: item.dateOfNotification || item.date || "",

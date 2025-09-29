@@ -143,7 +143,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
       );
 
       const response = await fetch(
-        `${BASE_URL}/notifications/stillbirths/records/${locationId}?startDate=${startDate}&endDate=${endDate}`,
+        //`${BASE_URL}/notifications/stillbirths/records/${locationId}?startDate=${startDate}&endDate=${endDate}`,
+        `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${startDate}&endDate=${endDate}`,
+
         {
           method: "GET",
           headers: {

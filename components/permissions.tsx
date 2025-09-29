@@ -29,6 +29,7 @@ export const permissionRules: Record<ScreenName, PermissionRule> = {
   editstaff: {
     roles: ["county user", "subcounty user", "admin"],
   },
+  
   patient_registration: {
     roles: ["county user", "subcounty user", "nurse", "admin"],
   },

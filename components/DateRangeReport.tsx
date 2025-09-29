@@ -2,7 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import DateTimePicker from "@react-native-community/datetimepicker";
 import * as FileSystem from "expo-file-system/legacy";
 import * as Sharing from "expo-sharing";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -33,9 +33,7 @@ interface PreviewData {
 interface ApiNotification {
   id: number;
   dateOfNotification: string;
-  location: {
-    name: string;
-  };
+  location: { name: string };
   mother: {
     age: number;
     placeOfDelivery: string;
@@ -53,6 +51,22 @@ interface ApiNotification {
   }>;
 }
 
+interface StatsData {
+  total: number;
+  sex: {
+    female: number;
+    male: number;
+  };
+  type: {
+    fresh: number;
+    macerated: number;
+  };
+  place: {
+    facility: number;
+    home: number;
+  };
+}
+
 const DateRangeReport: React.FC<DateRangeReportProps> = () => {
   const [startDate, setStartDate] = useState<Date>(new Date());
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -62,10 +76,14 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
   const [previewVisible, setPreviewVisible] = useState(false);
   const [previewData, setPreviewData] = useState<PreviewData[]>([]);
   const [rawData, setRawData] = useState<ApiNotification[]>([]);
+  const [statsData, setStatsData] = useState<StatsData>({
+    total: 0,
+    sex: { female: 0, male: 0 },
+    type: { fresh: 0, macerated: 0 },
+    place: { facility: 0, home: 0 },
+  });
 
-  const formatDate = (date: Date): string => {
-    return date.toISOString().split("T")[0];
-  };
+  const formatDate = (date: Date): string => date.toISOString().split("T")[0];
 
   const handleStartDateChange = (event: any, selectedDate?: Date) => {
     setShowStartDatePicker(Platform.OS === "ios");
@@ -81,32 +99,22 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     }
   };
 
-  // Function to determine if stillbirth is Fresh or Macerated
   const determineStillbirthType = (baby: any): string => {
-    // If it's a live birth, return "Live birth"
-    if (baby.outcome?.toLowerCase() === "live birth") {
-      return "Live birth";
-    }
+    if (baby.outcome?.toLowerCase() === "live birth") return "Live birth";
 
-    // For stillbirths, determine if fresh or macerated based on common medical criteria
     if (baby.outcome?.toLowerCase() === "stillbirth") {
       if (baby.ageAtDeathDays !== undefined && baby.ageAtDeathDays > 0) {
         return "Macerated";
       }
-
-      // If Apgar scores are present but very low, likely fresh stillbirth during delivery
       if (baby.apgarScore1min || baby.apgarScore5min || baby.apgarScore10min) {
         return "Fresh";
       }
-
-      // Default to "Fresh" if no specific indicators
       return "Fresh";
     }
 
     return baby.outcome || "Unknown";
   };
 
-  // Function to fetch date range data
   const fetchDateRangeData = async (
     startDateStr: string,
     endDateStr: string
@@ -115,16 +123,70 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       const accessToken = await AsyncStorage.getItem("access_token");
       const locationId = await AsyncStorage.getItem("location_id");
 
-      if (!accessToken) {
-        throw new Error("User not authenticated");
-      }
+      if (!accessToken) throw new Error("User not authenticated");
+      if (!locationId) throw new Error("Location ID not found");
 
-      if (!locationId) {
-        throw new Error("Location ID not found");
-      }
-
+      // Try the detailed records endpoint
       const response = await fetch(
         `${BASE_URL}/notifications/stillbirths/records/${locationId}?startDate=${startDateStr}&endDate=${endDateStr}`,
+        {
+          method: "GET",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${accessToken}`,
+          },
+        }
+      );
+
+      if (!response.ok) {
+        // If records endpoint fails, try the main endpoint
+        console.log("Records endpoint failed, trying main endpoint...");
+        const mainResponse = await fetch(
+          `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${startDateStr}&endDate=${endDateStr}`,
+          {
+            method: "GET",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${accessToken}`,
+            },
+          }
+        );
+
+        if (!mainResponse.ok) {
+          throw new Error(`HTTP error! status: ${mainResponse.status}`);
+        }
+
+        const mainResult = await mainResponse.json();
+        console.log("Main endpoint response:", mainResult);
+
+        // If we only get stats data, return empty array for detailed records
+        return [];
+      }
+
+      const result = await response.json();
+      console.log("Records API Response:", result);
+
+      return result.data || result || [];
+    } catch (error) {
+      console.error("Error fetching date range data:", error);
+      Alert.alert("Error", "Failed to fetch data for the selected date range");
+      return [];
+    }
+  };
+
+  const fetchStatsData = async (
+    startDateStr: string,
+    endDateStr: string
+  ): Promise<StatsData | null> => {
+    try {
+      const accessToken = await AsyncStorage.getItem("access_token");
+      const locationId = await AsyncStorage.getItem("location_id");
+
+      if (!accessToken) throw new Error("User not authenticated");
+      if (!locationId) throw new Error("Location ID not found");
+
+      const response = await fetch(
+        `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${startDateStr}&endDate=${endDateStr}`,
         {
           method: "GET",
           headers: {
@@ -139,27 +201,78 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       }
 
       const result = await response.json();
-      const apiData = result.data || result || [];
+      console.log("Full API Response:", JSON.stringify(result, null, 2));
 
-      console.log(`Fetched ${apiData.length} records`);
-      console.log("API response:", apiData);
+      // For date range queries, we should use the monthly data
+      if (result.monthly && result.monthly.length > 0) {
+        console.log("Monthly data found:", result.monthly);
 
-      return apiData;
+        // Since we're querying a date range, use the first monthly entry
+        const monthlyData = result.monthly[0];
+
+        const stats: StatsData = {
+          total: monthlyData.total || 0,
+          sex: {
+            female: monthlyData.sex?.female || 0,
+            male: monthlyData.sex?.male || 0,
+          },
+          type: {
+            fresh: monthlyData.type?.fresh || 0,
+            macerated: monthlyData.type?.macerated || 0,
+          },
+          place: {
+            facility: monthlyData.place?.facility || 0,
+            home: monthlyData.place?.home || 0,
+          },
+        };
+
+        console.log("Processed stats from monthly data:", stats);
+        return stats;
+      }
+
+      // Fallback to today's data if no monthly data (for today's queries)
+      if (result.today) {
+        console.log("Using today's data as fallback:", result.today);
+
+        const stats: StatsData = {
+          total: result.today.total || 0,
+          sex: {
+            female: result.today.sex?.female || 0,
+            male: result.today.sex?.male || 0,
+          },
+          type: {
+            // Handle the "fresh stillbirth" key name difference
+            fresh:
+              result.today.type?.["fresh stillbirth"] ||
+              result.today.type?.fresh ||
+              0,
+            macerated: result.today.type?.macerated || 0,
+          },
+          place: {
+            facility: result.today.place?.facility || 0,
+            home: result.today.place?.home || 0,
+          },
+        };
+
+        console.log("Processed stats from today's data:", stats);
+        return stats;
+      }
+
+      console.log("No data found in response");
+      return null;
     } catch (error) {
-      console.error("Error fetching date range data:", error);
-      Alert.alert("Error", "Failed to fetch data for the selected date range");
-      return [];
+      console.error("Error fetching stats data:", error);
+      Alert.alert("Error", "Failed to fetch stats data");
+      return null;
     }
   };
 
-  // Process API data to create preview data in order: sex, type, facility, date
   const processApiData = (apiData: ApiNotification[]): PreviewData[] => {
     if (!apiData || apiData.length === 0) return [];
 
     const previewData: PreviewData[] = [];
 
     apiData.forEach((notification) => {
-      // Process each baby in the notification
       notification.babies?.forEach((baby) => {
         const stillbirthType = determineStillbirthType(baby);
 
@@ -179,7 +292,6 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
         });
       });
 
-      // If no babies array, create a basic entry from notification data
       if (!notification.babies || notification.babies.length === 0) {
         previewData.push({
           sex: "Unknown",
@@ -199,7 +311,6 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     return previewData;
   };
 
-  // Load data for the selected date range
   const loadDateRangeData = async (): Promise<ApiNotification[]> => {
     if (startDate > endDate) {
       Alert.alert("Error", "Start date cannot be after end date");
@@ -213,14 +324,21 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
 
       console.log(`Loading data from ${startDateStr} to ${endDateStr}`);
 
+      // Fetch stats data
+      const stats = await fetchStatsData(startDateStr, endDateStr);
+      if (stats) {
+        setStatsData(stats);
+      }
+
+      // Fetch detailed data for preview/download
       const apiData = await fetchDateRangeData(startDateStr, endDateStr);
       setRawData(apiData);
 
-      return apiData;
+      return apiData; // Always return the data
     } catch (error) {
       console.error("Error loading date range data:", error);
       Alert.alert("Error", "Failed to load data for the selected date range");
-      return [];
+      return []; // Return empty array on error
     } finally {
       setIsLoading(false);
     }
@@ -230,11 +348,10 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     try {
       setIsLoading(true);
 
-      let dataToUse: ApiNotification[] = [];
+      // If we don't have raw data, load it first
+      let dataToUse: ApiNotification[] = rawData;
 
-      if (rawData && rawData.length > 0) {
-        dataToUse = rawData;
-      } else {
+      if (!dataToUse || dataToUse.length === 0) {
         dataToUse = await loadDateRangeData();
       }
 
@@ -262,11 +379,10 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     try {
       Alert.alert("Download", "Preparing date range report...");
 
-      let dataToUse: ApiNotification[] = [];
+      // If we don't have raw data, load it first
+      let dataToUse: ApiNotification[] = rawData;
 
-      if (rawData && rawData.length > 0) {
-        dataToUse = rawData;
-      } else {
+      if (!dataToUse || dataToUse.length === 0) {
         dataToUse = await loadDateRangeData();
       }
 
@@ -275,7 +391,6 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
         return;
       }
 
-      // Prepare data for Excel in order: sex, type, facility, date
       const excelData = processApiData(dataToUse).map((item) => ({
         Sex: item.sex,
         Type: item.type,
@@ -287,23 +402,17 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
         "Delivery Place": item.deliveryPlace,
       }));
 
-      // Create worksheet
       const ws = XLSX.utils.json_to_sheet(excelData);
-
-      // Create workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Stillbirth Linelist");
 
-      // Generate buffer as base64
       const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
 
-      // Create file path
       const fileName = `stillbirth_linelist_${formatDate(
         startDate
       )}_to_${formatDate(endDate)}.xlsx`;
       const directory = FileSystem.cacheDirectory + "reports/";
 
-      // Ensure directory exists
       try {
         const dirInfo = await FileSystem.getInfoAsync(directory);
         if (!dirInfo.exists) {
@@ -317,12 +426,10 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
 
       const fileUri = directory + fileName;
 
-      // Write file
       await FileSystem.writeAsStringAsync(fileUri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Share file (download)
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType:
@@ -340,6 +447,31 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
     }
   };
 
+  // Load data when component mounts
+  useEffect(() => {
+    const loadDataOnMount = async () => {
+      console.log("Component mounted, loading initial data...");
+      await loadDateRangeData();
+    };
+
+    loadDataOnMount();
+  }, []);
+
+  // Load data when dates change
+  useEffect(() => {
+    const loadDataOnDateChange = async () => {
+      if (startDate && endDate) {
+        console.log("Dates changed, loading data...");
+        await loadDateRangeData();
+      }
+    };
+
+    loadDataOnDateChange();
+  }, [startDate, endDate]);
+
+  // Shared card style - equal sizes for all tiles
+  const cardStyle = tw`flex-1 aspect-square bg-white m-1 p-4 rounded-lg shadow-md justify-center`;
+
   return (
     <ScrollView style={tw`p-4`}>
       {/* Preview Modal */}
@@ -350,7 +482,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       >
         <View style={tw`flex-1 p-4 bg-white`}>
           <View style={tw`flex-row justify-between items-center mb-4`}>
-            <Text style={tw`text- font-bold text-purple-600`}>MOH 369</Text>
+            <Text style={tw`text-lg font-bold text-purple-600`}>MOH 369</Text>
             <TouchableOpacity
               onPress={() => setPreviewVisible(false)}
               style={tw`p-2`}
@@ -373,7 +505,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
               <ScrollView style={tw`flex-1 mb-4`}>
                 {previewData.length > 0 ? (
                   <View style={tw`border border-gray-200 rounded-lg`}>
-                    {/* Table Header - Order: sex, type, facility, date */}
+                    {/* Table Header */}
                     <View
                       style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}
                     >
@@ -398,7 +530,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
                         Date
                       </Text>
                     </View>
-                    {/* Table Rows - Order: sex, type, facility, date */}
+                    {/* Rows */}
                     {previewData.map((item: PreviewData, index: number) => (
                       <View
                         key={index}
@@ -442,34 +574,45 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
       </Modal>
 
       <View style={tw`bg-white p-4 rounded-lg shadow-md mb-4`}>
-        <Text style={tw`text-xl font-bold text-purple-700 mb-4 text-center`}>
-          MOH 369
-        </Text>
+        {/* <Text style={tw`text-xl font-bold text-purple-700 mb-4 text-center`}>
+          MOH 369 - Date Range Report
+        </Text> */}
 
+        {/* Two Date Pickers */}
         <View style={tw`mb-4`}>
           <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>
-            Start Date
+            Select Date Range
           </Text>
-          <TouchableOpacity
-            style={tw`border border-gray-300 p-3 rounded-lg bg-white`}
-            onPress={() => setShowStartDatePicker(true)}
-          >
-            <Text style={tw`text-gray-700`}>{formatDate(startDate)}</Text>
-          </TouchableOpacity>
+          <View style={tw`flex-row gap-3`}>
+            {/* Start Date Picker */}
+            <View style={tw`flex-1`}>
+              <Text style={tw`text-xs text-gray-600 mb-1`}>Start Date</Text>
+              <TouchableOpacity
+                style={tw`border border-gray-300 p-3 rounded-lg bg-white`}
+                onPress={() => setShowStartDatePicker(true)}
+              >
+                <Text style={tw`text-gray-700 text-center`}>
+                  {formatDate(startDate)}
+                </Text>
+              </TouchableOpacity>
+            </View>
+
+            {/* End Date Picker */}
+            <View style={tw`flex-1`}>
+              <Text style={tw`text-xs text-gray-600 mb-1`}>End Date</Text>
+              <TouchableOpacity
+                style={tw`border border-gray-300 p-3 rounded-lg bg-white`}
+                onPress={() => setShowEndDatePicker(true)}
+              >
+                <Text style={tw`text-gray-700 text-center`}>
+                  {formatDate(endDate)}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </View>
         </View>
 
-        <View style={tw`mb-4`}>
-          <Text style={tw`text-sm font-semibold text-gray-700 mb-2`}>
-            End Date
-          </Text>
-          <TouchableOpacity
-            style={tw`border border-gray-300 p-3 rounded-lg bg-white`}
-            onPress={() => setShowEndDatePicker(true)}
-          >
-            <Text style={tw`text-gray-700`}>{formatDate(endDate)}</Text>
-          </TouchableOpacity>
-        </View>
-
+        {/* Date Pickers */}
         {showStartDatePicker && (
           <DateTimePicker
             value={startDate}
@@ -491,10 +634,85 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
           />
         )}
 
+        {/* Stats Tiles */}
+        <View style={tw`mt-4`}>
+          {/* Row 1 - Total Cases and Sex Distribution */}
+          <View style={tw`flex-row mb-2`}>
+            {/* Total Cases - Clickable for preview */}
+            <TouchableOpacity
+              style={[cardStyle, statsData.total === 0 && tw`opacity-50`]}
+              onPress={handlePreview}
+              disabled={statsData.total === 0}
+            >
+              <Text
+                style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
+              >
+                Total Cases
+              </Text>
+              <Text style={tw`text-2xl text-gray-700 text-center`}>
+                {statsData.total}
+              </Text>
+              <Text style={tw`text-xs text-purple-500 text-center mt-2`}>
+                {statsData.total > 0
+                  ? "Tap to preview and download linelist"
+                  : "No data available"}
+              </Text>
+            </TouchableOpacity>
+
+            {/* Sex Distribution */}
+            <View style={cardStyle}>
+              <Text
+                style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
+              >
+                Sex
+              </Text>
+              <Text style={tw`text-gray-700 text-center`}>
+                ♀ Female: {statsData.sex.female}
+              </Text>
+              <Text style={tw`text-gray-700 text-center`}>
+                ♂ Male: {statsData.sex.male}
+              </Text>
+            </View>
+          </View>
+
+          {/* Row 2 - Type and Delivery Place */}
+          <View style={tw`flex-row`}>
+            {/* Type */}
+            <View style={cardStyle}>
+              <Text
+                style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
+              >
+                Type
+              </Text>
+              <Text style={tw`text-gray-700 text-center`}>
+                Fresh: {statsData.type.fresh}
+              </Text>
+              <Text style={tw`text-gray-700 text-center`}>
+                Macerated: {statsData.type.macerated}
+              </Text>
+            </View>
+
+            {/* Delivery Place */}
+            <View style={cardStyle}>
+              <Text
+                style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
+              >
+                Delivery Place
+              </Text>
+              <Text style={tw`text-gray-700 text-center`}>
+                🏠 Home: {statsData.place.home}
+              </Text>
+              <Text style={tw`text-gray-700 text-center`}>
+                🏥 Facility: {statsData.place.facility}
+              </Text>
+            </View>
+          </View>
+        </View>
+
         {/* Action Buttons */}
-        <View style={tw`flex-row gap-3 mt-4`}>
+        {/* <View style={tw`flex-row gap-3 mt-4`}>
           <TouchableOpacity
-            onPress={handlePreview}
+            onPress={loadDateRangeData}
             style={tw`flex-1 bg-purple-600 py-3 rounded-lg`}
             disabled={isLoading}
           >
@@ -502,7 +720,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
               <ActivityIndicator color="white" />
             ) : (
               <Text style={tw`text-center text-white font-semibold`}>
-                Preview Data
+                Refresh Data
               </Text>
             )}
           </TouchableOpacity>
@@ -516,10 +734,10 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
               Download Excel
             </Text>
           </TouchableOpacity>
-        </View>
+        </View> */}
 
-        {/* Data Count Info */}
-        {rawData.length > 0 && (
+        {/* Status Information */}
+        {/* {rawData.length > 0 && (
           <View style={tw`bg-purple-50 p-3 rounded-lg mt-4`}>
             <Text style={tw`text-purple-700 text-center`}>
               Found {rawData.length} notifications with {previewData.length}{" "}
@@ -528,14 +746,13 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
           </View>
         )}
 
-        {/* No Data Message */}
         {rawData.length === 0 && !isLoading && (
           <View style={tw`bg-yellow-100 p-4 rounded-lg mt-4`}>
             <Text style={tw`text-yellow-700 text-center`}>
-              Select a date range and click "Preview Data" to view records
+              Select a date range to view records
             </Text>
           </View>
-        )}
+        )} */}
       </View>
     </ScrollView>
   );

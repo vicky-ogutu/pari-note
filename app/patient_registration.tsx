@@ -334,6 +334,7 @@ const StillbirthRegistrationScreen = () => {
           typeOfPregnancy: formData.pregnancyType,
           attendedAntenatal: formData.antenatalCare,
           placeOfDelivery: formData.deliveryPlace,
+          facilityLevelOfCare: formData.facilityLevel,
           typeOfDelivery: formData.deliveryType,
           periodOfDeath: formData.periodOfDeath,
           perinatalCause: formData.perinatalCause.join(", "),
@@ -360,6 +361,7 @@ const StillbirthRegistrationScreen = () => {
         ],
       };
 
+      console.log("Submitting payload to this baseURL:", BASE_URL);
       console.log("Submitting payload:", payload);
 
       const response = await fetch(`${BASE_URL}/notifications`, {
@@ -1256,7 +1258,7 @@ const StillbirthRegistrationScreen = () => {
       <CustomDrawer
         drawerVisible={drawerVisible}
         setDrawerVisible={setDrawerVisible}
-        userRole={userRole}
+        //userRole={userRole}
         handleLogout={handleLogout}
       />
     </KeyboardAvoidingView>
