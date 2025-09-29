@@ -9,25 +9,26 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../constants/ApiConfig";
 
 export class ReportService {
+  /** Get access token from storage */
   static async getAccessToken(): Promise<string> {
     const token = await AsyncStorage.getItem("access_token");
     if (!token) throw new Error("User not authenticated");
     return token;
   }
 
+  /** Get location id from storage */
   static async getLocationId(): Promise<string> {
     const locationId = await AsyncStorage.getItem("location_id");
     if (!locationId) throw new Error("Location ID not found");
     return locationId;
   }
 
+  /** Fetch summarized report (today + monthly) */
   static async fetchReportData(
     locationId: string
   ): Promise<{ today: ReportData; monthly: MonthlyReportItem[] }> {
     const accessToken = await this.getAccessToken();
 
-    // const startDate = "2025-09-01";
-    // const today = "2025-09-29";
     const today = new Date().toISOString().split("T")[0];
     const startDate = new Date(
       new Date().getFullYear(),
@@ -38,7 +39,6 @@ export class ReportService {
       .split("T")[0];
 
     const response = await fetch(
-      //`${BASE_URL}/notifications/stillbirths/${locationId}`,
       `${BASE_URL}/notifications/stillbirths/${locationId}/?startDate=${startDate}&endDate=${today}`,
       {
         method: "GET",
@@ -53,9 +53,25 @@ export class ReportService {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    return await response.json();
+    const result = await response.json();
+
+    // Normalize today's type mapping (e.g. "fresh stillbirth" -> "fresh")
+    if (result.today?.type) {
+      const normalizedType: Record<string, number> = { fresh: 0, macerated: 0 };
+      for (const key of Object.keys(result.today.type)) {
+        if (key.toLowerCase().includes("fresh")) {
+          normalizedType.fresh += result.today.type[key];
+        } else if (key.toLowerCase().includes("macerated")) {
+          normalizedType.macerated += result.today.type[key];
+        }
+      }
+      result.today.type = normalizedType;
+    }
+
+    return result;
   }
 
+  /** Fetch detailed/raw records within a date range */
   static async fetchDetailedData(
     dateRange: DateRange,
     locationId: string
@@ -81,6 +97,7 @@ export class ReportService {
     return result.data || result || [];
   }
 
+  /** Get start & end dates for a given month string */
   static getMonthDates(monthString: string): DateRange {
     const [monthName, yearStr] = monthString.split(" ");
     const year = parseInt(yearStr);
@@ -100,9 +117,7 @@ export class ReportService {
       december: 11,
     };
 
-    const monthLower = monthName.toLowerCase();
-    const monthIndex = monthMap[monthLower];
-
+    const monthIndex = monthMap[monthName.toLowerCase()];
     if (monthIndex === undefined) {
       throw new Error(`Invalid month name: ${monthName}`);
     }
@@ -116,61 +131,72 @@ export class ReportService {
     };
   }
 
+  /** Get today's date */
   static getTodayDate(): string {
     return new Date().toISOString().split("T")[0];
   }
 
+  /** Process raw data (used in date range reports) */
   static processRawData(rawData: RawDataItem[]): ReportData {
-    const flattenedData = rawData?.flatMap((item) => {
+    const flattenedData = rawData?.flatMap((item: any) => {
       if (item.babies && item.babies.length > 0) {
-        return item.babies.map((baby) => ({
+        return item.babies.map((baby: any) => ({
           ...item,
-          ...baby,
           sex: baby.sex,
-          type: baby.outcome,
+          type: baby.outcome || baby.type,
+          place: baby.place || item.place || item.deliveryPlace,
         }));
       }
-      return item;
+      return {
+        ...item,
+        sex:
+          item.sex || (item.female ? "female" : item.male ? "male" : undefined),
+        type: item.outcome || item.type,
+        place: item.place || item.deliveryPlace,
+      };
     });
 
     const total = flattenedData.length;
 
     const sex = {
       female: flattenedData.filter(
-        (item) => item?.female && Number(item.female) > 0
+        (d: any) => d?.sex?.toLowerCase() === "female"
       ).length,
-      male: flattenedData.filter((item) => item?.male && Number(item.male) > 0)
+      male: flattenedData.filter((d: any) => d?.sex?.toLowerCase() === "male")
         .length,
     };
 
     const type = {
       fresh: flattenedData.filter(
-        (item) =>
-          item.type?.toLowerCase().includes("fresh") ||
-          item.type === "fresh" ||
-          item.outcome?.toLowerCase().includes("fresh")
+        (d: any) =>
+          d.type?.toLowerCase().includes("fresh") ||
+          d.outcome?.toLowerCase().includes("fresh")
       ).length,
       macerated: flattenedData.filter(
-        (item) =>
-          item.type?.toLowerCase().includes("macerated") ||
-          item.type === "macerated" ||
-          item.outcome?.toLowerCase().includes("macerated")
+        (d: any) =>
+          d.type?.toLowerCase().includes("macerated") ||
+          d.outcome?.toLowerCase().includes("macerated")
       ).length,
     };
 
     const place = {
-      home: flattenedData.filter((item) => item.place === "home").length,
+      home: flattenedData.filter(
+        (d: any) =>
+          d.place?.toLowerCase() === "home" ||
+          d.deliveryPlace?.toLowerCase() === "home"
+      ).length,
       facility: flattenedData.filter(
-        (item) =>
-          item.place?.toLowerCase().includes("facility") ||
-          item.facility ||
-          item.place === "facility"
+        (d: any) =>
+          d.place?.toLowerCase() === "facility" ||
+          d.place?.toLowerCase().includes("facility") ||
+          d.deliveryPlace?.toLowerCase().includes("facility")
       ).length,
     };
 
     return { total, sex, type, place };
   }
 
+  /** Prepare preview data (used in UI tables/lists) */
   static preparePreviewData(rawData: RawDataItem[]): PreviewData[] {
     return rawData.flatMap((item) => {
       let facilityName = "Unknown";
@@ -203,7 +229,9 @@ export class ReportService {
 
       return [
         {
-          sex: item.female ? "Female" : item.male ? "Male" : "Unknown",
+          sex:
+            (item as any).sex ||
+            (item.female ? "Female" : item.male ? "Male" : "Unknown"),
           type: item.outcome || item.type || "Unknown",
           facility: facilityName,
           date: item.dateOfNotification || item.date || "",

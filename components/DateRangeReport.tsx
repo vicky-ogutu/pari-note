@@ -187,6 +187,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
 
       const response = await fetch(
         `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${startDateStr}&endDate=${endDateStr}`,
+
         {
           method: "GET",
           headers: {
