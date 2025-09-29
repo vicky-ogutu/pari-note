@@ -197,11 +197,11 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                 >
                   {getRolesDisplayText()}
                 </Text>
-                {userRoles.length > 1 && (
+                {/* {userRoles.length > 1 && (
                   <Text style={tw`text-purple-200 text-xs ml-1`}>
                     ({userRoles.length} roles)
                   </Text>
-                )}
+                )} */}
               </View>
             </View>
           </View>
