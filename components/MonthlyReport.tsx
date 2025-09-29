@@ -68,177 +68,232 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
   const [tileData, setTileData] = useState<MonthlyTileData[]>([]);
   const [dataLoading, setDataLoading] = useState(false);
 
-  // Function to get month dates from month string (e.g., "January 2024")
-  // Function to get month dates from month string (e.g., "September 2025")
-  const getMonthDates = (monthString: string) => {
-    try {
-      const [monthName, yearStr] = monthString.split(" ");
-      const year = parseInt(yearStr);
-
-      // Create a map of month names to month indices (0-11)
-      const monthMap: { [key: string]: number } = {
-        january: 0,
-        february: 1,
-        march: 2,
-        april: 3,
-        may: 4,
-        june: 5,
-        july: 6,
-        august: 7,
-        september: 8,
-        october: 9,
-        november: 10,
-        december: 11,
-      };
-
-      const monthLower = monthName.toLowerCase();
-      const monthIndex = monthMap[monthLower];
-
-      if (monthIndex === undefined) {
-        throw new Error(`Invalid month name: ${monthName}`);
-      }
-
-      const startDate = new Date(year, monthIndex, 1);
-      const endDate = new Date(year, monthIndex + 1, 0);
-
-      return {
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
-      };
-    } catch (error) {
-      console.error("Error parsing month:", error);
-      // Return current month as fallback
-      const now = new Date();
-      const startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-      const endDate = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-      return {
-        startDate: startDate.toISOString().split("T")[0],
-        endDate: endDate.toISOString().split("T")[0],
-      };
-    }
+  // Parse "September 2025" -> { year: 2025, month: 8 }
+  const parseMonthString = (monthString: string) => {
+    const [monthName, yearStr] = monthString.split(" ");
+    const year = parseInt(yearStr, 10);
+    const month = new Date(`${monthName} 1, ${year}`).getMonth(); // 0-based
+    return { year, month };
   };
 
-  // Function to fetch monthly detailed data
-  const fetchMonthlyDetailedData = async (
-    monthString: string
-  ): Promise<RawDataItem[]> => {
+  // Function to get month dates from month string (e.g., "January 2024")
+  // Get first and last day of a given month
+  const getMonthDates = (year: number, month: number) => {
+    const startDate = new Date(year, month, 1).toISOString().split("T")[0];
+    const endDate = new Date(year, month + 1, 0).toISOString().split("T")[0];
+    return { startDate, endDate };
+  };
+
+  const fetchMonthlyDetailedData = async (year: number, month: number) => {
     try {
       setDataLoading(true);
       const accessToken = await AsyncStorage.getItem("access_token");
       const locationId = await AsyncStorage.getItem("location_id");
 
-      if (!accessToken) {
-        throw new Error("User not authenticated");
-      }
-
       if (!locationId) {
-        throw new Error("Location ID not found");
+        console.log("No location ID available");
+        return [];
       }
 
-      // Get dates for the selected month
-      const { startDate, endDate } = getMonthDates(monthString);
-
-      console.log(
-        `Fetching data for ${monthString}: ${startDate} to ${endDate}`
-      );
+      const { startDate, endDate } = getMonthDates(year, month);
 
       const response = await fetch(
-        //`${BASE_URL}/notifications/stillbirths/records/${locationId}?startDate=${startDate}&endDate=${endDate}`,
         `${BASE_URL}/notifications/stillbirths/${locationId}?startDate=${startDate}&endDate=${endDate}`,
-
         {
-          method: "GET",
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${accessToken}`,
           },
         }
       );
 
+      if (response.status === 204 || response.status === 404) {
+        console.log("No data found for monthly");
+        return [];
+      }
+
       if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
-      console.log(`Raw data for ${monthString}:`, result);
-      return result.data || result || [];
-    } catch (error) {
-      console.error("Error fetching monthly data:", error);
-      Alert.alert("Error", "Failed to fetch monthly data. Please try again.");
+      console.log(
+        "Monthly API Success - Raw response:",
+        JSON.stringify(result, null, 2)
+      );
+      console.log(
+        `Requesting monthly data for ${year}-${
+          month + 1
+        }: ${startDate} → ${endDate}, location ${locationId}`
+      );
+
+      // Handle different response structures
+      const rawData = Array.isArray(result)
+        ? result
+        : Array.isArray(result?.data)
+        ? result.data
+        : Array.isArray(result?.monthly)
+        ? result.monthly
+        : [];
+
+      console.log(`Processed ${rawData.length} records for monthly data`);
+      return rawData;
+    } catch (err) {
+      console.error("Monthly fetch error:", err);
       return [];
     } finally {
       setDataLoading(false);
     }
   };
 
-  // Function to prepare preview data
-  // const preparePreviewData = (rawData: RawDataItem[]): PreviewData[] => {
-  //   return rawData.map((item: RawDataItem) => ({
-  //     sex: item.female ? "Female" : item.male ? "Male" : "Unknown",
-  //     type: item.type || "Unknown",
-  //     facility: item.facility || "Unknown",
-  //     date: item.date || "",
-  //     weight: item.weight || "",
-  //     motherAge: item.motherAge || "",
-  //     gestationalAge: item.gestationalAge || "",
-  //     deliveryPlace: item.deliveryPlace || "",
-  //   }));
-  // };
-  // Function to prepare preview data
-
   const preparePreviewData = (rawData: any[]): PreviewData[] => {
+    if (!rawData || rawData.length === 0) {
+      console.log("No raw data available for preview");
+      return [];
+    }
+
     return rawData.flatMap((item: any) => {
       // Handle cases where there might be multiple babies
       if (item.babies && item.babies.length > 0) {
         return item.babies.map((baby: any) => ({
           sex: baby.sex || "Unknown",
-          type: baby.outcome || "Unknown", // Use baby's outcome as Type
+          type: baby.outcome || "Unknown",
           facility: item.location?.name || "Unknown",
           date: item.dateOfNotification || "",
+          weight: baby.weight || "",
+          motherAge: item.motherAge || "",
+          gestationalAge: item.gestationalAge || "",
         }));
       }
 
       // Fallback for items without babies array
       return [
         {
-          sex: "Unknown",
-          type: "Unknown",
-          facility: item.location?.name || "Unknown",
-          date: item.dateOfNotification || "",
+          sex: item.sex || "Unknown",
+          type: item.type || item.outcome || "Unknown",
+          facility: item.location?.name || item.facility || "Unknown",
+          date: item.dateOfNotification || item.date || "",
+          weight: item.weight || "",
+          motherAge: item.motherAge || "",
+          gestationalAge: item.gestationalAge || "",
         },
       ];
     });
   };
-  // Initialize tile data from props
-  useEffect(() => {
-    if (propData && propData.length > 0) {
-      const monthlyTileData: MonthlyTileData[] = propData.map((monthData) => ({
-        month: monthData.month,
+
+  // Process API response data to match our expected format
+  const processApiData = (apiData: any[]): MonthlyTileData[] => {
+    if (!apiData || apiData.length === 0) {
+      console.log("No API data to process");
+      return [];
+    }
+
+    return apiData.map((monthData: any) => {
+      console.log("Processing month data:", JSON.stringify(monthData, null, 2));
+
+      // Handle different response structures
+      const sexData = monthData.sex || {};
+      const typeData = monthData.type || {};
+      const placeData = monthData.place || {};
+
+      return {
+        month: monthData.month || "Unknown Month",
         total: monthData.total || 0,
         avgWeight: monthData.avgWeight || 0,
         sex: {
-          female: monthData.sex?.female || 0,
-          male: monthData.sex?.male || 0,
+          female: typeof sexData === "object" ? sexData.female || 0 : 0,
+          male: typeof sexData === "object" ? sexData.male || 0 : 0,
         },
         type: {
-          fresh: monthData.type?.fresh || 0,
-          macerated: monthData.type?.macerated || 0,
+          fresh:
+            typeof typeData === "object"
+              ? typeData.fresh || typeData["fresh stillbirth"] || 0
+              : 0,
+          macerated: typeof typeData === "object" ? typeData.macerated || 0 : 0,
         },
         place: {
-          home: monthData.place?.home || 0,
-          facility: monthData.place?.facility || 0,
+          home: typeof placeData === "object" ? placeData.home || 0 : 0,
+          facility: typeof placeData === "object" ? placeData.facility || 0 : 0,
         },
-      }));
+      };
+    });
+  };
 
-      setTileData(monthlyTileData);
-    }
+  // Initialize tile data from props or fetch data
+  useEffect(() => {
+    const initializeData = async () => {
+      // If we have prop data, use it
+      if (propData && propData.length > 0) {
+        console.log("Using prop data for monthly report");
+        const monthlyTileData: MonthlyTileData[] = propData.map(
+          (monthData) => ({
+            month: monthData.month,
+            total: monthData.total || 0,
+            avgWeight: monthData.avgWeight || 0,
+            sex: {
+              female: monthData.sex?.female || 0,
+              male: monthData.sex?.male || 0,
+            },
+            type: {
+              fresh: monthData.type?.fresh || 0,
+              macerated: monthData.type?.macerated || 0,
+            },
+            place: {
+              home: monthData.place?.home || 0,
+              facility: monthData.place?.facility || 0,
+            },
+          })
+        );
+        setTileData(monthlyTileData);
+      } else {
+        // If no prop data, try to fetch monthly data
+        console.log("No prop data, attempting to fetch monthly data");
+        try {
+          setDataLoading(true);
+          const accessToken = await AsyncStorage.getItem("access_token");
+          const locationId = await AsyncStorage.getItem("location_id");
+
+          if (!accessToken || !locationId) {
+            console.log("No auth token or location ID available");
+            return;
+          }
+
+          // Fetch summary data for all months
+          const response = await fetch(
+            `${BASE_URL}/notifications/stillbirths/summary/${locationId}`,
+            {
+              headers: {
+                Authorization: `Bearer ${accessToken}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const result = await response.json();
+            console.log(
+              "Monthly summary API response:",
+              JSON.stringify(result, null, 2)
+            );
+
+            if (result.monthly && Array.isArray(result.monthly)) {
+              const processedData = processApiData(result.monthly);
+              setTileData(processedData);
+            }
+          }
+        } catch (error) {
+          console.error("Error fetching monthly summary:", error);
+        } finally {
+          setDataLoading(false);
+        }
+      }
+    };
+
+    initializeData();
   }, [propData]);
 
   const handleTotalPress = async (monthData: {
     month: string;
     total?: number;
   }) => {
-    // Don't proceed if there's no data for this month
     if (!monthData.total || monthData.total === 0) {
       Alert.alert("Info", `No data available for ${monthData.month}`);
       return;
@@ -248,11 +303,14 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
       setLoading(true);
       setSelectedMonth(monthData.month);
 
-      // Fetch detailed data for the selected month
-      const rawData = await fetchMonthlyDetailedData(monthData.month);
+      const { year, month } = parseMonthString(monthData.month);
+      const rawData = await fetchMonthlyDetailedData(year, month);
 
-      if (rawData && rawData.length > 0) {
+      console.log(`Fetched ${rawData.length} detailed records for preview`);
+
+      if (rawData.length > 0) {
         const previewData = preparePreviewData(rawData);
+        console.log(`Prepared ${previewData.length} preview items`);
         setPreviewData(previewData);
         setPreviewVisible(true);
       } else {
@@ -273,50 +331,49 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
     try {
       Alert.alert("Download", `Preparing report for ${monthString}...`);
 
-      // Fetch fresh data for the month
-      const rawData = await fetchMonthlyDetailedData(monthString);
+      const { year, month } = parseMonthString(monthString);
+      const rawData = await fetchMonthlyDetailedData(year, month);
 
       if (!rawData || rawData.length === 0) {
         Alert.alert("Info", `No data available for ${monthString}`);
         return;
       }
 
-      // Prepare data for Excel - using the same order: sex, type, facility, date
       const excelData = rawData.flatMap((item: any) => {
         if (item.babies && item.babies.length > 0) {
           return item.babies.map((baby: any) => ({
             Sex: baby.sex || "Unknown",
-            Type: baby.outcome || "Unknown", // Baby's outcome as Type
+            Type: baby.outcome || "Unknown",
             Facility: item.location?.name || "Unknown",
             Date: item.dateOfNotification || "",
+            Weight: baby.weight || "",
+            "Mother Age": item.motherAge || "",
+            "Gestational Age": item.gestationalAge || "",
           }));
         }
         return [
           {
-            Sex: "Unknown",
-            Type: "Unknown",
-            Facility: item.location?.name || "Unknown",
-            Date: item.dateOfNotification || "",
+            Sex: item.sex || "Unknown",
+            Type: item.type || item.outcome || "Unknown",
+            Facility: item.location?.name || item.facility || "Unknown",
+            Date: item.dateOfNotification || item.date || "",
+            Weight: item.weight || "",
+            "Mother Age": item.motherAge || "",
+            "Gestational Age": item.gestationalAge || "",
           },
         ];
       });
 
-      // Create worksheet
       const ws = XLSX.utils.json_to_sheet(excelData);
-
-      // Create workbook
       const wb = XLSX.utils.book_new();
       XLSX.utils.book_append_sheet(wb, ws, "Monthly Stillbirth Linelist");
 
-      // Generate buffer
       const wbout = XLSX.write(wb, { type: "base64", bookType: "xlsx" });
 
-      // Create file name
-      const { startDate, endDate } = getMonthDates(monthString);
+      const { startDate, endDate } = getMonthDates(year, month);
       const fileName = `monthly_stillbirth_linelist_${startDate}_to_${endDate}.xlsx`;
       const directory = FileSystem.cacheDirectory + "reports/";
 
-      // Ensure directory exists
       try {
         const dirInfo = await FileSystem.getInfoAsync(directory);
         if (!dirInfo.exists) {
@@ -329,13 +386,10 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
       }
 
       const fileUri = directory + fileName;
-
-      // Write file
       await FileSystem.writeAsStringAsync(fileUri, wbout, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-      // Share file (download)
       if (await Sharing.isAvailableAsync()) {
         await Sharing.shareAsync(fileUri, {
           mimeType:
@@ -346,7 +400,6 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
         Alert.alert("Success", "Monthly report downloaded successfully!");
       }
 
-      // Close preview after download
       setPreviewVisible(false);
     } catch (error) {
       console.error("Error downloading monthly report:", error);
@@ -357,8 +410,8 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
     }
   };
 
-  // Use propData directly if tileData is not set yet but we have props
-  const displayData = tileData.length > 0 ? tileData : propData || [];
+  // Use tileData if available, otherwise use processed propData
+  const displayData = tileData.length > 0 ? tileData : [];
 
   if (dataLoading && displayData.length === 0) {
     return (
@@ -377,9 +430,6 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
     );
   }
 
-  // Shared card style - matching Today's Report
-  const cardStyle = tw`flex-1 aspect-square bg-white m-1 p-4 rounded-lg shadow-md justify-center`;
-
   return (
     <ScrollView style={tw`p-4`}>
       {/* Preview Modal */}
@@ -390,14 +440,14 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
       >
         <View style={tw`flex-1 p-4 bg-white`}>
           <View style={tw`flex-row justify-between items-center mb-4`}>
-            <Text style={tw`text-sm font-bold text-purple-600`}>
+            <Text style={tw`text-lg font-bold text-purple-600`}>
               MOH 369 - {selectedMonth}
             </Text>
             <TouchableOpacity
               onPress={() => setPreviewVisible(false)}
               style={tw`p-2`}
             >
-              <Text style={tw`text-lg font-bold`}>×</Text>
+              <Text style={tw`text-2xl font-bold`}>×</Text>
             </TouchableOpacity>
           </View>
 
@@ -415,24 +465,6 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
               <ScrollView style={tw`flex-1 mb-4`}>
                 {previewData.length > 0 ? (
                   <View style={tw`border border-gray-200 rounded-lg`}>
-                    {/* Table Header
-                    <View
-                      style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}
-                    >
-                      <Text style={tw`flex-1 font-bold text-purple-600`}>
-                        Date
-                      </Text>
-                      <Text style={tw`flex-1 font-bold text-purple-600`}>
-                        Sex
-                      </Text>
-                      <Text style={tw`flex-1 font-bold text-purple-600`}>
-                        Type
-                      </Text>
-                      <Text style={tw`flex-1 font-bold text-purple-600`}>
-                        Facility
-                      </Text>
-                    </View> */}
-                    {/* Table Header */}
                     <View
                       style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}
                     >
@@ -492,9 +524,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
         </View>
       </Modal>
 
-      <Text style={tw`text-2xl font-bold text-purple-700 mb-6 text-center`}>
+      {/* <Text style={tw`text-2xl font-bold text-purple-700 mb-6 text-center`}>
         Monthly Stillbirth Reports
-      </Text>
+      </Text> */}
 
       {/* Monthly Reports List */}
       {displayData.map((monthData, index) => (
@@ -512,7 +544,7 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
             {/* Total Cases - Clickable for preview */}
             <TouchableOpacity
               style={[
-                cardStyle,
+                tw`flex-1 bg-white m-1 p-4 rounded-lg shadow-md justify-center`,
                 (!monthData.total || monthData.total === 0) && tw`opacity-50`,
               ]}
               onPress={() => handleTotalPress(monthData)}
@@ -534,7 +566,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
             </TouchableOpacity>
 
             {/* Sex Distribution */}
-            <View style={cardStyle}>
+            <View
+              style={tw`flex-1 bg-white m-1 p-4 rounded-lg shadow-md justify-center`}
+            >
               <Text
                 style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
               >
@@ -552,7 +586,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
           {/* Row 2 */}
           <View style={tw`flex-row`}>
             {/* Type */}
-            <View style={cardStyle}>
+            <View
+              style={tw`flex-1 bg-white m-1 p-4 rounded-lg shadow-md justify-center`}
+            >
               <Text
                 style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
               >
@@ -567,7 +603,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
             </View>
 
             {/* Delivery Place */}
-            <View style={cardStyle}>
+            <View
+              style={tw`flex-1 bg-white m-1 p-4 rounded-lg shadow-md justify-center`}
+            >
               <Text
                 style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
               >
@@ -581,6 +619,20 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
               </Text>
             </View>
           </View>
+
+          {/* Average Weight Row */}
+          {/* <View style={tw`mt-2`}>
+            <View style={tw`bg-white m-1 p-4 rounded-lg shadow-md justify-center`}>
+              <Text
+                style={tw`text-lg font-semibold text-purple-600 mb-2 text-center`}
+              >
+                Average Weight
+              </Text>
+              <Text style={tw`text-xl text-gray-700 text-center`}>
+                {monthData.avgWeight ? `${monthData.avgWeight}g` : 'N/A'}
+              </Text>
+            </View>
+          </View> */}
         </View>
       ))}
     </ScrollView>
