@@ -1,4 +1,10 @@
-import { DateRange, MonthlyReportItem, PreviewData, RawDataItem, ReportData } from "@/types/reports";
+import {
+  DateRange,
+  MonthlyReportItem,
+  PreviewData,
+  RawDataItem,
+  ReportData,
+} from "@/types/reports";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { BASE_URL } from "../constants/ApiConfig";
 
@@ -15,11 +21,25 @@ export class ReportService {
     return locationId;
   }
 
-  static async fetchReportData(locationId: string): Promise<{ today: ReportData; monthly: MonthlyReportItem[] }> {
+  static async fetchReportData(
+    locationId: string
+  ): Promise<{ today: ReportData; monthly: MonthlyReportItem[] }> {
     const accessToken = await this.getAccessToken();
-    
+
+    // const startDate = "2025-09-01";
+    // const today = "2025-09-29";
+    const today = new Date().toISOString().split("T")[0];
+    const startDate = new Date(
+      new Date().getFullYear(),
+      new Date().getMonth(),
+      1
+    )
+      .toISOString()
+      .split("T")[0];
+
     const response = await fetch(
-      `${BASE_URL}/notifications/stillbirths/${locationId}`,
+      //`${BASE_URL}/notifications/stillbirths/${locationId}`,
+      `${BASE_URL}/notifications/stillbirths/${locationId}/?startDate=${startDate}&endDate=${today}`,
       {
         method: "GET",
         headers: {
@@ -36,7 +56,10 @@ export class ReportService {
     return await response.json();
   }
 
-  static async fetchDetailedData(dateRange: DateRange, locationId: string): Promise<RawDataItem[]> {
+  static async fetchDetailedData(
+    dateRange: DateRange,
+    locationId: string
+  ): Promise<RawDataItem[]> {
     const accessToken = await this.getAccessToken();
 
     const response = await fetch(
@@ -63,8 +86,18 @@ export class ReportService {
     const year = parseInt(yearStr);
 
     const monthMap: { [key: string]: number } = {
-      january: 0, february: 1, march: 2, april: 3, may: 4, june: 5,
-      july: 6, august: 7, september: 8, october: 9, november: 10, december: 11,
+      january: 0,
+      february: 1,
+      march: 2,
+      april: 3,
+      may: 4,
+      june: 5,
+      july: 6,
+      august: 7,
+      september: 8,
+      october: 9,
+      november: 10,
+      december: 11,
     };
 
     const monthLower = monthName.toLowerCase();
@@ -94,7 +127,7 @@ export class ReportService {
           ...item,
           ...baby,
           sex: baby.sex,
-          type: baby.outcome
+          type: baby.outcome,
         }));
       }
       return item;
@@ -104,11 +137,10 @@ export class ReportService {
 
     const sex = {
       female: flattenedData.filter(
-        (item) =>  (item?.female && Number(item.female) > 0)
+        (item) => item?.female && Number(item.female) > 0
       ).length,
-      male: flattenedData.filter(
-        (item) => (item?.male && Number(item.male) > 0)
-      ).length,
+      male: flattenedData.filter((item) => item?.male && Number(item.male) > 0)
+        .length,
     };
 
     const type = {
@@ -127,9 +159,7 @@ export class ReportService {
     };
 
     const place = {
-      home: flattenedData.filter(
-        (item) => item.place === "home"
-      ).length,
+      home: flattenedData.filter((item) => item.place === "home").length,
       facility: flattenedData.filter(
         (item) =>
           item.place?.toLowerCase().includes("facility") ||
@@ -147,7 +177,8 @@ export class ReportService {
       if (item.facility) {
         facilityName = item.facility;
       } else if (item.location && typeof item.location === "object") {
-        facilityName = item.location.name || item.location.facilityName || "Unknown";
+        facilityName =
+          item.location.name || item.location.facilityName || "Unknown";
       } else if (item.healthFacility) {
         facilityName = item.healthFacility;
       } else if (item.facilityName) {
@@ -163,14 +194,16 @@ export class ReportService {
           time: item.time || "",
           weight: baby.weight || baby.birthWeight?.toString() || "",
           motherAge: item.mother?.age?.toString() || item.motherAge || "",
-          gestationalAge: baby.gestationalAge || baby.gestationWeeks?.toString() || "",
-          deliveryPlace: baby.place || item.mother?.placeOfDelivery || item.place || "",
+          gestationalAge:
+            baby.gestationalAge || baby.gestationWeeks?.toString() || "",
+          deliveryPlace:
+            baby.place || item.mother?.placeOfDelivery || item.place || "",
         }));
       }
 
       return [
         {
-          sex:  (item.female ? "Female" : item.male ? "Male" : "Unknown"),
+          sex: item.female ? "Female" : item.male ? "Male" : "Unknown",
           type: item.outcome || item.type || "Unknown",
           facility: facilityName,
           date: item.dateOfNotification || item.date || "",
