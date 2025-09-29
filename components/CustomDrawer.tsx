@@ -108,7 +108,7 @@ const CustomDrawer: React.FC<DrawerProps> = ({
         locationText += userData.county;
       }
 
-      return locationText || "Multiple locations";
+      return locationText;
     }
 
     // Single role users
@@ -226,14 +226,17 @@ const CustomDrawer: React.FC<DrawerProps> = ({
               </TouchableOpacity>
 
               {/* Report Stillbirth - Accessible to all roles based on scenarios */}
-              <TouchableOpacity
-                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                onPress={() => handleNavigation("patient_registration")}
-              >
-                <Text style={tw`text-gray-500 font-medium ml-2`}>
-                  📋 Report Stillbirth
-                </Text>
-              </TouchableOpacity>
+              {/* Report Stillbirth - Visible only if nurse role is present */}
+              {hasRole("nurse") && (
+                <TouchableOpacity
+                  style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                  onPress={() => handleNavigation("patient_registration")}
+                >
+                  <Text style={tw`text-gray-500 font-medium ml-2`}>
+                    📋 Report Stillbirth
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* User Management - hidden if ONLY nurse */}
               {!(
