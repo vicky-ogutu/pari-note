@@ -12,7 +12,7 @@ import {
   Platform,
   Text,
   TouchableOpacity,
-  View
+  View,
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
@@ -79,11 +79,7 @@ const HomeScreen = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Use the permissions
-  const {
-    userRoles,
-    canAccess,
-  } = usePermissions();
-
+  const { userRoles, canAccess } = usePermissions();
 
   // Fetch report data when component mounts or activeTab changes
   useEffect(() => {
@@ -133,7 +129,7 @@ const HomeScreen = () => {
 
   // NO PERMISSION CHECKS - Everyone can add users
   const handleAddUser = () => {
-    if (userRoles.length == 1 && userRoles.includes('nurse')) {
+    if (userRoles.length == 1 && userRoles.includes("nurse")) {
       router.push("/patient_registration");
     } else {
       router.push("/register");
@@ -214,45 +210,71 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={handleAddUser}>
             {userRoles?.includes("nurse") ? (
               <FilePenIcon color="#682483ff" />
-              
             ) : (
               <UserPlusIcon size={36} color="#682483ff" />
             )}
-            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
       </View>
 
       {/* Tab Navigation - Everyone can see all tabs */}
       <View style={tw`flex-row bg-white border-b border-gray-200`}>
         <TouchableOpacity
-          style={tw`flex-1 py-3 ${activeTab === ReportType.TODAY ? "border-b-2 border-purple-500" : ""}`}
+          style={tw`flex-1 py-3 ${
+            activeTab === ReportType.TODAY ? "border-b-2 border-purple-500" : ""
+          }`}
           onPress={() => setActiveTab(ReportType.TODAY)}
         >
-          <Text style={tw`text-center font-semibold ${activeTab === ReportType.TODAY ? "text-purple-500" : "text-gray-500"}`}>
+          <Text
+            style={tw`text-center font-semibold ${
+              activeTab === ReportType.TODAY
+                ? "text-purple-500"
+                : "text-gray-500"
+            }`}
+          >
             Today's Report
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={tw`flex-1 py-3 ${activeTab === ReportType.MONTHLY ? "border-b-2 border-purple-500" : ""}`}
+          style={tw`flex-1 py-3 ${
+            activeTab === ReportType.MONTHLY
+              ? "border-b-2 border-purple-500"
+              : ""
+          }`}
           onPress={() => setActiveTab(ReportType.MONTHLY)}
         >
-          <Text style={tw`text-center font-semibold ${activeTab === ReportType.MONTHLY ? "text-purple-500" : "text-gray-500"}`}>
+          <Text
+            style={tw`text-center font-semibold ${
+              activeTab === ReportType.MONTHLY
+                ? "text-purple-500"
+                : "text-gray-500"
+            }`}
+          >
             Monthly Report
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={tw`flex-1 py-3 ${activeTab === ReportType.DATE_RANGE ? "border-b-2 border-purple-500" : ""}`}
+          style={tw`flex-1 py-3 ${
+            activeTab === ReportType.DATE_RANGE
+              ? "border-b-2 border-purple-500"
+              : ""
+          }`}
           onPress={() => setActiveTab(ReportType.DATE_RANGE)}
         >
-          <Text style={tw`text-center font-semibold ${activeTab === ReportType.DATE_RANGE ? "text-purple-500" : "text-gray-500"}`}>
+          <Text
+            style={tw`text-center font-semibold ${
+              activeTab === ReportType.DATE_RANGE
+                ? "text-purple-500"
+                : "text-gray-500"
+            }`}
+          >
             Date Range
           </Text>
         </TouchableOpacity>
       </View>
 
-
       {/* Main Content */}
-      <UnifiedReport type={activeTab} />
+      <UnifiedReport type={activeTab as ReportType} />
       {/* <ScrollView
         contentContainerStyle={tw`p-4`}
         refreshControl={
