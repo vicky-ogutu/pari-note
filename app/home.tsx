@@ -1,19 +1,18 @@
 // app/home.tsx
 import DateRangeReport from "@/components/DateRangeReport";
+import UnifiedReport from "@/components/UnifiedReport";
+import { ReportType } from "@/types/reports";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { FilePenIcon, UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  RefreshControl,
-  ScrollView,
   Text,
   TouchableOpacity,
-  View,
+  View
 } from "react-native";
 import Icon from "react-native-vector-icons/MaterialIcons";
 import tw from "tailwind-react-native-classnames";
@@ -197,17 +196,6 @@ const HomeScreen = () => {
     }
     return null;
   };
-
-  // // Show loading while permissions are being loaded
-  // if (permissionsLoading) {
-  //   return (
-  //     <View style={tw`flex-1 justify-center items-center bg-purple-100`}>
-  //       <ActivityIndicator size="large" color="#682483ff" />
-  //       <Text style={tw`mt-4 text-purple-600`}>Loading...</Text>
-  //     </View>
-  //   );
-  // }
-
   return (
     <KeyboardAvoidingView
       style={tw`flex-1 bg-purple-100`}
@@ -237,76 +225,35 @@ const HomeScreen = () => {
       {/* Tab Navigation - Everyone can see all tabs */}
       <View style={tw`flex-row bg-white border-b border-gray-200`}>
         <TouchableOpacity
-          style={tw`flex-1 py-3 ${
-            activeTab === "today" ? "border-b-2 border-purple-500" : ""
-          }`}
-          onPress={() => setActiveTab("today")}
+          style={tw`flex-1 py-3 ${activeTab === ReportType.TODAY ? "border-b-2 border-purple-500" : ""}`}
+          onPress={() => setActiveTab(ReportType.TODAY)}
         >
-          <Text
-            style={tw`text-center font-semibold ${
-              activeTab === "today" ? "text-purple-500" : "text-gray-500"
-            }`}
-          >
+          <Text style={tw`text-center font-semibold ${activeTab === ReportType.TODAY ? "text-purple-500" : "text-gray-500"}`}>
             Today's Report
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={tw`flex-1 py-3 ${
-            activeTab === "monthly" ? "border-b-2 border-purple-500" : ""
-          }`}
-          onPress={() => setActiveTab("monthly")}
+          style={tw`flex-1 py-3 ${activeTab === ReportType.MONTHLY ? "border-b-2 border-purple-500" : ""}`}
+          onPress={() => setActiveTab(ReportType.MONTHLY)}
         >
-          <Text
-            style={tw`text-center font-semibold ${
-              activeTab === "monthly" ? "text-purple-500" : "text-gray-500"
-            }`}
-          >
+          <Text style={tw`text-center font-semibold ${activeTab === ReportType.MONTHLY ? "text-purple-500" : "text-gray-500"}`}>
             Monthly Report
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={tw`flex-1 py-3 ${
-            activeTab === "dateRange" ? "border-b-2 border-purple-500" : ""
-          }`}
-          onPress={() => setActiveTab("dateRange")}
+          style={tw`flex-1 py-3 ${activeTab === ReportType.DATE_RANGE ? "border-b-2 border-purple-500" : ""}`}
+          onPress={() => setActiveTab(ReportType.DATE_RANGE)}
         >
-          <Text
-            style={tw`text-center font-semibold ${
-              activeTab === "dateRange" ? "text-purple-500" : "text-gray-500"
-            }`}
-          >
+          <Text style={tw`text-center font-semibold ${activeTab === ReportType.DATE_RANGE ? "text-purple-500" : "text-gray-500"}`}>
             Date Range
           </Text>
         </TouchableOpacity>
       </View>
 
-      {/* Load Indicator */}
-      {isLoading && (
-        <View
-          style={tw`absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-10`}
-        >
-          <ActivityIndicator size="large" color="#ffffff" />
-        </View>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <View style={tw`bg-red-100 p-3 mx-4 mt-4 rounded-lg`}>
-          <Text style={tw`text-red-700 text-center`}>{error}</Text>
-        </View>
-      )}
-
-      {/* No Data Message */}
-      {!isLoading && !error && !reportData && (
-        <View style={tw`bg-yellow-100 p-3 mx-4 mt-4 rounded-lg`}>
-          <Text style={tw`text-yellow-700 text-center`}>
-            No data available. Pull to refresh.
-          </Text>
-        </View>
-      )}
 
       {/* Main Content */}
-      <ScrollView
+      <UnifiedReport type={activeTab} />
+      {/* <ScrollView
         contentContainerStyle={tw`p-4`}
         refreshControl={
           <RefreshControl
@@ -317,7 +264,7 @@ const HomeScreen = () => {
         }
       >
         {renderContent()}
-      </ScrollView>
+      </ScrollView> */}
 
       {/* Drawer */}
       <CustomDrawer
