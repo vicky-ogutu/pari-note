@@ -18,9 +18,7 @@ import CustomDrawer from "../components/CustomDrawer";
 import HamburgerButton from "../components/HamburgerButton";
 import { BASE_URL } from "../constants/ApiConfig";
 
-// Define types for our form data
-type FormData = {
-  // Section 1: Baby details
+type BabyData = {
   dateOfDeath: string;
   timeOfDeath: string;
   gestationWeeks: string;
@@ -32,45 +30,29 @@ type FormData = {
   birthWeight: string;
   sexOfBaby: string;
   otherSex: string;
+};
 
-  // Section 2: Mother details
+type MotherData = {
   motherAge: string;
   motherMarried: string;
   motherPara: string;
   motherOutcome: string;
-
-  // Section 3: Obstetric history
   pregnancyType: string;
   antenatalCare: string;
   obstetricConditions: string[];
   otherObstetric: string;
-
-  // Section 4: Delivery care
   deliveryPlace: string;
   otherDeliveryPlace: string;
   facilityLevel: string;
   deliveryType: string;
   otherDeliveryType: string;
-
-  // Section 5: Cause of death
   periodOfDeath: string;
   perinatalCause: string[];
   maternalCondition: string;
   otherCause: string;
 };
 
-const initialFormData: FormData = {
-  dateOfDeath: "",
-  timeOfDeath: "",
-  gestationWeeks: "",
-  babyOutcome: "",
-  apgar1min: "",
-  apgar5min: "",
-  apgar10min: "",
-  ageAtDeath: "",
-  birthWeight: "",
-  sexOfBaby: "",
-  otherSex: "",
+const initialMotherData: MotherData = {
   motherAge: "",
   motherMarried: "",
   motherPara: "",
@@ -90,11 +72,22 @@ const initialFormData: FormData = {
   otherCause: "",
 };
 
+const initialBabyData: BabyData = {
+  dateOfDeath: "",
+  timeOfDeath: "",
+  gestationWeeks: "",
+  babyOutcome: "",
+  apgar1min: "",
+  apgar5min: "",
+  apgar10min: "",
+  ageAtDeath: "",
+  birthWeight: "",
+  sexOfBaby: "",
+  otherSex: "",
+};
+
 const StillbirthRegistrationScreen = () => {
   const [currentScreen, setCurrentScreen] = useState(1);
-  const [formData, setFormData] = useState<FormData>(initialFormData);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-  const [showTimePicker, setShowTimePicker] = useState(false);
   const [drawerVisible, setDrawerVisible] = useState(false);
   const [userRole, setUserRole] = useState<string>("");
   const [userInfo, setUserInfo] = useState<{
@@ -103,6 +96,54 @@ const StillbirthRegistrationScreen = () => {
     location: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const [activeDatePicker, setActiveDatePicker] = useState<number | null>(null);
+  const [activeTimePicker, setActiveTimePicker] = useState<number | null>(null);
+
+  const [babies, setBabies] = useState<BabyData[]>([{ ...initialBabyData }]);
+  const [motherData, setMotherData] = useState<MotherData>({
+    ...initialMotherData,
+  });
+
+  const addBaby = () => {
+    setBabies((prev) => [...prev, { ...initialBabyData }]);
+  };
+
+  const updateBaby = (index: number, field: keyof BabyData, value: string) => {
+    const newBabies = [...babies];
+    newBabies[index][field] = value;
+    setBabies(newBabies);
+  };
+
+  const updateMotherData = (field: keyof MotherData, value: any) => {
+    setMotherData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const toggleObstetricCondition = (condition: string) => {
+    const currentConditions = [...motherData.obstetricConditions];
+    const index = currentConditions.indexOf(condition);
+
+    if (index > -1) {
+      currentConditions.splice(index, 1);
+    } else {
+      currentConditions.push(condition);
+    }
+
+    updateMotherData("obstetricConditions", currentConditions);
+  };
+
+  const togglePerinatalCause = (cause: string) => {
+    const currentCauses = [...motherData.perinatalCause];
+    const index = currentCauses.indexOf(cause);
+
+    if (index > -1) {
+      currentCauses.splice(index, 1);
+    } else {
+      currentCauses.push(cause);
+    }
+
+    updateMotherData("perinatalCause", currentCauses);
+  };
 
   useEffect(() => {
     const getUserInfo = async () => {
@@ -168,10 +209,6 @@ const StillbirthRegistrationScreen = () => {
     ]);
   };
 
-  const updateFormData = (field: keyof FormData, value: any) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
   const formatDate = (date: Date) => {
     return date.toISOString().split("T")[0];
   };
@@ -184,60 +221,41 @@ const StillbirthRegistrationScreen = () => {
     });
   };
 
-  const toggleObstetricCondition = (condition: string) => {
-    const currentConditions = [...formData.obstetricConditions];
-    const index = currentConditions.indexOf(condition);
-
-    if (index > -1) {
-      currentConditions.splice(index, 1);
-    } else {
-      currentConditions.push(condition);
-    }
-
-    updateFormData("obstetricConditions", currentConditions);
-  };
-
-  const togglePerinatalCause = (cause: string) => {
-    const currentCauses = [...formData.perinatalCause];
-    const index = currentCauses.indexOf(cause);
-
-    if (index > -1) {
-      currentCauses.splice(index, 1);
-    } else {
-      currentCauses.push(cause);
-    }
-
-    updateFormData("perinatalCause", currentCauses);
-  };
-
   const validateCurrentScreen = () => {
     switch (currentScreen) {
       case 1:
-        return (
-          formData.dateOfDeath &&
-          formData.timeOfDeath &&
-          formData.gestationWeeks &&
-          formData.babyOutcome &&
-          formData.birthWeight &&
-          formData.sexOfBaby &&
-          (formData.sexOfBaby !== "Others" || formData.otherSex) &&
-          (formData.babyOutcome !== "Alive" ||
-            (formData.apgar1min &&
-              formData.apgar5min &&
-              formData.apgar10min &&
-              formData.ageAtDeath))
-        );
+        // Validate all babies
+        for (const baby of babies) {
+          if (
+            !baby.dateOfDeath ||
+            !baby.timeOfDeath ||
+            !baby.gestationWeeks ||
+            !baby.babyOutcome ||
+            !baby.birthWeight ||
+            !baby.sexOfBaby ||
+            (baby.sexOfBaby === "Others" && !baby.otherSex) ||
+            (baby.babyOutcome === "Alive" &&
+              (!baby.apgar1min ||
+                !baby.apgar5min ||
+                !baby.apgar10min ||
+                !baby.ageAtDeath))
+          ) {
+            return false;
+          }
+        }
+        return true;
+
       case 2: {
         if (
-          !formData.motherAge ||
-          !formData.motherMarried ||
-          !formData.motherPara ||
-          !formData.motherOutcome
+          !motherData.motherAge ||
+          !motherData.motherMarried ||
+          !motherData.motherPara ||
+          !motherData.motherOutcome
         ) {
           return false;
         }
 
-        const age = Number(formData.motherAge);
+        const age = Number(motherData.motherAge);
         if (isNaN(age) || age < 14 || age > 70) {
           Alert.alert(
             "Invalid Age",
@@ -248,28 +266,34 @@ const StillbirthRegistrationScreen = () => {
 
         return true;
       }
+
       case 3:
         return (
-          formData.pregnancyType &&
-          formData.antenatalCare &&
-          (formData.obstetricConditions.length > 0 || formData.otherObstetric)
+          motherData.pregnancyType &&
+          motherData.antenatalCare &&
+          (motherData.obstetricConditions.length > 0 ||
+            motherData.otherObstetric)
         );
+
       case 4:
         return (
-          formData.deliveryPlace &&
-          (formData.deliveryPlace !== "Others" ||
-            formData.otherDeliveryPlace) &&
-          (formData.deliveryPlace !== "Facility" || formData.facilityLevel) &&
-          formData.deliveryType &&
-          (formData.deliveryType !== "Other" || formData.otherDeliveryType)
+          motherData.deliveryPlace &&
+          (motherData.deliveryPlace !== "Others" ||
+            motherData.otherDeliveryPlace) &&
+          (motherData.deliveryPlace !== "Facility" ||
+            motherData.facilityLevel) &&
+          motherData.deliveryType &&
+          (motherData.deliveryType !== "Other" || motherData.otherDeliveryType)
         );
+
       case 5:
         return (
-          formData.periodOfDeath &&
-          (formData.perinatalCause.length > 0 ||
-            formData.maternalCondition ||
-            formData.otherCause)
+          motherData.periodOfDeath &&
+          (motherData.perinatalCause.length > 0 ||
+            motherData.maternalCondition ||
+            motherData.otherCause)
         );
+
       default:
         return true;
     }
@@ -321,44 +345,36 @@ const StillbirthRegistrationScreen = () => {
         );
       }
 
-      // Build the payload according to API contract
       const payload = {
         locationId: parseInt(locationId),
         dateOfNotification: new Date().toISOString().split("T")[0],
-
         mother: {
-          age: parseInt(formData.motherAge) || null,
-          married: formData.motherMarried === "Yes",
-          parity: formData.motherPara,
-          outcome: formData.motherOutcome,
-          typeOfPregnancy: formData.pregnancyType,
-          attendedAntenatal: formData.antenatalCare,
-          placeOfDelivery: formData.deliveryPlace,
-          facilityLevelOfCare: formData.facilityLevel,
-          typeOfDelivery: formData.deliveryType,
-          periodOfDeath: formData.periodOfDeath,
-          perinatalCause: formData.perinatalCause.join(", "),
-          maternalCondition: formData.maternalCondition,
-          conditions: formData.obstetricConditions,
+          age: parseInt(motherData.motherAge) || null,
+          married: motherData.motherMarried === "Yes",
+          parity: motherData.motherPara,
+          outcome: motherData.motherOutcome,
+          typeOfPregnancy: motherData.pregnancyType,
+          attendedAntenatal: motherData.antenatalCare,
+          placeOfDelivery: motherData.deliveryPlace,
+          facilityLevelOfCare: motherData.facilityLevel,
+          typeOfDelivery: motherData.deliveryType,
+          periodOfDeath: motherData.periodOfDeath,
+          perinatalCause: motherData.perinatalCause.join(", "),
+          maternalCondition: motherData.maternalCondition,
+          conditions: motherData.obstetricConditions,
         },
-
-        babies: [
-          {
-            dateOfDeath: formData.dateOfDeath,
-            timeOfDeath: formData.timeOfDeath,
-            gestationWeeks: parseInt(formData.gestationWeeks) || null,
-            outcome: formData.babyOutcome,
-            apgarScore1min: formData.apgar1min || null,
-            apgarScore5min: formData.apgar5min || null,
-            apgarScore10min: formData.apgar10min || null,
-            ageAtDeathDays: parseInt(formData.ageAtDeath) || 0,
-            birthWeight: parseInt(formData.birthWeight) || null,
-            sex:
-              formData.sexOfBaby === "Others"
-                ? formData.otherSex
-                : formData.sexOfBaby,
-          },
-        ],
+        babies: babies.map((b) => ({
+          dateOfDeath: b.dateOfDeath,
+          timeOfDeath: b.timeOfDeath,
+          gestationWeeks: parseInt(b.gestationWeeks) || null,
+          outcome: b.babyOutcome,
+          apgarScore1min: b.apgar1min || null,
+          apgarScore5min: b.apgar5min || null,
+          apgarScore10min: b.apgar10min || null,
+          ageAtDeathDays: parseInt(b.ageAtDeath) || 0,
+          birthWeight: parseInt(b.birthWeight) || null,
+          sex: b.sexOfBaby === "Others" ? b.otherSex : b.sexOfBaby,
+        })),
       };
 
       console.log("Submitting payload to this baseURL:", BASE_URL);
@@ -398,7 +414,8 @@ const StillbirthRegistrationScreen = () => {
             text: "OK",
             onPress: () => {
               // Reset form and go back to screen 1
-              setFormData(initialFormData);
+              setMotherData({ ...initialMotherData });
+              setBabies([{ ...initialBabyData }]);
               setCurrentScreen(1);
             },
           },
@@ -425,218 +442,261 @@ const StillbirthRegistrationScreen = () => {
         return (
           <View style={tw`mb-5`}>
             <Text style={tw`text-lg font-bold mb-5 text-gray-700`}>
-              1. Details of Deceased baby <RequiredAsterisk />
+              1. Details of Deceased Baby <RequiredAsterisk />
             </Text>
 
-            {/* Date Picker Field */}
-            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-              Date of death <RequiredAsterisk />
-            </Text>
-            <TouchableOpacity
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              onPress={() => setShowDatePicker(true)}
-            >
-              <Text style={tw`text-gray-700`}>
-                {formData.dateOfDeath || "Select date (YYYY-MM-DD)"}
-              </Text>
-            </TouchableOpacity>
-
-            {showDatePicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="date"
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(event, selectedDate) => {
-                  setShowDatePicker(false);
-                  if (selectedDate) {
-                    updateFormData("dateOfDeath", formatDate(selectedDate));
-                  }
-                }}
-              />
-            )}
-
-            {/* Time Picker Field */}
-            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-              Time of death <RequiredAsterisk />
-            </Text>
-            <TouchableOpacity
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
-              onPress={() => setShowTimePicker(true)}
-            >
-              <Text style={tw`text-gray-700`}>
-                {formData.timeOfDeath || "Select time (HH:MM)"}
-              </Text>
-            </TouchableOpacity>
-
-            {showTimePicker && (
-              <DateTimePicker
-                value={new Date()}
-                mode="time"
-                is24Hour={true}
-                display={Platform.OS === "ios" ? "spinner" : "default"}
-                onChange={(event, selectedDate) => {
-                  setShowTimePicker(false);
-                  if (selectedDate) {
-                    updateFormData("timeOfDeath", formatTime(selectedDate));
-                  }
-                }}
-              />
-            )}
-
-            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-              Gestation at birth (in weeks) <RequiredAsterisk />
-            </Text>
-            <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
-              placeholder="Enter gestation in weeks"
-              placeholderTextColor="#9CA3AF"
-              value={formData.gestationWeeks}
-              onChangeText={(text) => updateFormData("gestationWeeks", text)}
-              keyboardType="numeric"
-            />
-
-            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-              Baby outcome: <RequiredAsterisk />
-            </Text>
-            <View style={tw`mb-4`}>
-              {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
-                (option) => (
-                  <TouchableOpacity
-                    key={option}
-                    style={tw`flex-row items-center mb-2`}
-                    onPress={() => updateFormData("babyOutcome", option)}
-                  >
-                    <View
-                      style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
-                    >
-                      {formData.babyOutcome === option && (
-                        <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
-                      )}
-                    </View>
-                    <Text style={tw`text-gray-700`}>{option}</Text>
-                  </TouchableOpacity>
-                )
-              )}
-            </View>
-
-            {formData.babyOutcome === "Alive" && (
-              <>
-                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-                  Apgar score: <RequiredAsterisk />
+            {babies.map((baby, index) => (
+              <View key={index} style={tw`mb-8 border-b border-gray-200 pb-5`}>
+                <Text style={tw`text-base font-bold mb-4 text-gray-700`}>
+                  Baby {index + 1}
                 </Text>
-                <View style={tw`flex-row justify-between mb-4`}>
-                  <View style={tw`flex-1 mx-1`}>
-                    <Text style={tw`text-sm font-semibold mb-1 text-gray-600`}>
-                      1 min
-                    </Text>
-                    <TextInput
-                      style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
-                      placeholder="0-10"
-                      placeholderTextColor="#9CA3AF"
-                      value={formData.apgar1min}
-                      onChangeText={(text) => updateFormData("apgar1min", text)}
-                      keyboardType="numeric"
-                      maxLength={2}
-                    />
-                  </View>
-                  <View style={tw`flex-1 mx-1`}>
-                    <Text style={tw`text-sm font-semibold mb-1 text-gray-600`}>
-                      5 min
-                    </Text>
-                    <TextInput
-                      style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
-                      placeholder="0-10"
-                      placeholderTextColor="#9CA3AF"
-                      value={formData.apgar5min}
-                      onChangeText={(text) => updateFormData("apgar5min", text)}
-                      keyboardType="numeric"
-                      maxLength={2}
-                    />
-                  </View>
-                  <View style={tw`flex-1 mx-1`}>
-                    <Text style={tw`text-sm font-semibold mb-1 text-gray-600`}>
-                      10 min
-                    </Text>
-                    <TextInput
-                      style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
-                      placeholder="0-10"
-                      placeholderTextColor="#9CA3AF"
-                      value={formData.apgar10min}
-                      onChangeText={(text) =>
-                        updateFormData("apgar10min", text)
-                      }
-                      keyboardType="numeric"
-                      maxLength={2}
-                    />
-                  </View>
-                </View>
 
+                {/* Date Picker Field */}
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-                  Age at time of death (in days) <RequiredAsterisk />
+                  Date of death <RequiredAsterisk />
+                </Text>
+                <TouchableOpacity
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
+                  onPress={() => setActiveDatePicker(index)}
+                >
+                  <Text style={tw`text-gray-700`}>
+                    {baby.dateOfDeath || "Select date (YYYY-MM-DD)"}
+                  </Text>
+                </TouchableOpacity>
+
+                {activeDatePicker === index && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="date"
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={(event, selectedDate) => {
+                      setActiveDatePicker(null);
+                      if (selectedDate) {
+                        updateBaby(
+                          index,
+                          "dateOfDeath",
+                          formatDate(selectedDate)
+                        );
+                      }
+                    }}
+                  />
+                )}
+
+                {/* Time Picker Field */}
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Time of death <RequiredAsterisk />
+                </Text>
+                <TouchableOpacity
+                  style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
+                  onPress={() => setActiveTimePicker(index)}
+                >
+                  <Text style={tw`text-gray-700`}>
+                    {baby.timeOfDeath || "Select time (HH:MM)"}
+                  </Text>
+                </TouchableOpacity>
+
+                {activeTimePicker === index && (
+                  <DateTimePicker
+                    value={new Date()}
+                    mode="time"
+                    is24Hour={true}
+                    display={Platform.OS === "ios" ? "spinner" : "default"}
+                    onChange={(event, selectedDate) => {
+                      setActiveTimePicker(null);
+                      if (selectedDate) {
+                        updateBaby(
+                          index,
+                          "timeOfDeath",
+                          formatTime(selectedDate)
+                        );
+                      }
+                    }}
+                  />
+                )}
+
+                {/* Gestation */}
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Gestation at birth (in weeks) <RequiredAsterisk />
                 </Text>
                 <TextInput
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
-                  placeholder="Enter age in days"
+                  placeholder="Enter gestation in weeks"
                   placeholderTextColor="#9CA3AF"
-                  value={formData.ageAtDeath}
-                  onChangeText={(text) => updateFormData("ageAtDeath", text)}
+                  value={baby.gestationWeeks}
+                  onChangeText={(text) =>
+                    updateBaby(index, "gestationWeeks", text)
+                  }
                   keyboardType="numeric"
                 />
-              </>
-            )}
 
-            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-              Birth weight (in grams) <RequiredAsterisk />
-            </Text>
-            <TextInput
-              style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
-              placeholder="Enter birth weight in grams"
-              placeholderTextColor="#9CA3AF"
-              value={formData.birthWeight}
-              onChangeText={(text) => updateFormData("birthWeight", text)}
-              keyboardType="numeric"
-            />
-
-            <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-              Sex of baby: <RequiredAsterisk />
-            </Text>
-            <View style={tw`mb-4`}>
-              {["Male", "Female", "Others"].map((option) => (
-                <TouchableOpacity
-                  key={option}
-                  style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("sexOfBaby", option)}
-                >
-                  <View
-                    style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
-                  >
-                    {formData.sexOfBaby === option && (
-                      <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
-                    )}
-                  </View>
-                  <Text style={tw`text-gray-700`}>{option}</Text>
-                </TouchableOpacity>
-              ))}
-            </View>
-
-            {formData.sexOfBaby === "Others" && (
-              <>
+                {/* Baby outcome */}
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-                  Specify other sex <RequiredAsterisk />
+                  Baby outcome: <RequiredAsterisk />
+                </Text>
+                <View style={tw`mb-4`}>
+                  {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
+                    (option) => (
+                      <TouchableOpacity
+                        key={option}
+                        style={tw`flex-row items-center mb-2`}
+                        onPress={() => updateBaby(index, "babyOutcome", option)}
+                      >
+                        <View
+                          style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
+                        >
+                          {baby.babyOutcome === option && (
+                            <View
+                              style={tw`h-3 w-3 rounded-full bg-purple-500`}
+                            />
+                          )}
+                        </View>
+                        <Text style={tw`text-gray-700`}>{option}</Text>
+                      </TouchableOpacity>
+                    )
+                  )}
+                </View>
+
+                {baby.babyOutcome === "Alive" && (
+                  <>
+                    {/* Apgar */}
+                    <Text
+                      style={tw`text-base font-semibold mb-2 text-gray-600`}
+                    >
+                      Apgar score: <RequiredAsterisk />
+                    </Text>
+                    <View style={tw`flex-row justify-between mb-4`}>
+                      {(
+                        [
+                          "apgar1min",
+                          "apgar5min",
+                          "apgar10min",
+                        ] as (keyof BabyData)[]
+                      ).map((field, i) => (
+                        <View key={field} style={tw`flex-1 mx-1`}>
+                          <Text
+                            style={tw`text-sm font-semibold mb-1 text-gray-600`}
+                          >
+                            {i === 0 ? "1 min" : i === 1 ? "5 min" : "10 min"}
+                          </Text>
+                          <TextInput
+                            style={tw`bg-white p-3 rounded border border-gray-300 text-gray-700 text-center`}
+                            placeholder="0-10"
+                            placeholderTextColor="#9CA3AF"
+                            value={baby[field]}
+                            onChangeText={(text) =>
+                              updateBaby(index, field, text)
+                            }
+                            keyboardType="numeric"
+                            maxLength={2}
+                          />
+                        </View>
+                      ))}
+                    </View>
+
+                    {/* Age at death */}
+                    <Text
+                      style={tw`text-base font-semibold mb-2 text-gray-600`}
+                    >
+                      Age at time of death (in days) <RequiredAsterisk />
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                      placeholder="Enter age in days"
+                      placeholderTextColor="#9CA3AF"
+                      value={baby.ageAtDeath}
+                      onChangeText={(text) =>
+                        updateBaby(index, "ageAtDeath", text)
+                      }
+                      keyboardType="numeric"
+                    />
+                  </>
+                )}
+
+                {/* Birth weight */}
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Birth weight (in grams) <RequiredAsterisk />
                 </Text>
                 <TextInput
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
-                  placeholder="Enter specification"
+                  placeholder="Enter birth weight in grams"
                   placeholderTextColor="#9CA3AF"
-                  value={formData.otherSex}
-                  onChangeText={(text) => updateFormData("otherSex", text)}
+                  value={baby.birthWeight}
+                  onChangeText={(text) =>
+                    updateBaby(index, "birthWeight", text)
+                  }
+                  keyboardType="numeric"
                 />
-              </>
-            )}
+
+                {/* Sex */}
+                <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
+                  Sex of baby: <RequiredAsterisk />
+                </Text>
+                <View style={tw`mb-4`}>
+                  {["Male", "Female", "Others"].map((option) => (
+                    <TouchableOpacity
+                      key={option}
+                      style={tw`flex-row items-center mb-2`}
+                      onPress={() => updateBaby(index, "sexOfBaby", option)}
+                    >
+                      <View
+                        style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
+                      >
+                        {baby.sexOfBaby === option && (
+                          <View
+                            style={tw`h-3 w-3 rounded-full bg-purple-500`}
+                          />
+                        )}
+                      </View>
+                      <Text style={tw`text-gray-700`}>{option}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+
+                {baby.sexOfBaby === "Others" && (
+                  <>
+                    <Text
+                      style={tw`text-base font-semibold mb-2 text-gray-600`}
+                    >
+                      Specify other sex <RequiredAsterisk />
+                    </Text>
+                    <TextInput
+                      style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
+                      placeholder="Enter specification"
+                      placeholderTextColor="#9CA3AF"
+                      value={baby.otherSex}
+                      onChangeText={(text) =>
+                        updateBaby(index, "otherSex", text)
+                      }
+                    />
+                  </>
+                )}
+
+                {/* Remove Baby button */}
+                {babies.length > 1 && (
+                  <TouchableOpacity
+                    style={tw`bg-red-500 p-3 rounded`}
+                    onPress={() =>
+                      setBabies((prev) => prev.filter((_, i) => i !== index))
+                    }
+                  >
+                    <Text style={tw`text-white text-center`}>
+                      🗑 Remove Baby {index + 1}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            ))}
+
+            {/* Add Another Baby */}
+            <TouchableOpacity
+              style={tw`bg-purple-500 p-3 rounded`}
+              onPress={addBaby}
+            >
+              <Text style={tw`text-white text-center`}>+ Add Another Baby</Text>
+            </TouchableOpacity>
           </View>
         );
 
-      // Cases 2-5 remain the same as your original code, just updating text colors for consistency
       case 2:
         return (
           <View style={tw`mb-5`}>
@@ -651,8 +711,8 @@ const StillbirthRegistrationScreen = () => {
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
               placeholder="Enter mother's age"
               placeholderTextColor="#9CA3AF"
-              value={formData.motherAge}
-              onChangeText={(text) => updateFormData("motherAge", text)}
+              value={motherData.motherAge}
+              onChangeText={(text) => updateMotherData("motherAge", text)}
               keyboardType="numeric"
             />
 
@@ -664,12 +724,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("motherMarried", option)}
+                  onPress={() => updateMotherData("motherMarried", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.motherMarried === option && (
+                    {motherData.motherMarried === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -685,8 +745,8 @@ const StillbirthRegistrationScreen = () => {
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
               placeholder="Enter para information"
               placeholderTextColor="#9CA3AF"
-              value={formData.motherPara}
-              onChangeText={(text) => updateFormData("motherPara", text)}
+              value={motherData.motherPara}
+              onChangeText={(text) => updateMotherData("motherPara", text)}
             />
 
             <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
@@ -697,12 +757,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("motherOutcome", option)}
+                  onPress={() => updateMotherData("motherOutcome", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.motherOutcome === option && (
+                    {motherData.motherOutcome === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -729,12 +789,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("pregnancyType", option)}
+                  onPress={() => updateMotherData("pregnancyType", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.pregnancyType === option && (
+                    {motherData.pregnancyType === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -751,12 +811,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("antenatalCare", option)}
+                  onPress={() => updateMotherData("antenatalCare", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.antenatalCare === option && (
+                    {motherData.antenatalCare === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -793,7 +853,7 @@ const StillbirthRegistrationScreen = () => {
                 <View
                   style={tw`h-5 w-5 border-2 border-purple-500 rounded items-center justify-center mr-2`}
                 >
-                  {formData.obstetricConditions.includes(condition) && (
+                  {motherData.obstetricConditions.includes(condition) && (
                     <Text style={tw`text-purple-500 font-bold`}>✓</Text>
                   )}
                 </View>
@@ -808,8 +868,8 @@ const StillbirthRegistrationScreen = () => {
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
               placeholder="Enter other conditions"
               placeholderTextColor="#9CA3AF"
-              value={formData.otherObstetric}
-              onChangeText={(text) => updateFormData("otherObstetric", text)}
+              value={motherData.otherObstetric}
+              onChangeText={(text) => updateMotherData("otherObstetric", text)}
             />
           </View>
         );
@@ -829,12 +889,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("deliveryPlace", option)}
+                  onPress={() => updateMotherData("deliveryPlace", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.deliveryPlace === option && (
+                    {motherData.deliveryPlace === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -843,7 +903,7 @@ const StillbirthRegistrationScreen = () => {
               ))}
             </View>
 
-            {formData.deliveryPlace === "Others" && (
+            {motherData.deliveryPlace === "Others" && (
               <>
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
                   Specify other delivery place <RequiredAsterisk />
@@ -852,15 +912,15 @@ const StillbirthRegistrationScreen = () => {
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
                   placeholder="Enter delivery place"
                   placeholderTextColor="#9CA3AF"
-                  value={formData.otherDeliveryPlace}
+                  value={motherData.otherDeliveryPlace}
                   onChangeText={(text) =>
-                    updateFormData("otherDeliveryPlace", text)
+                    updateMotherData("otherDeliveryPlace", text)
                   }
                 />
               </>
             )}
 
-            {formData.deliveryPlace === "Facility" && (
+            {motherData.deliveryPlace === "Facility" && (
               <>
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
                   Level of care (2, 3, 4, 5, 6) <RequiredAsterisk />
@@ -869,8 +929,10 @@ const StillbirthRegistrationScreen = () => {
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
                   placeholder="Enter level of care"
                   placeholderTextColor="#9CA3AF"
-                  value={formData.facilityLevel}
-                  onChangeText={(text) => updateFormData("facilityLevel", text)}
+                  value={motherData.facilityLevel}
+                  onChangeText={(text) =>
+                    updateMotherData("facilityLevel", text)
+                  }
                   keyboardType="numeric"
                 />
               </>
@@ -891,12 +953,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("deliveryType", option)}
+                  onPress={() => updateMotherData("deliveryType", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.deliveryType === option && (
+                    {motherData.deliveryType === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -905,7 +967,7 @@ const StillbirthRegistrationScreen = () => {
               ))}
             </View>
 
-            {formData.deliveryType === "Other" && (
+            {motherData.deliveryType === "Other" && (
               <>
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
                   Specify other delivery type <RequiredAsterisk />
@@ -914,9 +976,9 @@ const StillbirthRegistrationScreen = () => {
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
                   placeholder="Enter delivery type"
                   placeholderTextColor="#9CA3AF"
-                  value={formData.otherDeliveryType}
+                  value={motherData.otherDeliveryType}
                   onChangeText={(text) =>
-                    updateFormData("otherDeliveryType", text)
+                    updateMotherData("otherDeliveryType", text)
                   }
                 />
               </>
@@ -940,12 +1002,12 @@ const StillbirthRegistrationScreen = () => {
                   <TouchableOpacity
                     key={option}
                     style={tw`flex-row items-center mb-2`}
-                    onPress={() => updateFormData("periodOfDeath", option)}
+                    onPress={() => updateMotherData("periodOfDeath", option)}
                   >
                     <View
                       style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                     >
-                      {formData.periodOfDeath === option && (
+                      {motherData.periodOfDeath === option && (
                         <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                       )}
                     </View>
@@ -979,7 +1041,7 @@ const StillbirthRegistrationScreen = () => {
                 <View
                   style={tw`h-5 w-5 border-2 border-purple-500 rounded items-center justify-center mr-2`}
                 >
-                  {formData.perinatalCause.includes(cause) && (
+                  {motherData.perinatalCause.includes(cause) && (
                     <Text style={tw`text-purple-500 font-bold`}>✓</Text>
                   )}
                 </View>
@@ -1002,12 +1064,12 @@ const StillbirthRegistrationScreen = () => {
                 <TouchableOpacity
                   key={option}
                   style={tw`flex-row items-center mb-2`}
-                  onPress={() => updateFormData("maternalCondition", option)}
+                  onPress={() => updateMotherData("maternalCondition", option)}
                 >
                   <View
                     style={tw`h-5 w-5 rounded-full border-2 border-purple-500 items-center justify-center mr-2`}
                   >
-                    {formData.maternalCondition === option && (
+                    {motherData.maternalCondition === option && (
                       <View style={tw`h-3 w-3 rounded-full bg-purple-500`} />
                     )}
                   </View>
@@ -1023,8 +1085,8 @@ const StillbirthRegistrationScreen = () => {
               style={tw`bg-white p-4 rounded mb-4 border border-gray-300 text-gray-700`}
               placeholder="Enter other causes"
               placeholderTextColor="#9CA3AF"
-              value={formData.otherCause}
-              onChangeText={(text) => updateFormData("otherCause", text)}
+              value={motherData.otherCause}
+              onChangeText={(text) => updateMotherData("otherCause", text)}
             />
           </View>
         );
@@ -1047,108 +1109,113 @@ const StillbirthRegistrationScreen = () => {
               </Text>
             </View>
 
-            <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
-              1. Details of Deceased baby
-            </Text>
-            <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Date of Death: {formData.dateOfDeath || "Not provided"}
-            </Text>
-            <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Time of Death: {formData.timeOfDeath || "Not provided"}
-            </Text>
-            <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Gestation Weeks: {formData.gestationWeeks || "Not provided"}
-            </Text>
-            <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Baby Outcome: {formData.babyOutcome || "Not provided"}
-            </Text>
+            {/* Babies Information */}
+            {babies.map((baby, index) => (
+              <View key={index} style={tw`mb-6`}>
+                <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
+                  Baby {index + 1} Details
+                </Text>
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Date of Death: {baby.dateOfDeath || "Not provided"}
+                </Text>
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Time of Death: {baby.timeOfDeath || "Not provided"}
+                </Text>
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Gestation Weeks: {baby.gestationWeeks || "Not provided"}
+                </Text>
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Baby Outcome: {baby.babyOutcome || "Not provided"}
+                </Text>
 
-            {formData.babyOutcome === "Alive" && (
-              <>
-                <Text style={tw`text-sm mb-1 text-gray-600`}>
-                  Apgar 1min: {formData.apgar1min || "Not provided"}
-                </Text>
-                <Text style={tw`text-sm mb-1 text-gray-600`}>
-                  Apgar 5min: {formData.apgar5min || "Not provided"}
-                </Text>
-                <Text style={tw`text-sm mb-1 text-gray-600`}>
-                  Apgar 10min: {formData.apgar10min || "Not provided"}
-                </Text>
-                <Text style={tw`text-sm mb-1 text-gray-600`}>
-                  Age at Death: {formData.ageAtDeath || "Not provided"}
-                </Text>
-              </>
-            )}
+                {baby.babyOutcome === "Alive" && (
+                  <>
+                    <Text style={tw`text-sm mb-1 text-gray-600`}>
+                      Apgar 1min: {baby.apgar1min || "Not provided"}
+                    </Text>
+                    <Text style={tw`text-sm mb-1 text-gray-600`}>
+                      Apgar 5min: {baby.apgar5min || "Not provided"}
+                    </Text>
+                    <Text style={tw`text-sm mb-1 text-gray-600`}>
+                      Apgar 10min: {baby.apgar10min || "Not provided"}
+                    </Text>
+                    <Text style={tw`text-sm mb-1 text-gray-600`}>
+                      Age at Death: {baby.ageAtDeath || "Not provided"}
+                    </Text>
+                  </>
+                )}
 
-            <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Birth Weight: {formData.birthWeight || "Not provided"}
-            </Text>
-            <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Sex of Baby: {formData.sexOfBaby || "Not provided"}
-            </Text>
-            {formData.sexOfBaby === "Others" && (
-              <Text style={tw`text-sm mb-1 text-gray-600`}>
-                Other Sex: {formData.otherSex || "Not provided"}
-              </Text>
-            )}
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Birth Weight: {baby.birthWeight || "Not provided"}
+                </Text>
+                <Text style={tw`text-sm mb-1 text-gray-600`}>
+                  Sex of Baby: {baby.sexOfBaby || "Not provided"}
+                </Text>
+                {baby.sexOfBaby === "Others" && (
+                  <Text style={tw`text-sm mb-1 text-gray-600`}>
+                    Other Sex: {baby.otherSex || "Not provided"}
+                  </Text>
+                )}
+              </View>
+            ))}
 
             <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
               2. Mother's details
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Mother's Age: {formData.motherAge || "Not provided"}
+              Mother's Age: {motherData.motherAge || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Married: {formData.motherMarried || "Not provided"}
+              Married: {motherData.motherMarried || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Para: {formData.motherPara || "Not provided"}
+              Para: {motherData.motherPara || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Mother's Outcome: {formData.motherOutcome || "Not provided"}
+              Mother's Outcome: {motherData.motherOutcome || "Not provided"}
             </Text>
 
             <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
               3. Obstetric history and care during Pregnancy
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Pregnancy Type: {formData.pregnancyType || "Not provided"}
+              Pregnancy Type: {motherData.pregnancyType || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Antenatal Care: {formData.antenatalCare || "Not provided"}
+              Antenatal Care: {motherData.antenatalCare || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
               Obstetric Conditions:{" "}
-              {formData.obstetricConditions.join(", ") || "None"}
+              {motherData.obstetricConditions.join(", ") || "None"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Other Obstetric: {formData.otherObstetric || "Not provided"}
+              Other Obstetric: {motherData.otherObstetric || "Not provided"}
             </Text>
 
             <Text style={tw`text-base font-bold mt-4 mb-2 text-gray-700`}>
               4. Care during delivery
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Delivery Place: {formData.deliveryPlace || "Not provided"}
+              Delivery Place: {motherData.deliveryPlace || "Not provided"}
             </Text>
-            {formData.deliveryPlace === "Others" && (
+            {motherData.deliveryPlace === "Others" && (
               <Text style={tw`text-sm mb-1 text-gray-600`}>
                 Other Delivery Place:{" "}
-                {formData.otherDeliveryPlace || "Not provided"}
+                {motherData.otherDeliveryPlace || "Not provided"}
               </Text>
             )}
-            {formData.deliveryPlace === "Facility" && (
+            {motherData.deliveryPlace === "Facility" && (
               <Text style={tw`text-sm mb-1 text-gray-600`}>
-                Facility Level: {formData.facilityLevel || "Not provided"}
+                Facility Level: {motherData.facilityLevel || "Not provided"}
               </Text>
             )}
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Delivery Type: {formData.deliveryType || "Not provided"}
+              Delivery Type: {motherData.deliveryType || "Not provided"}
             </Text>
-            {formData.deliveryType === "Other" && (
+            {motherData.deliveryType === "Other" && (
               <Text style={tw`text-sm mb-1 text-gray-600`}>
                 Other Delivery Type:{" "}
-                {formData.otherDeliveryType || "Not provided"}
+                {motherData.otherDeliveryType || "Not provided"}
               </Text>
             )}
 
@@ -1156,17 +1223,18 @@ const StillbirthRegistrationScreen = () => {
               5. Cause of death
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Period of Death: {formData.periodOfDeath || "Not provided"}
+              Period of Death: {motherData.periodOfDeath || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
               Perinatal Cause:{" "}
-              {formData.perinatalCause.join(", ") || "Not provided"}
+              {motherData.perinatalCause.join(", ") || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Maternal Condition: {formData.maternalCondition || "Not provided"}
+              Maternal Condition:{" "}
+              {motherData.maternalCondition || "Not provided"}
             </Text>
             <Text style={tw`text-sm mb-1 text-gray-600`}>
-              Other Cause: {formData.otherCause || "Not provided"}
+              Other Cause: {motherData.otherCause || "Not provided"}
             </Text>
 
             <TouchableOpacity
