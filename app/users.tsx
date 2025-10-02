@@ -31,7 +31,7 @@ export type User = {
   email: string;
   name: string;
   phone?: string;
-  roles: Role[]; // <-- now it's an array
+  roles: Role[]; // an array
   location: {
     id: number;
     name: string;
@@ -57,6 +57,25 @@ const UsersScreen = () => {
     getUserRole();
     fetchUsers();
   }, []);
+
+  // Update search results whenever searchQuery changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
+        (user.phone && user.phone.includes(query))
+    );
+
+    setFilteredUsers(filtered);
+  }, [searchQuery, users]); // 👈 Runs whenever searchQuery or users change
 
   const fetchUsers = async () => {
     try {
@@ -135,37 +154,38 @@ const UsersScreen = () => {
   };
 
   // Search users by name, email, or role
-  const searchUsers = () => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users);
-      return;
-    }
+  // const searchUsers = () => {
+  //   if (!searchQuery.trim()) {
+  //     setFilteredUsers(users);
+  //     return;
+  //   }
 
-    setIsLoading(true);
+  //   setIsLoading(true);
 
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
-        (user.phone && user.phone.includes(query))
-    );
+  //   const query = searchQuery.toLowerCase().trim();
+  //   const filtered = users.filter(
+  //     (user) =>
+  //       user.name.toLowerCase().includes(query) ||
+  //       user.email.toLowerCase().includes(query) ||
+  //       user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
+  //       (user.phone && user.phone.includes(query))
+  //   );
 
-    setFilteredUsers(filtered);
-    setIsLoading(false);
+  //   setFilteredUsers(filtered);
+  //   setIsLoading(false);
 
-    if (filtered.length === 0) {
-      Alert.alert("Info", "No users found matching your search");
-    }
-  };
+  //   if (filtered.length === 0) {
+  //     Alert.alert("Info", "No users found matching your search");
+  //   }
+  // };
 
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
   };
 
   const handleEditUser = (user: User) => {
-    const primaryRole = user.roles[0]; // pick first role for now
+    const roleNames = user.roles.map((r) => r.name);
+    const roleIds = user.roles.map((r) => r.id);
 
     router.push({
       pathname: "/editstaff",
@@ -174,14 +194,13 @@ const UsersScreen = () => {
         name: user.name,
         email: user.email,
         phone: user.phone || "",
-        role: primaryRole?.name || "",
-        roleId: primaryRole?.id?.toString() || "",
+        roles: JSON.stringify(roleNames),
+        roleIds: JSON.stringify(roleIds),
         locationId: user.location.id.toString(),
         locationName: user.location.name,
       },
     });
   };
-
   const handleAddUser = () => {
     router.push("/register");
   };
@@ -321,7 +340,7 @@ const UsersScreen = () => {
       {/* Main Content */}
       <View style={tw`flex-1 p-5`}>
         {/* Search Section */}
-        <View style={tw`mb-6`}>
+        {/* <View style={tw`mb-6`}>
           <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>
             Search Users
           </Text>
@@ -340,8 +359,14 @@ const UsersScreen = () => {
               <Text style={tw`text-white`}>Search</Text>
             </TouchableOpacity>
           </View>
-        </View>
+        </View> */}
 
+        <TextInput
+          placeholder="Search users..."
+          value={searchQuery}
+          onChangeText={setSearchQuery} //filtering dynamically
+          style={tw`border border-gray-300 rounded p-2 mb-3`}
+        />
         <View style={tw`flex-1 flex-col lg:flex-row`}>
           {/* Users List */}
           <View style={tw`flex-1 mb-6 lg:mb-0 lg:mr-4`}>
