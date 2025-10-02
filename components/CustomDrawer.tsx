@@ -75,6 +75,7 @@ const CustomDrawer: React.FC<DrawerProps> = ({
     // Priority order for display
     if (userRoles.includes("county_user")) return "county_user";
     if (userRoles.includes("subcounty_user")) return "subcounty_user";
+    if (userRoles.includes("admin")) return "admin";
     if (userRoles.includes("nurse")) return "nurse";
 
     return userRoles[0];
