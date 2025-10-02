@@ -186,6 +186,47 @@ const UsersScreen = () => {
     router.push("/register");
   };
 
+  // --- add this handler ---
+  const handleDeleteUser = async (user: User) => {
+    Alert.alert(
+      "Confirm Delete",
+      `Are you sure you want to delete ${user.name}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const accessToken = await AsyncStorage.getItem("access_token");
+              if (!accessToken) {
+                Alert.alert("Error", "Authentication token not found");
+                return;
+              }
+
+              await axios.delete(`${BASE_URL}/users/${user.id}`, {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
+
+              Alert.alert("Success", "User deleted successfully");
+              fetchUsers(); // refresh list
+            } catch (error: any) {
+              console.error("Error deleting user:", error);
+              Alert.alert(
+                "Error",
+                error.response?.data?.message ||
+                  "Failed to delete user. Please try again."
+              );
+            }
+          },
+        },
+      ]
+    );
+  };
+
   const formatRoles = (roles: Role[]) => {
     if (!roles || roles.length === 0) return "No role assigned";
 
@@ -218,12 +259,23 @@ const UsersScreen = () => {
         Location: {item.location.name} ({item.location.type})
       </Text>
 
-      <TouchableOpacity
-        style={tw`bg-purple-500 px-3 py-1 rounded mt-2 self-start`}
-        onPress={() => handleEditUser(item)}
-      >
-        <Text style={tw`text-white text-xs`}>Edit</Text>
-      </TouchableOpacity>
+      <View style={tw`flex-row mt-2`}>
+        {/* Edit Button */}
+        <TouchableOpacity
+          style={tw`flex-1 bg-purple-500 px-3 py-2 rounded mr-2 items-center`}
+          onPress={() => handleEditUser(item)}
+        >
+          <Text style={tw`text-white text-xs font-semibold`}>Edit</Text>
+        </TouchableOpacity>
+
+        {/* Delete Button */}
+        <TouchableOpacity
+          style={tw`flex-1 bg-red-500 px-3 py-2 rounded items-center`}
+          onPress={() => handleDeleteUser(item)}
+        >
+          <Text style={tw`text-white text-xs font-semibold`}>Delete</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
@@ -294,12 +346,9 @@ const UsersScreen = () => {
           {/* Users List */}
           <View style={tw`flex-1 mb-6 lg:mb-0 lg:mr-4`}>
             <View style={tw`flex-row justify-between items-center mb-3`}>
-              <Text style={tw`text-lg font-bold text-gray-500`}>
+              {/* <Text style={tw`text-lg font-bold text-gray-500`}>
                 Users List ({filteredUsers.length})
-              </Text>
-              <TouchableOpacity onPress={fetchUsers} style={tw`p-2`}>
-                <Icon name="refresh" size={20} color="#682483" />
-              </TouchableOpacity>
+              </Text> */}
             </View>
             <FlatList
               data={filteredUsers}
@@ -318,65 +367,20 @@ const UsersScreen = () => {
               onRefresh={fetchUsers}
             />
           </View>
-
-          {/* User Details */}
-          {selectedUser && (
-            <View style={tw`flex-1 bg-white p-5 rounded-lg`}>
-              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>
-                User Details
-              </Text>
-
-              <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Name:</Text> {selectedUser.name}
-              </Text>
-              <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Email:</Text> {selectedUser.email}
-              </Text>
-              {selectedUser.phone && (
-                <Text style={tw`text-gray-500 mb-2`}>
-                  <Text style={tw`font-bold`}>Phone:</Text> {selectedUser.phone}
-                </Text>
-              )}
-              <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Roles:</Text>{" "}
-                {formatRoles(selectedUser.roles)}
-              </Text>
-              <Text style={tw`text-gray-500 mb-4`}>
-                <Text style={tw`font-bold`}>Location:</Text>{" "}
-                {selectedUser.location.name} ({selectedUser.location.type})
-              </Text>
-
-              <TouchableOpacity
-                style={tw`bg-purple-500 px-4 py-2 rounded mb-2`}
-                onPress={() => handleEditUser(selectedUser)}
-              >
-                <Text style={tw`text-white text-center`}>Edit User</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={tw`bg-red-500 px-4 py-2 rounded`}
-                onPress={() =>
-                  Alert.alert(
-                    "Info",
-                    "Delete functionality would be implemented here"
-                  )
-                }
-              >
-                <Text style={tw`text-white text-center`}>Delete User</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
-
-        {/* Notice */}
-        {!selectedUser && filteredUsers.length > 0 && (
-          <View style={tw`bg-yellow-100 p-4 rounded-lg mt-6`}>
-            <Text style={tw`text-yellow-800 text-center`}>
-              💡 Select a user to view details or click the Edit button to
-              modify user information
-            </Text>
-          </View>
-        )}
+        <TouchableOpacity
+          onPress={fetchUsers}
+          style={[
+            tw`bg-purple-500 p-4 rounded-full shadow-lg`,
+            {
+              position: "absolute",
+              bottom: 20,
+              right: 20,
+            },
+          ]}
+        >
+          <Icon name="refresh" size={20} color="#682483" />
+        </TouchableOpacity>
       </View>
 
       {/* Custom Drawer */}
