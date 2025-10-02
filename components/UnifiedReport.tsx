@@ -300,11 +300,11 @@ const UnifiedReport: React.FC<UnifiedReportProps> = ({
                 key={index}
                 style={tw`bg-purple-50 p-4 rounded-lg shadow-md mb-6`}
               >
-                <Text
+                {/* <Text
                   style={tw`text-xl font-bold text-purple-700 mb-4 text-center`}
                 >
                   {monthData.month}
-                </Text>
+                </Text> */}
                 <ReportTiles
                   data={monthData}
                   title={`${monthData.month}'s Report`}

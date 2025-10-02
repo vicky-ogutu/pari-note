@@ -92,7 +92,7 @@ export default function LoginScreen() {
         normalizedRoles.includes("nurse")
       ) {
         router.replace("/home");
-      } 
+      }
     } catch (error: any) {
       console.error("Login error:", error);
       Alert.alert("Error", error.message || "Invalid credentials");
@@ -109,11 +109,11 @@ export default function LoginScreen() {
       <ScrollView contentContainerStyle={tw`flex-grow justify-center p-5`}>
         <View style={tw`items-center mb-10`}>
           <Image
-            source={require("../assets/images/logo.png")}
+            source={require("../assets/images/logo.jpeg")}
             style={tw`w-40 h-40 mb-4`}
             resizeMode="contain"
           />
-                    <Text style={tw`text-purple-500 text-4xl font-bold mb-2 text-center`}>
+          <Text style={tw`text-purple-500 text-4xl font-bold mb-2 text-center`}>
             MOH 369 Register
           </Text>
           <Text style={tw`text-gray-600 text-base`}>Sign in to continue</Text>

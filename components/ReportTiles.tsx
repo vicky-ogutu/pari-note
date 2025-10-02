@@ -1,10 +1,5 @@
 import React from "react";
-import {
-    ActivityIndicator,
-    Text,
-    TouchableOpacity,
-    View,
-} from "react-native";
+import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import tw from "tailwind-react-native-classnames";
 
 export interface TileData {
@@ -29,6 +24,7 @@ interface ReportTilesProps {
   onTotalPress: () => void;
   showDatePicker?: boolean;
   onDatePickerPress?: () => void;
+  onDownload?: () => void;
   isLoading?: boolean;
 }
 
@@ -38,6 +34,7 @@ const ReportTiles: React.FC<ReportTilesProps> = ({
   onTotalPress,
   showDatePicker = false,
   onDatePickerPress,
+  onDownload,
   isLoading = false,
 }) => {
   // Shared card style
@@ -55,20 +52,49 @@ const ReportTiles: React.FC<ReportTilesProps> = ({
   }
 
   return (
+    // <View style={tw`p-4`}>
+    //   {/* Title and Date Picker Button */}
+    //   <View style={tw`flex-row justify-between items-center mb-4`}>
+    //     <Text style={tw`text-lg font-bold text-purple-700`}>{title}</Text>
+    //     {showDatePicker && onDatePickerPress && (
+    //       <TouchableOpacity
+    //         onPress={onDatePickerPress}
+    //         style={tw`bg-purple-600 px-4 py-2 rounded-lg`}
+    //       >
+    //         <Text style={tw`text-white text-sm font-semibold`}>
+    //           Select Dates
+    //         </Text>
+    //       </TouchableOpacity>
+    //     )}
+    //   </View>
     <View style={tw`p-4`}>
-      {/* Title and Date Picker Button */}
+      {/* Title and Action Buttons */}
       <View style={tw`flex-row justify-between items-center mb-4`}>
         <Text style={tw`text-lg font-bold text-purple-700`}>{title}</Text>
-        {showDatePicker && onDatePickerPress && (
-          <TouchableOpacity
-            onPress={onDatePickerPress}
-            style={tw`bg-purple-600 px-4 py-2 rounded-lg`}
-          >
-            <Text style={tw`text-white text-sm font-semibold`}>
-              Select Dates
-            </Text>
-          </TouchableOpacity>
-        )}
+
+        <View style={tw`flex-row space-x-2`}>
+          {/* Download Button */}
+          {onDownload && (
+            <TouchableOpacity
+              onPress={onDownload}
+              style={tw`bg-green-600 px-3 py-2 rounded-lg`}
+            >
+              <Text style={tw`text-white text-sm font-semibold`}>Download</Text>
+            </TouchableOpacity>
+          )}
+
+          {/* Date Picker Button */}
+          {showDatePicker && onDatePickerPress && (
+            <TouchableOpacity
+              onPress={onDatePickerPress}
+              style={tw`bg-purple-600 px-4 py-2 rounded-lg`}
+            >
+              <Text style={tw`text-white text-sm font-semibold`}>
+                Select Dates
+              </Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
 
       {/* Row 1 */}
@@ -147,14 +173,14 @@ const ReportTiles: React.FC<ReportTilesProps> = ({
       </View>
 
       {/* Data Summary */}
-      {data.total > 0 && (
+      {/* {data.total > 0 && (
         <View style={tw`bg-purple-50 p-3 rounded-lg mt-4`}>
           <Text style={tw`text-purple-700 text-center text-sm`}>
             {data.total} total cases • {data.sex.female + data.sex.male} sex recorded •{" "}
             {data.type.fresh + data.type.macerated} types classified
           </Text>
         </View>
-      )}
+      )} */}
     </View>
   );
 };
