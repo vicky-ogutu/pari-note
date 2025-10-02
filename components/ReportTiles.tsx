@@ -113,7 +113,7 @@ const ReportTiles: React.FC<ReportTilesProps> = ({
           >
             Total Cases
           </Text>
-          <Text style={tw`text-2xl text-gray-700 text-center`}>
+          <Text style={tw`text-1xl text-gray-700 text-center`}>
             {data.total || 0}
           </Text>
           <Text style={tw`text-xs text-purple-500 text-center mt-2`}>

@@ -459,7 +459,7 @@ const StillbirthRegistrationScreen = () => {
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
                   onPress={() => setActiveDatePicker(index)}
                 >
-                  <Text style={tw`text-gray-700`}>
+                  <Text style={tw`text-gray-500`}>
                     {baby.dateOfDeath || "Select date (YYYY-MM-DD)"}
                   </Text>
                 </TouchableOpacity>
@@ -490,7 +490,7 @@ const StillbirthRegistrationScreen = () => {
                   style={tw`bg-white p-4 rounded mb-4 border border-gray-300`}
                   onPress={() => setActiveTimePicker(index)}
                 >
-                  <Text style={tw`text-gray-700`}>
+                  <Text style={tw`text-gray-400`}>
                     {baby.timeOfDeath || "Select time (HH:MM)"}
                   </Text>
                 </TouchableOpacity>
@@ -531,7 +531,7 @@ const StillbirthRegistrationScreen = () => {
 
                 {/* Baby outcome */}
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-                  Baby outcome: <RequiredAsterisk />
+                  Baby outcome <RequiredAsterisk />
                 </Text>
                 <View style={tw`mb-4`}>
                   {["Alive", "fresh stillbirth", "macerated stillbirth"].map(
@@ -629,7 +629,7 @@ const StillbirthRegistrationScreen = () => {
 
                 {/* Sex */}
                 <Text style={tw`text-base font-semibold mb-2 text-gray-600`}>
-                  Sex of baby: <RequiredAsterisk />
+                  Sex of baby <RequiredAsterisk />
                 </Text>
                 <View style={tw`mb-4`}>
                   {["Male", "Female", "Others"].map((option) => (

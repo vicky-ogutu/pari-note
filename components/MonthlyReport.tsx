@@ -534,9 +534,9 @@ const MonthlyReport: React.FC<MonthlyReportProps> = ({ data: propData }) => {
           style={tw`bg-purple-50 p-4 rounded-lg shadow-md mb-6`}
         >
           {/* Month Header */}
-          {/* <Text style={tw`text-xl font-bold text-purple-700 mb-4 text-center`}>
+          <Text style={tw`text-xl font-bold text-purple-700 mb-4 text-center`}>
             {monthData.month}
-          </Text> */}
+          </Text>
 
           {/* Row 1 - Total Cases and Sex Distribution */}
           <View style={tw`flex-row mb-2`}>
