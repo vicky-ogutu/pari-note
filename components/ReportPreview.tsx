@@ -1,11 +1,11 @@
 import React from "react";
 import {
-    ActivityIndicator,
-    Modal,
-    ScrollView,
-    Text,
-    TouchableOpacity,
-    View,
+  ActivityIndicator,
+  Modal,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
 } from "react-native";
 import tw from "tailwind-react-native-classnames";
 
@@ -46,10 +46,16 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
         <View style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}>
           <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Sex</Text>
           <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Type</Text>
-          <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Facility</Text>
+          <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>
+            Facility
+          </Text>
           <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Date</Text>
-          <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Weight</Text>
-          <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Mother Age</Text>
+          <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>
+            Weight
+          </Text>
+          <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>
+            Mother Age
+          </Text>
         </View>
       );
     }
@@ -58,7 +64,9 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
       <View style={tw`flex-row bg-purple-100 p-3 border-b border-gray-200`}>
         <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Sex</Text>
         <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Type</Text>
-        <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Facility</Text>
+        <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>
+          Facility
+        </Text>
         <Text style={tw`flex-1 font-bold text-purple-600 text-xs`}>Date</Text>
       </View>
     );
@@ -67,10 +75,7 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
   const renderTableRow = (item: PreviewData, index: number) => {
     if (showAdditionalInfo) {
       return (
-        <View
-          key={index}
-          style={tw`flex-row p-3 border-b border-gray-100`}
-        >
+        <View key={index} style={tw`flex-row p-3 border-b border-gray-100`}>
           <Text style={tw`flex-1 text-xs`}>{item.sex}</Text>
           <Text style={tw`flex-1 text-xs`}>{item.type}</Text>
           <Text style={tw`flex-1 text-xs`}>{item.facility}</Text>
@@ -82,10 +87,7 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
     }
 
     return (
-      <View
-        key={index}
-        style={tw`flex-row p-3 border-b border-gray-100`}
-      >
+      <View key={index} style={tw`flex-row p-3 border-b border-gray-100`}>
         <Text style={tw`flex-1 text-xs`}>{item.sex}</Text>
         <Text style={tw`flex-1 text-xs`}>{item.type}</Text>
         <Text style={tw`flex-1 text-xs`}>{item.facility}</Text>
@@ -95,25 +97,19 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
   };
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      onRequestClose={onClose}
-    >
+    <Modal visible={visible} animationType="slide" onRequestClose={onClose}>
       <View style={tw`flex-1 p-4 bg-white`}>
         <View style={tw`flex-row justify-between items-center mb-4`}>
           <View style={tw`flex-1`}>
-            <Text style={tw`text-lg font-bold text-purple-600`}>MOH 369 Report</Text>
+            <Text style={tw`text-lg font-bold text-purple-600`}>
+              MOH 369 Report
+            </Text>
             <Text style={tw`text-lg text-gray-600`}>{title}</Text>
           </View>
-          <TouchableOpacity
-            onPress={onClose}
-            style={tw`p-2`}
-          >
+          <TouchableOpacity onPress={onClose} style={tw`p-2`}>
             <Text style={tw`text-lg font-bold text-gray-500`}>×</Text>
           </TouchableOpacity>
         </View>
-
 
         {isLoading ? (
           <View style={tw`flex-1 justify-center items-center`}>
@@ -152,7 +148,7 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
 
               <TouchableOpacity
                 onPress={onDownload}
-                style={tw`flex-1 bg-purple-600 py-3 rounded-lg ${
+                style={tw`flex-1 bg-purple-600 py-3 rounded-lg ml-3 ${
                   previewData.length === 0 ? "opacity-50" : ""
                 }`}
                 disabled={previewData.length === 0}
@@ -166,7 +162,8 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
             {previewData.length > 0 && (
               <View style={tw`bg-green-50 p-3 rounded-lg mt-3`}>
                 <Text style={tw`text-green-700 text-center text-xs`}>
-                  The Excel file will include all {previewData.length} records with complete details
+                  The Excel file will include all {previewData.length} records
+                  with complete details
                 </Text>
               </View>
             )}

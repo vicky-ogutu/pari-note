@@ -386,7 +386,7 @@ const UnifiedReport: React.FC<UnifiedReportProps> = ({
             ? selectedMonth
             : `Date Range: ${dateRange.startDate} to ${dateRange.endDate}`
         }
-        onDownload={downloadReport}
+        // onDownload={downloadReport}
         isLoading={detailLoading}
       />
     </View>

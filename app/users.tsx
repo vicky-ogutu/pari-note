@@ -3,7 +3,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import axios from "axios";
 import { router } from "expo-router";
 import { UserPlusIcon } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -65,6 +65,12 @@ const UsersScreen = () => {
       return;
     }
 
+    // useFocusEffect(
+    //   React.useCallback(() => {
+    //     fetchUsers();
+    //   }, [])
+    // );
+
     const query = searchQuery.toLowerCase().trim();
     const filtered = users.filter(
       (user) =>
@@ -94,6 +100,11 @@ const UsersScreen = () => {
           "Content-Type": "application/json",
         },
       });
+
+      console.log(
+        "🟣 API Users Response:",
+        JSON.stringify(response.data, null, 2)
+      );
 
       if (response.status === 200) {
         setUsers(response.data);
@@ -153,32 +164,6 @@ const UsersScreen = () => {
     ]);
   };
 
-  // Search users by name, email, or role
-  // const searchUsers = () => {
-  //   if (!searchQuery.trim()) {
-  //     setFilteredUsers(users);
-  //     return;
-  //   }
-
-  //   setIsLoading(true);
-
-  //   const query = searchQuery.toLowerCase().trim();
-  //   const filtered = users.filter(
-  //     (user) =>
-  //       user.name.toLowerCase().includes(query) ||
-  //       user.email.toLowerCase().includes(query) ||
-  //       user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
-  //       (user.phone && user.phone.includes(query))
-  //   );
-
-  //   setFilteredUsers(filtered);
-  //   setIsLoading(false);
-
-  //   if (filtered.length === 0) {
-  //     Alert.alert("Info", "No users found matching your search");
-  //   }
-  // };
-
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
   };
@@ -223,7 +208,7 @@ const UsersScreen = () => {
                 return;
               }
 
-              await axios.delete(`${BASE_URL}/users/${user.id}`, {
+              await axios.delete(`${BASE_URL}/users/delete/${user.id}`, {
                 headers: {
                   Authorization: `Bearer ${accessToken}`,
                   "Content-Type": "application/json",
@@ -339,28 +324,6 @@ const UsersScreen = () => {
 
       {/* Main Content */}
       <View style={tw`flex-1 p-5`}>
-        {/* Search Section */}
-        {/* <View style={tw`mb-6`}>
-          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>
-            Search Users
-          </Text>
-          <View style={tw`flex-row`}>
-            <TextInput
-              style={tw`flex-1 bg-white p-3 text-gray-500 rounded-l border border-gray-300`}
-              placeholder="Search by name, email, role, or phone"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={searchUsers}
-            />
-            <TouchableOpacity
-              style={tw`bg-purple-500 p-3 rounded-r`}
-              onPress={searchUsers}
-            >
-              <Text style={tw`text-white`}>Search</Text>
-            </TouchableOpacity>
-          </View>
-        </View> */}
-
         <TextInput
           placeholder="Search users..."
           value={searchQuery}

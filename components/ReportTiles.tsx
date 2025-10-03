@@ -74,14 +74,14 @@ const ReportTiles: React.FC<ReportTilesProps> = ({
 
         <View style={tw`flex-row space-x-2`}>
           {/* Download Button */}
-          {onDownload && (
+          {/* {onDownload && (
             <TouchableOpacity
               onPress={onDownload}
               style={tw`bg-green-600 px-3 py-2 rounded-lg`}
             >
               <Text style={tw`text-white text-sm font-semibold`}>Download</Text>
             </TouchableOpacity>
-          )}
+          )} */}
 
           {/* Date Picker Button */}
           {showDatePicker && onDatePickerPress && (

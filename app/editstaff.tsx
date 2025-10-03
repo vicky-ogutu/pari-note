@@ -151,13 +151,18 @@ const EditStaffScreen = () => {
       const updateData: any = {
         name: formData.name,
         email: formData.email,
-        location_id: parseInt(formData.location_id),
-        role_ids: roleIds,
+        locationId: parseInt(formData.location_id),
+        roleId: roleIds,
       };
 
       if (formData.password) {
         updateData.password = formData.password;
       }
+
+      // 🔍 Debug Logs
+      console.log("🟣 SelectedRoles (names):", selectedRoles);
+      console.log("🟣 Mapped roleIds (numbers):", roleIds);
+      console.log("🟢 Final updateData payload:", updateData);
 
       const response = await axios.put(
         `${BASE_URL}/users/${userId}`,
@@ -317,22 +322,6 @@ const EditStaffScreen = () => {
                 </TouchableOpacity>
               ))}
             </View>
-
-            {/* Selected Roles */}
-            {selectedRoles.length > 0 && (
-              <View
-                style={tw`bg-blue-50 p-3 rounded mb-4 border border-blue-200`}
-              >
-                <Text style={tw`text-blue-800 text-sm font-bold mb-1`}>
-                  Selected Roles:
-                </Text>
-                {selectedRoles.map((role, index) => (
-                  <Text key={index} style={tw`text-blue-800 text-sm`}>
-                    • {getRoleDisplayName(role)}
-                  </Text>
-                ))}
-              </View>
-            )}
 
             {/* Buttons */}
             <View style={tw`flex-row justify-between`}>

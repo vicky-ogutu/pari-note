@@ -492,7 +492,7 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
             </TouchableOpacity>
           </View>
 
-          <Text style={tw`text-gray-600 mb-4`}>
+          <Text style={tw`text-gray-600 mb-4 text-purple-600`}>
             Showing data from {formatDate(startDate)} to {formatDate(endDate)}
           </Text>
 
@@ -587,12 +587,12 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
           <View style={tw`flex-row gap-3`}>
             {/* Start Date Picker */}
             <View style={tw`flex-1`}>
-              <Text style={tw`text-xs text-gray-600 mb-1`}>Start Date</Text>
+              <Text style={tw`text-xs text-purple-600 mb-1`}>Start Date</Text>
               <TouchableOpacity
                 style={tw`border border-gray-300 p-3 rounded-lg bg-white`}
                 onPress={() => setShowStartDatePicker(true)}
               >
-                <Text style={tw`text-gray-700 text-center`}>
+                <Text style={tw`text-purple-600 text-center`}>
                   {formatDate(startDate)}
                 </Text>
               </TouchableOpacity>
@@ -709,51 +709,6 @@ const DateRangeReport: React.FC<DateRangeReportProps> = () => {
             </View>
           </View>
         </View>
-
-        {/* Action Buttons */}
-        {/* <View style={tw`flex-row gap-3 mt-4`}>
-          <TouchableOpacity
-            onPress={loadDateRangeData}
-            style={tw`flex-1 bg-purple-600 py-3 rounded-lg`}
-            disabled={isLoading}
-          >
-            {isLoading ? (
-              <ActivityIndicator color="white" />
-            ) : (
-              <Text style={tw`text-center text-white font-semibold`}>
-                Refresh Data
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            onPress={downloadDateRangeReport}
-            style={tw`flex-1 bg-green-600 py-3 rounded-lg`}
-            disabled={isLoading}
-          >
-            <Text style={tw`text-center text-white font-semibold`}>
-              Download Excel
-            </Text>
-          </TouchableOpacity>
-        </View> */}
-
-        {/* Status Information */}
-        {/* {rawData.length > 0 && (
-          <View style={tw`bg-purple-50 p-3 rounded-lg mt-4`}>
-            <Text style={tw`text-purple-700 text-center`}>
-              Found {rawData.length} notifications with {previewData.length}{" "}
-              records
-            </Text>
-          </View>
-        )}
-
-        {rawData.length === 0 && !isLoading && (
-          <View style={tw`bg-yellow-100 p-4 rounded-lg mt-4`}>
-            <Text style={tw`text-yellow-700 text-center`}>
-              Select a date range to view records
-            </Text>
-          </View>
-        )} */}
       </View>
     </ScrollView>
   );
