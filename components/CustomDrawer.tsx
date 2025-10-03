@@ -82,9 +82,15 @@ const CustomDrawer: React.FC<DrawerProps> = ({
   };
 
   // Function to get display name for multiple roles
+  // const getRolesDisplayText = (): string => {
+  //   if (userRoles.length === 0) return "user";
+  //   return userRoles.map((r) => r.replace("_", " ")).join(", ");
+  // };
+
+  // Function to get display name for multiple roles
   const getRolesDisplayText = (): string => {
-    if (userRoles.length === 0) return "user";
-    return userRoles.map((r) => r.replace("_", " ")).join(", ");
+    if (userRoles.length === 0) return "User";
+    return userRoles.map((r) => getRoleDisplayName(r)).join(", ");
   };
 
   // Function to determine location display text based on user roles
@@ -135,6 +141,22 @@ const CustomDrawer: React.FC<DrawerProps> = ({
     }
 
     return userData.location || "Location not set";
+  };
+
+  // Map role keys to display names
+  const getRoleDisplayName = (role: string): string => {
+    switch (role.toLowerCase()) {
+      case "nurse":
+        return "HCW";
+      case "subcounty user":
+        return "Subcounty Admin";
+      case "county user":
+        return "County Admin";
+      case "admin":
+        return "Facility In-charge";
+      default:
+        return role.replace("_", " "); // fallback (e.g., "data_clerk" -> "data clerk")
+    }
   };
 
   // Handle navigation with permission check
