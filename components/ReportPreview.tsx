@@ -104,7 +104,7 @@ const ReportPreview: React.FC<ReportPreviewProps> = ({
             <Text style={tw`text-lg font-bold text-purple-600`}>
               MOH 369 Report
             </Text>
-            <Text style={tw`text-lg text-gray-600`}>{title}</Text>
+            <Text style={tw`text-lg text-purple-600`}>{title}</Text>
           </View>
           <TouchableOpacity onPress={onClose} style={tw`p-2`}>
             <Text style={tw`text-lg font-bold text-gray-500`}>×</Text>

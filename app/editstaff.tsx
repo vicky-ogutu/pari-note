@@ -152,7 +152,7 @@ const EditStaffScreen = () => {
         name: formData.name,
         email: formData.email,
         locationId: parseInt(formData.location_id),
-        roleId: roleIds,
+        roleIds: roleIds,
       };
 
       if (formData.password) {

@@ -1,5 +1,6 @@
 // app/users.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { router } from "expo-router";
 import { UserPlusIcon } from "lucide-react-native";
@@ -65,11 +66,11 @@ const UsersScreen = () => {
       return;
     }
 
-    // useFocusEffect(
-    //   React.useCallback(() => {
-    //     fetchUsers();
-    //   }, [])
-    // );
+    useFocusEffect(
+      React.useCallback(() => {
+        fetchUsers();
+      }, [])
+    );
 
     const query = searchQuery.toLowerCase().trim();
     const filtered = users.filter(
