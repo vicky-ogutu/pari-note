@@ -1,9 +1,10 @@
 // app/users.tsx
 import AsyncStorage from "@react-native-async-storage/async-storage";
+import { useFocusEffect } from "@react-navigation/native";
 import axios from "axios";
 import { router } from "expo-router";
 import { UserPlusIcon } from "lucide-react-native";
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
@@ -31,7 +32,7 @@ export type User = {
   email: string;
   name: string;
   phone?: string;
-  roles: Role[]; // <-- now it's an array
+  roles: Role[]; // an array
   location: {
     id: number;
     name: string;
@@ -58,6 +59,31 @@ const UsersScreen = () => {
     fetchUsers();
   }, []);
 
+  // Update search results whenever searchQuery changes
+  useEffect(() => {
+    if (!searchQuery.trim()) {
+      setFilteredUsers(users);
+      return;
+    }
+
+    useFocusEffect(
+      React.useCallback(() => {
+        fetchUsers();
+      }, [])
+    );
+
+    const query = searchQuery.toLowerCase().trim();
+    const filtered = users.filter(
+      (user) =>
+        user.name.toLowerCase().includes(query) ||
+        user.email.toLowerCase().includes(query) ||
+        user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
+        (user.phone && user.phone.includes(query))
+    );
+
+    setFilteredUsers(filtered);
+  }, [searchQuery, users]); // 👈 Runs whenever searchQuery or users change
+
   const fetchUsers = async () => {
     try {
       setIsFetching(true);
@@ -75,6 +101,11 @@ const UsersScreen = () => {
           "Content-Type": "application/json",
         },
       });
+
+      console.log(
+        "🟣 API Users Response:",
+        JSON.stringify(response.data, null, 2)
+      );
 
       if (response.status === 200) {
         setUsers(response.data);
@@ -134,38 +165,13 @@ const UsersScreen = () => {
     ]);
   };
 
-  // Search users by name, email, or role
-  const searchUsers = () => {
-    if (!searchQuery.trim()) {
-      setFilteredUsers(users);
-      return;
-    }
-
-    setIsLoading(true);
-
-    const query = searchQuery.toLowerCase().trim();
-    const filtered = users.filter(
-      (user) =>
-        user.name.toLowerCase().includes(query) ||
-        user.email.toLowerCase().includes(query) ||
-        user.roles.some((role) => role.name.toLowerCase().includes(query)) ||
-        (user.phone && user.phone.includes(query))
-    );
-
-    setFilteredUsers(filtered);
-    setIsLoading(false);
-
-    if (filtered.length === 0) {
-      Alert.alert("Info", "No users found matching your search");
-    }
-  };
-
   const handleUserSelect = (user: User) => {
     setSelectedUser(user);
   };
 
   const handleEditUser = (user: User) => {
-    const primaryRole = user.roles[0]; // pick first role for now
+    const roleNames = user.roles.map((r) => r.name);
+    const roleIds = user.roles.map((r) => r.id);
 
     router.push({
       pathname: "/editstaff",
@@ -174,16 +180,56 @@ const UsersScreen = () => {
         name: user.name,
         email: user.email,
         phone: user.phone || "",
-        role: primaryRole?.name || "",
-        roleId: primaryRole?.id?.toString() || "",
+        roles: JSON.stringify(roleNames),
+        roleIds: JSON.stringify(roleIds),
         locationId: user.location.id.toString(),
         locationName: user.location.name,
       },
     });
   };
-
   const handleAddUser = () => {
     router.push("/register");
+  };
+
+  // --- add this handler ---
+  const handleDeleteUser = async (user: User) => {
+    Alert.alert(
+      "Confirm Delete",
+      `Are you sure you want to delete ${user.name}?`,
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: async () => {
+            try {
+              const accessToken = await AsyncStorage.getItem("access_token");
+              if (!accessToken) {
+                Alert.alert("Error", "Authentication token not found");
+                return;
+              }
+
+              await axios.delete(`${BASE_URL}/users/delete/${user.id}`, {
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
+
+              Alert.alert("Success", "User deleted successfully");
+              fetchUsers(); // refresh list
+            } catch (error: any) {
+              console.error("Error deleting user:", error);
+              Alert.alert(
+                "Error",
+                error.response?.data?.message ||
+                  "Failed to delete user. Please try again."
+              );
+            }
+          },
+        },
+      ]
+    );
   };
 
   const formatRoles = (roles: Role[]) => {
@@ -218,12 +264,23 @@ const UsersScreen = () => {
         Location: {item.location.name} ({item.location.type})
       </Text>
 
-      <TouchableOpacity
-        style={tw`bg-purple-500 px-3 py-1 rounded mt-2 self-start`}
-        onPress={() => handleEditUser(item)}
-      >
-        <Text style={tw`text-white text-xs`}>Edit</Text>
-      </TouchableOpacity>
+      <View style={tw`flex-row mt-2`}>
+        {/* Edit Button */}
+        <TouchableOpacity
+          style={tw`flex-1 bg-purple-500 px-3 py-2 rounded mr-2 items-center`}
+          onPress={() => handleEditUser(item)}
+        >
+          <Text style={tw`text-white text-xs font-semibold`}>Edit</Text>
+        </TouchableOpacity>
+
+        {/* Delete Button */}
+        <TouchableOpacity
+          style={tw`flex-1 bg-red-500 px-3 py-2 rounded items-center`}
+          onPress={() => handleDeleteUser(item)}
+        >
+          <Text style={tw`text-white text-xs font-semibold`}>Delete</Text>
+        </TouchableOpacity>
+      </View>
     </TouchableOpacity>
   );
 
@@ -268,38 +325,19 @@ const UsersScreen = () => {
 
       {/* Main Content */}
       <View style={tw`flex-1 p-5`}>
-        {/* Search Section */}
-        <View style={tw`mb-6`}>
-          <Text style={tw`text-lg font-bold mb-3 text-gray-500`}>
-            Search Users
-          </Text>
-          <View style={tw`flex-row`}>
-            <TextInput
-              style={tw`flex-1 bg-white p-3 text-gray-500 rounded-l border border-gray-300`}
-              placeholder="Search by name, email, role, or phone"
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              onSubmitEditing={searchUsers}
-            />
-            <TouchableOpacity
-              style={tw`bg-purple-500 p-3 rounded-r`}
-              onPress={searchUsers}
-            >
-              <Text style={tw`text-white`}>Search</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
+        <TextInput
+          placeholder="Search users..."
+          value={searchQuery}
+          onChangeText={setSearchQuery} //filtering dynamically
+          style={tw`border border-gray-300 rounded p-2 mb-3`}
+        />
         <View style={tw`flex-1 flex-col lg:flex-row`}>
           {/* Users List */}
           <View style={tw`flex-1 mb-6 lg:mb-0 lg:mr-4`}>
             <View style={tw`flex-row justify-between items-center mb-3`}>
-              <Text style={tw`text-lg font-bold text-gray-500`}>
+              {/* <Text style={tw`text-lg font-bold text-gray-500`}>
                 Users List ({filteredUsers.length})
-              </Text>
-              <TouchableOpacity onPress={fetchUsers} style={tw`p-2`}>
-                <Icon name="refresh" size={20} color="#682483" />
-              </TouchableOpacity>
+              </Text> */}
             </View>
             <FlatList
               data={filteredUsers}
@@ -318,65 +356,20 @@ const UsersScreen = () => {
               onRefresh={fetchUsers}
             />
           </View>
-
-          {/* User Details */}
-          {selectedUser && (
-            <View style={tw`flex-1 bg-white p-5 rounded-lg`}>
-              <Text style={tw`text-lg font-bold mb-4 text-gray-500`}>
-                User Details
-              </Text>
-
-              <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Name:</Text> {selectedUser.name}
-              </Text>
-              <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Email:</Text> {selectedUser.email}
-              </Text>
-              {selectedUser.phone && (
-                <Text style={tw`text-gray-500 mb-2`}>
-                  <Text style={tw`font-bold`}>Phone:</Text> {selectedUser.phone}
-                </Text>
-              )}
-              <Text style={tw`text-gray-500 mb-2`}>
-                <Text style={tw`font-bold`}>Roles:</Text>{" "}
-                {formatRoles(selectedUser.roles)}
-              </Text>
-              <Text style={tw`text-gray-500 mb-4`}>
-                <Text style={tw`font-bold`}>Location:</Text>{" "}
-                {selectedUser.location.name} ({selectedUser.location.type})
-              </Text>
-
-              <TouchableOpacity
-                style={tw`bg-purple-500 px-4 py-2 rounded mb-2`}
-                onPress={() => handleEditUser(selectedUser)}
-              >
-                <Text style={tw`text-white text-center`}>Edit User</Text>
-              </TouchableOpacity>
-
-              <TouchableOpacity
-                style={tw`bg-red-500 px-4 py-2 rounded`}
-                onPress={() =>
-                  Alert.alert(
-                    "Info",
-                    "Delete functionality would be implemented here"
-                  )
-                }
-              >
-                <Text style={tw`text-white text-center`}>Delete User</Text>
-              </TouchableOpacity>
-            </View>
-          )}
         </View>
-
-        {/* Notice */}
-        {!selectedUser && filteredUsers.length > 0 && (
-          <View style={tw`bg-yellow-100 p-4 rounded-lg mt-6`}>
-            <Text style={tw`text-yellow-800 text-center`}>
-              💡 Select a user to view details or click the Edit button to
-              modify user information
-            </Text>
-          </View>
-        )}
+        <TouchableOpacity
+          onPress={fetchUsers}
+          style={[
+            tw`bg-purple-500 p-4 rounded-full shadow-lg`,
+            {
+              position: "absolute",
+              bottom: 20,
+              right: 20,
+            },
+          ]}
+        >
+          <Icon name="refresh" size={20} color="#682483" />
+        </TouchableOpacity>
       </View>
 
       {/* Custom Drawer */}

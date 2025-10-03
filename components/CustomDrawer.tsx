@@ -75,6 +75,7 @@ const CustomDrawer: React.FC<DrawerProps> = ({
     // Priority order for display
     if (userRoles.includes("county_user")) return "county_user";
     if (userRoles.includes("subcounty_user")) return "subcounty_user";
+    if (userRoles.includes("admin")) return "admin";
     if (userRoles.includes("nurse")) return "nurse";
 
     return userRoles[0];
@@ -108,7 +109,7 @@ const CustomDrawer: React.FC<DrawerProps> = ({
         locationText += userData.county;
       }
 
-      return locationText || "Multiple locations";
+      return locationText;
     }
 
     // Single role users
@@ -197,11 +198,11 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                 >
                   {getRolesDisplayText()}
                 </Text>
-                {userRoles.length > 1 && (
+                {/* {userRoles.length > 1 && (
                   <Text style={tw`text-purple-200 text-xs ml-1`}>
                     ({userRoles.length} roles)
                   </Text>
-                )}
+                )} */}
               </View>
             </View>
           </View>
@@ -209,72 +210,57 @@ const CustomDrawer: React.FC<DrawerProps> = ({
           {/* Navigation Menu */}
           <View style={tw`flex-1 p-4`}>
             <View style={tw`mb-6`}>
+              {/* Section Title */}
               <Text
                 style={tw`text-gray-500 text-xs uppercase font-semibold mb-3 pl-2`}
               >
                 Main Navigation
               </Text>
 
-              {/* Dashboard - Accessible to all roles */}
+              {/* Dashboard */}
               <TouchableOpacity
-                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
+                style={tw`flex-row items-center p-1 rounded-lg mb-2 pl-2`}
                 onPress={() => handleNavigation("home")}
               >
-                <Text style={tw`text-gray-500 font-medium ml-2`}>
-                  🏠 Dashboard
+                <Text style={tw`text-lg text-gray-500`}>🏠</Text>
+                <Text style={tw`text-gray-500 font-medium ml-3`}>
+                  Dashboard
                 </Text>
               </TouchableOpacity>
 
-              {/* Report Stillbirth - Accessible to all roles based on scenarios */}
-              <TouchableOpacity
-                style={tw`flex-row items-center p-3 rounded-lg mb-2`}
-                onPress={() => handleNavigation("patient_registration")}
-              >
-                <Text style={tw`text-gray-500 font-medium ml-2`}>
-                  📋 Report Stillbirth
-                </Text>
-              </TouchableOpacity>
+              {/* Report Stillbirth */}
+              {hasRole("nurse") && (
+                <TouchableOpacity
+                  style={tw`flex-row items-center p-1 rounded-lg mb-2 pl-2`}
+                  onPress={() => handleNavigation("patient_registration")}
+                >
+                  <Text style={tw`text-lg text-gray-500`}>📋</Text>
+                  <Text style={tw`text-gray-500 font-medium ml-3`}>
+                    Report Stillbirth
+                  </Text>
+                </TouchableOpacity>
+              )}
 
-              {/* User Management - hidden if ONLY nurse */}
+              {/* Users */}
               {!(
                 userRoles.length === 1 && userRoles[0].toLowerCase() === "nurse"
               ) && (
-                <View style={tw`mb-2`}>
-                  {/* Register User - Accessible to county and subcounty users */}
-                  {/* <Text
-                    style={tw`text-gray-400 text-xs font-semibold pl-3 mb-1`}
-                  >
-                    User Management
-                  </Text> */}
-
-                  <TouchableOpacity
-                    style={tw`flex-row items-center p-3 rounded-lg`}
-                    onPress={() => handleNavigation("users")}
-                  >
-                    <Text style={tw`text-gray-500 font-medium ml-2`}>
-                      👥 Users
-                    </Text>
-                  </TouchableOpacity>
-
-                  {/* <TouchableOpacity
-                    style={tw`flex-row items-center p-3 rounded-lg`}
-                    onPress={() => handleNavigation("register")}
-                  >
-                    <Text style={tw`text-gray-500 font-medium ml-2`}>
-                      📝 Register Staff
-                    </Text>
-                  </TouchableOpacity> */}
-                </View>
+                <TouchableOpacity
+                  style={tw`flex-row items-center p-1 rounded-lg pl-2`}
+                  onPress={() => handleNavigation("users")}
+                >
+                  <Text style={tw`text-lg text-gray-500`}>👥</Text>
+                  <Text style={tw`text-gray-500 font-medium ml-3`}>Users</Text>
+                </TouchableOpacity>
               )}
 
-              {/* Logout - Always visible */}
+              {/* Logout */}
               <TouchableOpacity
-                style={tw`flex-row items-center p-50 rounded-lg mt-4`}
+                style={tw`flex-row items-center p-1 rounded-lg mt-4 pl-2`}
                 onPress={handleLogout}
               >
-                <Text style={tw`text-gray-500 font-medium ml-2`}>
-                  🚪 Logout
-                </Text>
+                <Text style={tw`text-lg text-gray-500`}>🚪</Text>
+                <Text style={tw`text-gray-500 font-medium ml-3`}>Logout</Text>
               </TouchableOpacity>
             </View>
           </View>

@@ -1,16 +1,15 @@
 // app/home.tsx
 import DateRangeReport from "@/components/DateRangeReport";
+import UnifiedReport from "@/components/UnifiedReport";
+import { ReportType } from "@/types/reports";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { router } from "expo-router";
 import { FilePenIcon, UserPlusIcon } from "lucide-react-native";
 import { useEffect, useState } from "react";
 import {
-  ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
   Platform,
-  RefreshControl,
-  ScrollView,
   Text,
   TouchableOpacity,
   View,
@@ -80,11 +79,7 @@ const HomeScreen = () => {
   const [error, setError] = useState<string | null>(null);
 
   // Use the permissions
-  const {
-    userRoles,
-    canAccess,
-  } = usePermissions();
-
+  const { userRoles, canAccess } = usePermissions();
 
   // Fetch report data when component mounts or activeTab changes
   useEffect(() => {
@@ -134,7 +129,7 @@ const HomeScreen = () => {
 
   // NO PERMISSION CHECKS - Everyone can add users
   const handleAddUser = () => {
-    if (userRoles.length == 1 && userRoles.includes('nurse')) {
+    if (userRoles.length == 1 && userRoles.includes("nurse")) {
       router.push("/patient_registration");
     } else {
       router.push("/register");
@@ -197,17 +192,6 @@ const HomeScreen = () => {
     }
     return null;
   };
-
-  // // Show loading while permissions are being loaded
-  // if (permissionsLoading) {
-  //   return (
-  //     <View style={tw`flex-1 justify-center items-center bg-purple-100`}>
-  //       <ActivityIndicator size="large" color="#682483ff" />
-  //       <Text style={tw`mt-4 text-purple-600`}>Loading...</Text>
-  //     </View>
-  //   );
-  // }
-
   return (
     <KeyboardAvoidingView
       style={tw`flex-1 bg-purple-100`}
@@ -226,11 +210,10 @@ const HomeScreen = () => {
           <TouchableOpacity onPress={handleAddUser}>
             {userRoles?.includes("nurse") ? (
               <FilePenIcon color="#682483ff" />
-              
             ) : (
               <UserPlusIcon size={36} color="#682483ff" />
             )}
-            </TouchableOpacity>
+          </TouchableOpacity>
         </View>
       </View>
 
@@ -238,13 +221,15 @@ const HomeScreen = () => {
       <View style={tw`flex-row bg-white border-b border-gray-200`}>
         <TouchableOpacity
           style={tw`flex-1 py-3 ${
-            activeTab === "today" ? "border-b-2 border-purple-500" : ""
+            activeTab === ReportType.TODAY ? "border-b-2 border-purple-500" : ""
           }`}
-          onPress={() => setActiveTab("today")}
+          onPress={() => setActiveTab(ReportType.TODAY)}
         >
           <Text
             style={tw`text-center font-semibold ${
-              activeTab === "today" ? "text-purple-500" : "text-gray-500"
+              activeTab === ReportType.TODAY
+                ? "text-purple-500"
+                : "text-gray-500"
             }`}
           >
             Today's Report
@@ -252,13 +237,17 @@ const HomeScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={tw`flex-1 py-3 ${
-            activeTab === "monthly" ? "border-b-2 border-purple-500" : ""
+            activeTab === ReportType.MONTHLY
+              ? "border-b-2 border-purple-500"
+              : ""
           }`}
-          onPress={() => setActiveTab("monthly")}
+          onPress={() => setActiveTab(ReportType.MONTHLY)}
         >
           <Text
             style={tw`text-center font-semibold ${
-              activeTab === "monthly" ? "text-purple-500" : "text-gray-500"
+              activeTab === ReportType.MONTHLY
+                ? "text-purple-500"
+                : "text-gray-500"
             }`}
           >
             Monthly Report
@@ -266,13 +255,17 @@ const HomeScreen = () => {
         </TouchableOpacity>
         <TouchableOpacity
           style={tw`flex-1 py-3 ${
-            activeTab === "dateRange" ? "border-b-2 border-purple-500" : ""
+            activeTab === ReportType.DATE_RANGE
+              ? "border-b-2 border-purple-500"
+              : ""
           }`}
-          onPress={() => setActiveTab("dateRange")}
+          onPress={() => setActiveTab(ReportType.DATE_RANGE)}
         >
           <Text
             style={tw`text-center font-semibold ${
-              activeTab === "dateRange" ? "text-purple-500" : "text-gray-500"
+              activeTab === ReportType.DATE_RANGE
+                ? "text-purple-500"
+                : "text-gray-500"
             }`}
           >
             Date Range
@@ -280,33 +273,9 @@ const HomeScreen = () => {
         </TouchableOpacity>
       </View>
 
-      {/* Load Indicator */}
-      {isLoading && (
-        <View
-          style={tw`absolute inset-0 bg-black bg-opacity-50 justify-center items-center z-10`}
-        >
-          <ActivityIndicator size="large" color="#ffffff" />
-        </View>
-      )}
-
-      {/* Error Message */}
-      {error && (
-        <View style={tw`bg-red-100 p-3 mx-4 mt-4 rounded-lg`}>
-          <Text style={tw`text-red-700 text-center`}>{error}</Text>
-        </View>
-      )}
-
-      {/* No Data Message */}
-      {!isLoading && !error && !reportData && (
-        <View style={tw`bg-yellow-100 p-3 mx-4 mt-4 rounded-lg`}>
-          <Text style={tw`text-yellow-700 text-center`}>
-            No data available. Pull to refresh.
-          </Text>
-        </View>
-      )}
-
       {/* Main Content */}
-      <ScrollView
+      <UnifiedReport type={activeTab as ReportType} />
+      {/* <ScrollView
         contentContainerStyle={tw`p-4`}
         refreshControl={
           <RefreshControl
@@ -317,7 +286,7 @@ const HomeScreen = () => {
         }
       >
         {renderContent()}
-      </ScrollView>
+      </ScrollView> */}
 
       {/* Drawer */}
       <CustomDrawer

@@ -1,10 +1,12 @@
 export const getEndpoint = (path: string) => `${BASE_URL}${path}`;
 //export const BASE_URL = "http://localhost:3000";
-export const BASE_URL = "http://pari.scaletech.co.ke";
+export const BASE_URL = "https://pari.scaletech.co.ke";
 
 // Alternatively, with environment detection
 export const API_CONFIG = {
-  BASE_URL: __DEV__ ? "http://pari.scaletech.co.ke" : "http://localhost:3000",
+  BASE_URL: __DEV__
+    ? "https://pari.scaletech.co.ke"
+    : "https://pari.scaletech.co.ke",
 
   //add other API-related constants
   ENDPOINTS: {
