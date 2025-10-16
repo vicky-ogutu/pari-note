@@ -68,31 +68,6 @@ const CustomDrawer: React.FC<DrawerProps> = ({
       .join("");
   };
 
-  // Function to get primary role for display (prioritize county > subcounty > nurse)
-  const getPrimaryRole = (): string => {
-    if (userRoles.length === 0) return "user";
-
-    // Priority order for display
-    if (userRoles.includes("county_user")) return "county_user";
-    if (userRoles.includes("subcounty_user")) return "subcounty_user";
-    if (userRoles.includes("admin")) return "admin";
-    if (userRoles.includes("nurse")) return "nurse";
-
-    return userRoles[0];
-  };
-
-  // Function to get display name for multiple roles
-  // const getRolesDisplayText = (): string => {
-  //   if (userRoles.length === 0) return "user";
-  //   return userRoles.map((r) => r.replace("_", " ")).join(", ");
-  // };
-
-  // Function to get display name for multiple roles
-  const getRolesDisplayText = (): string => {
-    if (userRoles.length === 0) return "User";
-    return userRoles.map((r) => getRoleDisplayName(r)).join(", ");
-  };
-
   // Function to determine location display text based on user roles
   const getLocationDisplayText = () => {
     if (!userData) return "Location not set";
@@ -143,20 +118,18 @@ const CustomDrawer: React.FC<DrawerProps> = ({
     return userData.location || "Location not set";
   };
 
-  // Map role keys to display names
-  const getRoleDisplayName = (role: string): string => {
-    switch (role.toLowerCase()) {
-      case "nurse":
-        return "HCW";
-      case "subcounty user":
-        return "Subcounty Admin";
-      case "county user":
-        return "County Admin";
-      case "admin":
-        return "Facility In-charge";
-      default:
-        return role.replace("_", " "); // fallback (e.g., "data_clerk" -> "data clerk")
-    }
+  // Function to get primary role for display (prioritize county > subcounty > nurse)
+  const getPrimaryRole = (): string => {
+    if (userRoles.length === 0) return "user";
+
+    // Priority order for display
+    if (userRoles.includes("county_user")) return "county_user";
+    if (userRoles.includes("subcounty_user")) return "subcounty_user";
+    if (userRoles.includes("admin")) return "admin";
+    if (userRoles.includes("facility-incharge user")) return "facility-incharge user";
+    if (userRoles.includes("nurse")) return "nurse";
+
+    return userRoles[0];
   };
 
   // Handle navigation with permission check
@@ -209,22 +182,10 @@ const CustomDrawer: React.FC<DrawerProps> = ({
             </View>
 
             <View style={tw`bg-purple-400 rounded-lg p-3`}>
-              <View style={tw`flex-row items-center mb-1`}>
-                <Text style={tw`text-white text-xs`}>
+              <View style={tw`flex-row items-center`}>
+                <Text style={tw`text-white text-xs font-semibold`}>
                   {getLocationDisplayText()}
                 </Text>
-              </View>
-              <View style={tw`flex-row items-center`}>
-                <Text
-                  style={tw`text-purple-200 text-xs font-semibold capitalize`}
-                >
-                  {getRolesDisplayText()}
-                </Text>
-                {/* {userRoles.length > 1 && (
-                  <Text style={tw`text-purple-200 text-xs ml-1`}>
-                    ({userRoles.length} roles)
-                  </Text>
-                )} */}
               </View>
             </View>
           </View>

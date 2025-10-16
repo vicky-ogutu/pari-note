@@ -51,21 +51,24 @@ interface LocationOption {
 const ROLE_MAPPING: { [key: string]: number } = {
   "county user": 2,
   "subcounty user": 3,
+  "facility-incharge user": 5,
   admin: 1,
   nurse: 4,
 };
 
 const ROLE_HIERARCHY: { [key: string]: string[] } = {
-  "county user": ["county user", "subcounty user", "admin", "nurse"],
-  "subcounty user": ["subcounty user", "admin", "nurse"],
-  admin: ["admin", "nurse"],
+  "county user": ["county user", "subcounty user", "facility-incharge user", "nurse"],
+  "subcounty user": ["subcounty user", "facility-incharge user", "nurse"],
+  admin: ["admin", "county user", "subcounty user",  "facility-incharge user", "nurse"],
+  "facility-incharge user": ["facility-incharge user", "nurse"],
   nurse: ["nurse"],
 };
 
 const ROLE_DISPLAY_NAMES: { [key: string]: string } = {
   "county user": "County Admin",
   "subcounty user": "Subcounty Admin",
-  admin: "Facility In-Charge",
+  admin: "Admin",
+  "facility-incharge user": "Facility In-Charge",
   nurse: "HCW",
 };
 
@@ -613,6 +616,7 @@ const RegisterScreen = () => {
             {renderRoleCheckbox("subcounty user", ROLE_DISPLAY_NAMES["subcounty user"])}
             {renderRoleCheckbox("admin", ROLE_DISPLAY_NAMES["admin"])}
             {renderRoleCheckbox("nurse", ROLE_DISPLAY_NAMES["nurse"])}
+            {renderRoleCheckbox("facility-incharge user", ROLE_DISPLAY_NAMES["facility-incharge user"])}
           </View>
 
           {/* Submit Button */}

@@ -89,7 +89,9 @@ export default function LoginScreen() {
         normalizedRoles.includes("admin") ||
         normalizedRoles.includes("county user") ||
         normalizedRoles.includes("subcounty user") ||
+         normalizedRoles.includes("facility-incharge user")||
         normalizedRoles.includes("nurse")
+       
       ) {
         router.replace("/home");
       }

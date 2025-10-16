@@ -82,7 +82,7 @@ const UsersScreen = () => {
     );
 
     setFilteredUsers(filtered);
-  }, [searchQuery, users]); // 👈 Runs whenever searchQuery or users change
+  }, [searchQuery, users]); // when searchQuery or users change
 
   const fetchUsers = async () => {
     try {
@@ -260,9 +260,9 @@ const UsersScreen = () => {
       <Text style={tw`text-purple-500 text-xs font-medium`}>
         Roles: {formatRoles(item.roles)}
       </Text>
-      <Text style={tw`text-green-600 text-xs font-medium`}>
+       <Text style={tw`text-green-600 text-xs font-medium`}>
         Location: {item.location.name} ({item.location.type})
-      </Text>
+      </Text> 
 
       <View style={tw`flex-row mt-2`}>
         {/* Edit Button */}
