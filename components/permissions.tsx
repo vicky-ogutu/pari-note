@@ -21,13 +21,13 @@ export const permissionRules: Record<ScreenName, PermissionRule> = {
     roles: ["county user", "subcounty user",  "facility-incharge user", "nurse", "admin"],
   },
   register: {
-    roles: ["county user", "subcounty user", "facility-incharge user", "admin"],
+    roles: [ "admin"],
   },
   users: {
-    roles: ["county user", "subcounty user", "facility-incharge user", "admin"],
+    roles: ["admin"],
   },
   editstaff: {
-    roles: ["county user", "subcounty user", "facility-incharge user", "admin"],
+    roles: ["admin"],
   },
   
   patient_registration: {

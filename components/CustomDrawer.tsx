@@ -225,9 +225,10 @@ const CustomDrawer: React.FC<DrawerProps> = ({
               )}
 
               {/* Users */}
-              {!(
+              {/* {!(
                 userRoles.length === 1 && userRoles[0].toLowerCase() === "nurse"
-              ) && (
+              ) && ( */}
+              {hasRole("admin") && (
                 <TouchableOpacity
                   style={tw`flex-row items-center p-1 rounded-lg pl-2`}
                   onPress={() => handleNavigation("users")}

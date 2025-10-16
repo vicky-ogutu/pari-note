@@ -131,8 +131,13 @@ const HomeScreen = () => {
   const handleAddUser = () => {
     if (userRoles.length == 1 && userRoles.includes("nurse")) {
       router.push("/patient_registration");
-    } else {
+    } else  if (userRoles.includes("admin")) {
       router.push("/register");
+    }else{
+      Alert.alert(
+        "Access Denied",
+        "You do not have permission to add a new user."
+      );
     }
   };
 
