@@ -132,6 +132,26 @@ const CustomDrawer: React.FC<DrawerProps> = ({
     return userRoles[0];
   };
 
+  // Function to get role display text
+const getRoleDisplayText = (): string => {
+  const primaryRole = getPrimaryRole();
+  
+  switch (primaryRole) {
+    case "county_user":
+      return "County Admin";
+    case "subcounty_user":
+      return "Subcounty Admin";
+    case "nurse":
+      return "Nurse";
+    case "facility-incharge user":
+      return "Facility Incharge";
+    case "admin":
+      return "Admin";
+    default:
+      return " ";
+  }
+};
+
   // Handle navigation with permission check
   const handleNavigation = (screen: ScreenName) => {
     if (canAccess(screen)) {
@@ -173,6 +193,10 @@ const CustomDrawer: React.FC<DrawerProps> = ({
                 <Text style={tw`text-white text-lg font-bold`}>
                   {userData?.name || "Loading..."}
                 </Text>
+                {/* Add role display here */}
+      <Text style={tw`text-purple-200 text-xs font-medium mt-1`}>
+        {getRoleDisplayText()}
+      </Text>
                 {userData?.email && (
                   <Text style={tw`text-purple-200 text-xs`}>
                     {userData.email}
