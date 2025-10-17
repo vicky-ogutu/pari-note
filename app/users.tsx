@@ -33,7 +33,7 @@ export type User = {
   name: string;
   phone?: string;
   roles: Role[]; // an array
-  location: {
+  location?: {
     id: number;
     name: string;
     type: string;
@@ -182,8 +182,8 @@ const UsersScreen = () => {
         phone: user.phone || "",
         roles: JSON.stringify(roleNames),
         roleIds: JSON.stringify(roleIds),
-        locationId: user.location.id.toString(),
-        locationName: user.location.name,
+        locationId: user.location?.id.toString(),
+        locationName: user.location?.name,
       },
     });
   };
@@ -260,9 +260,13 @@ const UsersScreen = () => {
       <Text style={tw`text-purple-500 text-xs font-medium`}>
         Roles: {formatRoles(item.roles)}
       </Text>
-       <Text style={tw`text-green-600 text-xs font-medium`}>
+       {/* <Text style={tw`text-green-600 text-xs font-medium`}>
         Location: {item.location.name} ({item.location.type})
-      </Text> 
+      </Text>  */}
+      {/* Fixed location display with null check */}
+    <Text style={tw`text-green-600 text-xs font-medium`}>
+      Location: {item.location ? `${item.location.name} (${item.location.type})` : 'Not assigned'}
+    </Text>
 
       <View style={tw`flex-row mt-2`}>
         {/* Edit Button */}
