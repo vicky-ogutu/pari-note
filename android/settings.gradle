@@ -1,5 +1,6 @@
 pluginManagement {
-  def nodeExecutable = "/home/stephen/.nvm/versions/node/v22.3.0/bin/node"
+ def nodeExecutable = "/usr/local/bin/node"
+
 
   def reactNativeGradlePlugin = new File(
     providers.exec {
